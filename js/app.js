@@ -1,10 +1,14 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 269;
+RS.BUILD = 270;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 270, data: '2026-11-11', voci: [
+'iPhone e iPad: la stampa della planimetria ora funziona. L\'app installata dalla schermata Home non riesce ad aprire la stampa del sistema, quindi «Stampa o salva il PDF» prepara il foglio A4 come PDF a grandezza vera (la scala resta giusta) e apre il menu Condividi: «Stampa» per stamparlo, oppure «Salva su File», Mail, AirDrop.',
+'Autodiagnosi: una prova nuova per il PDF della planimetria, 89 in tutto.'
+] },
 { build: 269, data: '2026-11-11', voci: [
 'Stampa della planimetria, «Disposizione del foglio»: si sceglie se stampare la legenda; senza legenda i riquadri stanno affiancati in una fascia bassa e il disegno guadagna spazio (in orizzontale da 197×175 a 271×152 mm, in verticale da 184×190 a 184×239 mm).',
 'Si sceglie anche dove stanno legenda e riquadri (automatica, colonna a destra o a sinistra, fascia in basso o in alto) e l\'ordine dei riquadri (Comando e logo, dati del rilievo, scala e Nord, firme) con le frecce ↑ ↓. Le scelte restano per le tavole seguenti; «Ripristina tutto» torna a quelle di partenza.',

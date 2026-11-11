@@ -73,8 +73,8 @@ function fileProntoTocca(f) {
 const v = document.createElement('div');
 v.className = 'ios-file';
 v.innerHTML = '<div class="ios-file-box"><div class="ios-file-t">📄 File pronto</div><div class="ios-file-n"></div>' +
-'<div class="ios-file-h">Tocca il tasto e scegli «Salva su File» (oppure Mail, Drive, AirDrop).</div>' +
-'<button class="ios-file-ok" type="button">📤 Salva o condividi</button><button class="ios-file-no" type="button">Annulla</button></div>';
+'<div class="ios-file-h">' + (/\.pdf$/i.test(f.name) ? 'Tocca il tasto e scegli «Stampa» per stamparlo (alla grandezza vera: la scala resta giusta), oppure «Salva su File», Mail, AirDrop.' : 'Tocca il tasto e scegli «Salva su File» (oppure Mail, Drive, AirDrop).') + '</div>' +
+'<button class="ios-file-ok" type="button">' + (/\.pdf$/i.test(f.name) ? '🖨 Stampa o salva' : '📤 Salva o condividi') + '</button><button class="ios-file-no" type="button">Annulla</button></div>';
 v.querySelector('.ios-file-n').textContent = f.name;
 document.body.appendChild(v);
 const chiudi = () => v.remove();

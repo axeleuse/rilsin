@@ -2207,7 +2207,7 @@ el('printBody').innerHTML =
          <div class="pv-wrap"><div class="pv-page" id="poPage"></div></div>
          <div class="pv-note" id="poNote"></div>
          <div class="modal-actions" style="margin-top:16px">
-           <button class="mini" data-po-act="print" style="background:var(--accent);border-color:var(--accent);color:#fff">🖨 Stampa ora</button>
+           <button class="mini" data-po-act="print" style="background:var(--accent);border-color:var(--accent);color:#fff">${RS.ios ? '🖨 Stampa o salva il PDF' : '🖨 Stampa ora'}</button>
            <button class="mini" data-po-act="reset">Ripristina tutto</button>
          </div>`;
 el('printModal').hidden = false;

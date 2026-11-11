@@ -233,8 +233,42 @@ previewSvg() {
 const s = RS.scene, tv = this.buildTavola({ bn: s.printOptions().bn });
 return { svg: tv.svg, landscape: tv.landscape, note: tv.note };
 },
+planimetriaPdf() {
+return new Promise((ok, ko) => {
+try {
+const s = RS.scene, tv = this.buildTavola({ bn: s.printOptions().bn }), dpi = 200;
+const W = Math.round(tv.PW / 25.4 * dpi), H = Math.round(tv.PH / 25.4 * dpi);
+const url = URL.createObjectURL(new Blob([tv.svg.replace('<svg ', `<svg width="${W}" height="${H}" `)], { type: 'image/svg+xml' }));
+const img = new Image();
+img.onload = () => {
+try {
+const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+const g = cv.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.drawImage(img, 0, 0, W, H);
+const b = atob(cv.toDataURL('image/jpeg', 0.92).split(',')[1]), dati = new Uint8Array(b.length);
+for (let i = 0; i < b.length; i++) dati[i] = b.charCodeAt(i);
+URL.revokeObjectURL(url);
+const D = RS.pdf.documento(), MM = 72 / 25.4;
+if (tv.landscape) { D.P.w = 841.89; D.P.h = 595.28; }
+const pw = tv.landscape ? 297 : 210, ph = tv.landscape ? 210 : 297;
+D.immagine({ dati, w: W, h: H }, (pw - tv.PW) / 2 * MM, (ph - tv.PH) / 2 * MM, tv.PW * MM, tv.PH * MM);
+ok(D.fine({ titolo: 'Planimetria del campo del sinistro' }));
+} catch (e) { URL.revokeObjectURL(url); ko(e); }
+};
+img.onerror = () => { URL.revokeObjectURL(url); ko(new Error('immagine del foglio non disegnabile')); };
+img.src = url;
+} catch (e) { ko(e); }
+});
+},
 print() {
 const s = RS.scene;
+if (RS.ios) {
+if (RS.ui && RS.ui.toast) RS.ui.toast('Preparo il PDF della planimetria…', 2500);
+this.planimetriaPdf().then(u => {
+const nome = 'Planimetria ' + ((docTitle() || 'sinistro').replace(/[\\/:*?"<>|]+/g, ' ').trim()) + '.pdf';
+this.download(new Blob([u], { type: 'application/pdf' }), nome);
+}).catch(e => { if (RS.ui && RS.ui.toast) RS.ui.toast('PDF non riuscito: ' + (e && e.message || e), 5000); });
+return;
+}
 const tv = this.buildTavola({ bn: s.printOptions().bn }), landscape = tv.landscape, sized = tv.sized;
 const win = window.open('', '_blank');
 if (!win) { alert('Consenti i popup per stampare.'); return; }
