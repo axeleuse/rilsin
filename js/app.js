@@ -1,10 +1,15 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 266;
+RS.BUILD = 267;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 267, data: '2026-11-11', voci: [
+'Ridimensionamento corretto: aree (verde, piazzale, ghiaia, zebrata), edifici, isole, stalli, strade, fasce, strisce e immagini si allungano dal lato che si trascina e il lato opposto resta fermo, anche se l\'oggetto è ruotato. Prima crescevano da tutte e due le parti e andavano riposizionati a mano.',
+'Maniglie anche a metà dei lati, per allungare in una sola direzione. Con Alt premuto si ridimensiona attorno al centro. Simboli, testi, rotatorie e veicoli continuano a crescere attorno al loro centro.',
+'Area verde, piazzale, ghiaia e zebrata: nelle proprietà ora ci sono larghezza e profondità, da scrivere.'
+] },
 { build: 266, data: '2026-11-11', voci: [
 'Legenda della planimetria su misura: nel pannello di destra, in fondo, «Legenda della planimetria» elenca le voci che si stampano nel riquadro del foglio. Si toglie la spunta per non stampare una voce, si scrive un nome per cambiarla (vuoto = quello automatico) e si aggiungono voci a mano; «Torna alla legenda automatica» annulla tutto. Le scelte restano con la tavola.',
 'La legenda disegnata sulla tavola continua ad avere le sue scelte, nelle sue proprietà.',

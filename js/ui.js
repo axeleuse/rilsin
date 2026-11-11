@@ -3750,7 +3750,7 @@ h += selFld('Tipo', 'style', e.style, [['cont','Continua'],['disc','Tratteggiata
 }
 if (e.type === 'roundabout') h += `<div class="prow">${numFld('Diametro (m)', 'size', round(e.size), 0.5)}${numFld('Anello (m)', 'ring', round(e.ring), 0.5)}</div>`;
 if (e.type === 'roundabout' && RS.incroci) h += RS.incroci.pannelloRotatoria(e);
-if (e.type === 'island' || e.type === 'parking') h += `<div class="prow">${numFld('Largh. (m)', 'w', round(e.w), 0.1)}${numFld('Prof. (m)', 'h', round(e.h), 0.1)}</div>`;
+if (e.type === 'island' || e.type === 'parking' || e.type === 'area') h += `<div class="prow">${numFld('Largh. (m)', 'w', round(e.w), 0.1)}${numFld('Prof. (m)', 'h', round(e.h), 0.1)}</div>`;
 if (e.type === 'island') h += selFld('Forma', 'shape', e.shape || 'ovale', [['ovale','Ovale'],['triangolo','Triangolare'],['goccia','A goccia']]);
 if (e.type === 'island') h += selFld('Fondo', 'fondo', e.fondo || 'verde', [['verde','Verde (rialzata)'],['pavimentata','Pavimentata (rialzata)'],['zebrata','Zebrata (a raso)']]);
 if (e.type === 'parking') h += selFld('Stalli', 'angolo', String(e.angolo == null ? 90 : e.angolo),

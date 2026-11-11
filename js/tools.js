@@ -462,10 +462,23 @@ return;
 }
 if (op.kind === 'resize') {
 const el = RS.scene.get(op.id); if (!el) return;
-const loc = toLocal(w, op.cx, op.cy, el.rot || 0);
-const pad = op.pad || 0;
-let nw = Math.max(0.2, (Math.abs(loc.x) - pad) * 2), nh = Math.max(0.2, (Math.abs(loc.y) - pad) * 2);
+const loc = toLocal(w, op.cx, op.cy, op.rot != null ? op.rot : (el.rot || 0));
+const pad = op.pad || 0, sx = op.sx, sy = op.sy;
+if (op.alCentro || (!sx && !sy)) {
+let nw = sx || !sy ? Math.max(0.2, (Math.abs(loc.x) - pad) * 2) : op.w0, nh = sy || !sx ? Math.max(0.2, (Math.abs(loc.y) - pad) * 2) : op.h0;
+if (op.lockAspect && op.w0 > 0 && op.h0 > 0) { const k = Math.max(nw / op.w0, nh / op.h0); nw = op.w0 * k; nh = op.h0 * k; }
 applySize(el, nw, nh, op.lockAspect);
+RS.scene.render(); return;
+}
+let nw = sx ? Math.max(0.2, sx * (loc.x - sx * pad) + op.w0 / 2) : op.w0;
+let nh = sy ? Math.max(0.2, sy * (loc.y - sy * pad) + op.h0 / 2) : op.h0;
+if (op.lockAspect && op.w0 > 0 && op.h0 > 0) { const k = Math.max(sx ? nw / op.w0 : 0, sy ? nh / op.h0 : 0) || 1; nw = op.w0 * k; nh = op.h0 * k; }
+applySize(el, nw, nh, op.lockAspect);
+const a = RS.elements.localSize(el);
+const clx = sx ? sx * (a.w - op.w0) / 2 : 0, cly = sy ? sy * (a.h - op.h0) / 2 : 0;
+const r = op.rot * Math.PI / 180;
+el.x = op.cx + clx * Math.cos(r) - cly * Math.sin(r);
+el.y = op.cy + clx * Math.sin(r) + cly * Math.cos(r);
 RS.scene.render(); return;
 }
 if (op.kind === 'vertex') {
@@ -819,7 +832,11 @@ const el = RS.scene.get(id); if (!el) return;
 if (type === 'rot') {
 this._op = { kind: 'rotate', id, cx: el.x, cy: el.y };
 } else if (type === 'res') {
-this._op = { kind: 'resize', id, cx: el.x, cy: el.y, lockAspect: e.shiftKey || el.type === 'symbol', pad: this.hs() * 0.6 };
+const ls = RS.elements.localSize(el);
+const alCentro = e.altKey || !ANCORATI.has(el.type);
+this._op = { kind: 'resize', id, cx: el.x, cy: el.y, rot: el.rot || 0, w0: ls.w, h0: ls.h,
+sx: +handle.dataset.sx || 0, sy: +handle.dataset.sy || 0, alCentro,
+lockAspect: e.shiftKey || el.type === 'symbol' || el.type === 'image', pad: this.hs() * 0.6 };
 } else if (type === 'vtx') {
 this._op = { kind: 'vertex', id, i: +handle.dataset.i };
 } else if (type === 'lbl') {
@@ -859,12 +876,16 @@ g.setAttribute('transform', `translate(${el.x} ${el.y}) rotate(${el.rot || 0})`)
 const pad = h * 0.6, hw = ls.w/2 + pad, hh = ls.h/2 + pad;
 rect(g, -hw, -hh, hw*2, hh*2, 'ov-box');
 if (!el.locked && !trascina && !multi) {
-if (el.type !== 'incrocio' && el.type !== 'curva') [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].forEach(c => {
+const lati = ANCORATI.has(el.type) && el.type !== 'image'
+? (el.type === 'stopline' || el.type === 'mark' ? [[1, 0], [-1, 0]] : [[1, 0], [-1, 0], [0, 1], [0, -1]]) : [];
+if (el.type !== 'incrocio' && el.type !== 'curva') [[-1,-1],[1,-1],[1,1],[-1,1]].concat(lati).forEach(([sx, sy]) => {
+const cx = sx * hw, cy = sy * hh, lato = !sx || !sy;
 const r = N('rect');
-attr(r, { x: c[0]-h, y: c[1]-h, width: h*2, height: h*2, class: 'ov-h', 'data-handle':'res','data-id':id });
+attr(r, { x: cx-h, y: cy-h, width: h*2, height: h*2, class: 'ov-h', 'data-handle':'res','data-id':id, 'data-sx': sx, 'data-sy': sy });
 g.appendChild(r);
 const v = N('rect');
-attr(v, { x: c[0]-h*0.45, y: c[1]-h*0.45, width: h*0.9, height: h*0.9, class: 'ov-hv' });
+attr(v, lato ? { x: cx-h*(sy ? 0.6 : 0.3), y: cy-h*(sx ? 0.6 : 0.3), width: h*(sy ? 1.2 : 0.6), height: h*(sx ? 1.2 : 0.6), rx: h*0.3, class: 'ov-hv ov-hv-lato' }
+: { x: cx-h*0.45, y: cy-h*0.45, width: h*0.9, height: h*0.9, class: 'ov-hv' });
 g.appendChild(v);
 });
 const ry = -hh - h*3.6;
@@ -995,8 +1016,10 @@ const r = -rotDeg * Math.PI/180, c = Math.cos(r), s = Math.sin(r);
 const dx = w.x - cx, dy = w.y - cy;
 return { x: dx*c - dy*s, y: dx*s + dy*c };
 }
+const ANCORATI = new Set(['road', 'crosswalk', 'band', 'ramp', 'building', 'island', 'parking', 'area', 'stopline', 'mark', 'image']);
 function applySize(el, nw, nh, lock) {
 if (el.type === 'vehicle') { el.len = nw; el.wid = nh; }
+else if (el.type === 'image') { el.w = nw; el.h = nh; }
 else if (el.type === 'road' || el.type === 'crosswalk' || el.type === 'band' || el.type === 'ramp') { el.len = nw; el.wid = nh;
 if (el.type === 'road') RS.elements.aggiornaSezione(el, 'wid'); }
 else if (el.type === 'stopline' || el.type === 'mark') { el.len = nw; }
