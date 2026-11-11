@@ -425,7 +425,8 @@ return o;
 }
 function spunta(p, altre) {
 const L = lung(p), sp = spuntone(); let s0 = 0, s1 = L;
-altre.forEach(q => incontri(p, q).forEach(c => { if (c.s <= L - c.s) { if (c.s <= sp && c.s > s0) s0 = c.s; } else if (L - c.s <= sp && c.s < s1) s1 = c.s; }));
+const pt = Math.min(sp, L * .3);
+altre.forEach(q => incontri(p, q).forEach(c => { if (c.s <= L - c.s) { if (c.s <= pt && c.s > s0) s0 = c.s; } else if (L - c.s <= pt && c.s < s1) s1 = c.s; }));
 if (s1 - s0 < 40) return p;
 if (s0 <= .01 && s1 >= L - .01) return p;
 return taglia(p, s0, s1);
@@ -479,13 +480,21 @@ const coda = taglia(A, Math.max(0, LA - fin), LA), testa = taglia(B, 0, Math.min
 const va = versoFine(A), vb = versoInizio(B), co = va.x * vb.x + va.y * vb.y;
 const ib = suStrada(b, [{ pts: A }]);
 let sb = 0; if (ib) { for (let i = 1; i < A.length; i++) { if (A[i - 1] === ib.a) { sb += dist(ib.a, ib.q); break; } sb += dist(A[i - 1], A[i]); } }
-const sopra = ib && ib.v < item.mezza * 1.1 && LA - sb > 2 && (LA - sb) * K < 30 && co > Math.cos(40 * Math.PI / 180) && !(suStrada(B[B.length - 1], [{ pts: A }]).v < item.mezza);
-const capi = dist(e, b) < vic || cc;
+const sulNodo = c => st.some(o => o !== item && (() => { const d = suStrada(c, [o]); return d && d.v < o.mezza * 1.2; })());
+const nodoB = sulNodo(b), dritta = co > Math.cos(25 * Math.PI / 180);
+const sopra = ib && !nodoB && ib.v < item.mezza * 1.1 && LA - sb > 2 && (LA - sb) * K < 30 && co > Math.cos(40 * Math.PI / 180) && !(suStrada(B[B.length - 1], [{ pts: A }]).v < item.mezza);
+const capiVicini = dist(e, b) < vic && (dritta || !(nodoB || sulNodo(e)));
+let accavallate = false;
+if (cc) {
+const oltreA = lung(coda) - cc.s, cB = incontri(testa, coda)[0], primaB = cB ? cB.s : 0;
+accavallate = oltreA <= Math.min(vic, LA * .25) && primaB <= Math.min(vic, LR * .25) && (dritta || !(nodoB || sulNodo(e)));
+}
+const capi = capiVicini || accavallate;
 if (!(capi || sopra)) continue;
 if (co < (sopra && !capi ? Math.cos(40 * Math.PI / 180) : Math.cos(135 * Math.PI / 180))) continue;
 const fineA = sopra && !capi ? sb : LA;
 const tr = Math.min(Math.max(6 / K, 50), fineA / 3, LR / 3), A2 = taglia(A, 0, fineA - tr), B2 = taglia(B, tr, LR), u = A2[A2.length - 1], w = B2[0];
-const ct = sopra && !capi ? ib.q : cc ? { x: cc.x, y: cc.y } : { x: (e.x + b.x) / 2, y: (e.y + b.y) / 2 }, mid = [];
+const ct = sopra && !capi ? ib.q : accavallate ? { x: cc.x, y: cc.y } : { x: (e.x + b.x) / 2, y: (e.y + b.y) / 2 }, mid = [];
 for (let k = 1; k < 8; k++) { const t = k / 8; mid.push({ x: (1 - t) * (1 - t) * u.x + 2 * t * (1 - t) * ct.x + t * t * w.x, y: (1 - t) * (1 - t) * u.y + 2 * t * (1 - t) * ct.y + t * t * w.y }); }
 const nomeVia = item.el.nomeVia; togli(item.el.id); nuovaStrada(A2.concat(mid, B2), nomeVia);
 return true;
@@ -659,6 +668,12 @@ function applica(p, t, x) {
 const S = RS.scene;
 if (t === 'strada') {
 let st = strade(); const n0 = incroci(st).length; let r = regolarizza(p, true);
+const ro = rotatoriaToccata(r);
+if (ro) {
+const k = collegaRotatoria(ro, r);
+if (k && k.dentro) return 'Dentro la rotatoria: tratto non aggiunto';
+if (k) return k.lati > 1 ? 'Strada collegata alla rotatoria (due bracci)' : 'Strada collegata alla rotatoria';
+}
 const pr = prolunga(r, st);
 if (pr && pr.gia) return 'Qui c\'è già una strada: tratto non aggiunto';
 if (pr && pr.fatto && !pr.resto) return 'Strada allungata';
@@ -723,22 +738,72 @@ return 'Area';
 S.add({ type: 'sketch', pts: semplifica(p, 2).map(aMondo), width: .12, color: '#3a3a3a' }, false);
 return 'Tratto libero';
 }
+const BRACCIO_CORTO = 6;
+const tolleranzaRot = () => Math.min(Math.max(3 / K, 25), BRACCIO_CORTO / K * .9);
+function collegaRotatoria(ro, pts, nomeVia) {
+const c = aSchermo(ro), R = (ro.size || 26) / 2 / K, Rb = R + BRACCIO_CORTO / K, Rr = R + 1 / K;
+const q = ricampiona(pts, 3), dd = q.map(x => dist(x, c));
+if (Math.min(...dd) > R + tolleranzaRot()) return null;
+const pezzi = [];
+let i = 0; while (i < q.length && dd[i] > Rr) i++;
+if (i > 0 && i < q.length) pezzi.push(q.slice(0, i + 1).reverse());
+let j = q.length - 1; while (j >= 0 && dd[j] > Rr) j--;
+if (j >= 0 && j < q.length - 1 && j >= i) pezzi.push(q.slice(j));
+if (!pezzi.length) return { dentro: true };
+ro.bracci = ro.bracci || [];
+const gradi = (a, b) => +((((Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) % 360) + 360) % 360).toFixed(1);
+const scartoAng = (a, b) => Math.abs(((a - b) % 360 + 540) % 360 - 180);
+const passa = (P, d) => { for (let k = 1; k < P.length; k++) { const a = P[k - 1], b = P[k], da = dist(a, c), db = dist(b, c); if (db >= d) { const t = Math.max(0, Math.min(1, (d - da) / ((db - da) || 1))); return { k, X: { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t } }; } } return null; };
+let lati = 0;
+pezzi.forEach(P => {
+const far = P[P.length - 1];
+if (dist(far, c) < Rr) return;
+const fuori = [passa(P, Rr).X].concat(P.slice(passa(P, Rr).k));
+const oltre = passa(P, Rb), radiale = !oltre || scarto(fuori, c, far) < Math.max(1.5 / K, 10);
+if (radiale) {
+const ang = gradi(c, far), len = +Math.max(BRACCIO_CORTO, dist(far, c) * K - (ro.size || 26) / 2).toFixed(1);
+const br = ro.bracci.find(x => scartoAng(x.ang, ang) < 12);
+if (br) br.len = Math.max(+br.len || 0, len); else ro.bracci.push({ ang, len });
+} else {
+const ang = gradi(c, oltre.X);
+let br = ro.bracci.find(x => scartoAng(x.ang, ang) < 12 && (+x.len || 0) <= BRACCIO_CORTO + 1);
+if (!br) { br = { ang, len: BRACCIO_CORTO }; ro.bracci.push(br); }
+const g = br.ang * Math.PI / 180, L = R + (+br.len) / K, punta = { x: c.x + Math.cos(g) * L, y: c.y + Math.sin(g) * L };
+const resto = rdp([punta].concat(P.slice(oltre.k)), 1.5);
+if (lung(resto) > 8) nuovaStrada(resto, nomeVia);
+}
+lati++;
+});
+return { lati };
+}
+function rotatoriaToccata(pts) {
+let best = null, bv = 1e9;
+RS.scene.elements.forEach(e => {
+if (e.type !== 'roundabout' || e.inc) return;
+const c = aSchermo(e), R = (e.size || 26) / 2 / K, v = Math.min(...ricampiona(pts, 3).map(x => dist(x, c))) - R;
+if (v <= tolleranzaRot() && v < bv) { bv = v; best = e; }
+});
+return best;
+}
 function creaRotatoria(p) {
 const S = RS.scene, f = forma(p), c0 = { x: f.cx, y: f.cy }, st = strade(); let be = null, bv = 1e9;
 incroci(st).forEach(x => { const v = dist(x, c0); if (v < bv) { bv = v; be = x; } });
 if (!be) return 'Area';
-const cx = be.x * K, cy = be.y * K, size = Math.min(60, Math.max(26, (f.w + f.h) / 2 * K)), angs = [], lens = [];
-st.forEach(q => {
-const r = suStrada(be, [q]); if (!q.libera || !r || r.v > 12) return;
-[q.pts[0], q.pts[q.pts.length - 1]].forEach(e => {
-const dx = e.x * K - cx, dy = e.y * K - cy, d = Math.hypot(dx, dy);
-if (d > size / 2 + 2) { angs.push(+(((Math.atan2(dy, dx) * 180 / Math.PI) + 360) % 360).toFixed(1)); lens.push(+Math.max(6, d - size / 2).toFixed(1)); }
-});
-togli(q.el.id);
-});
-const rot = RS.incroci.rotatoriaNuova({ x: +cx.toFixed(2), y: +cy.toFixed(2) }, { size, bracciAng: angs.length ? angs : [0, 90, 180, 270] });
-if (angs.length) rot.bracci.forEach((b, i) => { b.len = lens[i]; });
+const cx = be.x * K, cy = be.y * K, size = Math.min(60, Math.max(26, (f.w + f.h) / 2 * K));
+const rot = RS.incroci.rotatoriaNuova({ x: +cx.toFixed(2), y: +cy.toFixed(2) }, { size, bracciAng: [] });
+rot.bracci = [];
 rot.z = zSotto();
+const R = size / 2 / K, verso = [];
+st.forEach(q => {
+if (!q.libera) return;
+if (Math.min(...ricampiona(q.pts, 3).map(x => dist(x, be))) > R + tolleranzaRot()) return;
+togli(q.el.id);
+const k = collegaRotatoria(rot, q.pts, q.el.nomeVia);
+if (!k || !k.lati) [q.pts[0], q.pts[q.pts.length - 1]].forEach(e => { if (dist(e, be) * K > 2) verso.push(+((((Math.atan2(e.y - be.y, e.x - be.x) * 180 / Math.PI) % 360) + 360) % 360).toFixed(1)); });
+});
+const vicinoA = a => rot.bracci.some(b => Math.abs(((a - b.ang) % 360 + 540) % 360 - 180) < 12);
+verso.forEach(a => { if (!vicinoA(a)) rot.bracci.push({ ang: a, len: 18 }); });
+if (!rot.bracci.length) rot.bracci = [0, 90, 180, 270].map(a => ({ ang: a, len: 18 }));
 S.add(rot, false);
 return 'Rotatoria';
 }

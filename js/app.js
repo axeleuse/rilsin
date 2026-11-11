@@ -1,10 +1,17 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 253;
+RS.BUILD = 254;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 254, data: '2026-11-11', voci: [
+'Schizzo, incroci con strade corte: due strade che si incrociano a metà venivano prese per un pezzo che prosegue l\'altro e fuse in una curva sola, oppure mezza strada veniva tagliata come una «punta» che sborda; anche una strada obliqua aggiunta su un incrocio poteva far sparire un braccio. Ora l\'incrocio resta tale, e una strada che parte da un incrocio è un braccio nuovo (si unisce a un\'altra solo se la prosegue quasi dritta).',
+'Schizzo, rotatoria (cerchio sopra un incrocio): ogni strada che ci arriva si divide sul cerchio e diventa un braccio, anche obliqua o un po\' fuori centro; una strada curva resta curva oltre il braccio. Prima una strada poteva sparire o diventare un braccio dritto.',
+'Schizzo: una strada disegnata dopo fino alla rotatoria (o che la attraversa) si collega da sola: diventa un suo braccio, o un braccio corto con la strada attaccata se arriva di sbieco o in curva.',
+'Informazioni, pagina di presentazione e licenza: tolta la frase sull\'applicativo non distribuito dall\'Arma.',
+'Autodiagnosi: una prova nuova per incroci e rotatorie dello schizzo, 77 in tutto.'
+] },
 { build: 253, data: '2026-11-11', voci: [
 'PC, RILSIN installato come app da Edge o Chrome (dal sito, icona «Installa app» nella barra dell\'indirizzo): una tavola salvata si apre con un doppio clic sul file, o con il tasto destro, «Apri con», RILSIN, come un documento di Word. Se RILSIN è già aperto la tavola arriva in quella finestra; se quella aperta ha modifiche non salvate, prima lo chiede. Restano gli avvisi di Apri (tavola di un collega, salvata con una versione più nuova). Il primo Salva chiede il permesso di scrivere nel file.'
 ] },

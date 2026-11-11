@@ -2261,7 +2261,7 @@ el('infoBody').innerHTML =
          </div>
          <div class="info-uso">In uso: ${escAttr(this.doveGira())}</div>
          <div class="info-voce"><span>ⓘ</span><div><b>Strumento di ausilio</b>RILSIN è uno strumento di ausilio realizzato da un
-           operatore, non un applicativo distribuito dall'Arma dei Carabinieri. Misure, calcoli ed elaborati vanno sempre
+           operatore. Misure, calcoli ed elaborati vanno sempre
            verificati da chi li firma, e non sostituiscono il rilievo e la valutazione tecnica.</div></div>
          <div class="info-voce"><span>👤</span><div><b>Autore</b>${escAttr(RS.AUTORE || '')}, ${RS.ANNO || ''}. Ausilio alla
            restituzione grafica in scala della scena del sinistro stradale.</div></div>
