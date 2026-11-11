@@ -31,7 +31,9 @@ const nOgg = (auto && auto.elements) ? auto.elements.length : 0;
 const nFoto = (auto && auto.fascicolo && auto.fascicolo.photos) ? auto.fascicolo.photos.length : 0;
 const nCoinv = auto && RS.storage.nCoinvolti ? RS.storage.nCoinvolti(auto) : 0;
 if (nOgg || nFoto || nCoinv) {
-c.push({ act: 'riprendi', icon: IC.riprendi, t: 'Riprendi il disegno lasciato in sospeso',
+let mini = null;
+try { const m = JSON.parse(localStorage.getItem('rilsin:bozzaMini') || 'null'); if (m && m.id && m.id === auto.bozzaId && /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(m.img)) mini = m.img; } catch (e) {}
+c.push({ act: 'riprendi', icon: IC.riprendi, mini, t: 'Riprendi il disegno lasciato in sospeso',
 d: descriviBozza(auto.autoAt, auto.autoNome || auto.nome || '', nOgg, nFoto), hot: true, salvata: !!auto.autoSalvata });
 }
 c.push({ act: 'procedura', icon: IC.procedura, t: 'Procedura guidata',
@@ -94,8 +96,44 @@ setTimeout(() => { this.w.hidden = true; }, 350);
 if (this.h.hidden) this.showMenu();
 if (RS.ui && RS.ui.maybeFirstSetup) setTimeout(() => RS.ui.maybeFirstSetup(), 500);
 },
+aggiornaMiniatura(bozzaId, forza) {
+const S = RS.scene; if (!S || !S.gElements || !S.elements.length || !bozzaId) return;
+const ora = Date.now(), dopo = 15000 - (ora - (this._miniT || 0));
+if (this._miniIn) return;
+if (!forza && dopo > 0) { clearTimeout(this._miniTimer); this._miniTimer = setTimeout(() => this.aggiornaMiniatura(bozzaId), dopo + 50); return; }
+clearTimeout(this._miniTimer);
+const b = S.contentBounds(); if (!b) return;
+this._miniIn = true; this._miniT = ora;
+const fine = () => { this._miniIn = false; };
+try {
+const pad = Math.max(b.w, b.h) * 0.06 + 1, R = 1.6;
+let x = b.x - pad, y = b.y - pad, w = b.w + 2 * pad, h = b.h + 2 * pad;
+if (w / h > R) { const nh = w / R; y -= (nh - h) / 2; h = nh; } else { const nw = h * R; x -= (nw - w) / 2; w = nw; }
+const g = S.gElements.cloneNode(true);
+g.querySelectorAll('image').forEach(n => n.remove());
+const XS = new XMLSerializer(), W = 320, H = 200;
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${W}" height="${H}" viewBox="${x} ${y} ${w} ${h}">` +
+`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#f4f1e8"/>` +
+(S.defs ? XS.serializeToString(S.defs) : '') + (S.defsDyn ? XS.serializeToString(S.defsDyn) : '') + XS.serializeToString(g) + '</svg>';
+const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' })), img = new Image();
+img.onload = () => {
+try {
+const c = document.createElement('canvas'); c.width = W; c.height = H;
+c.getContext('2d').drawImage(img, 0, 0, W, H);
+const dati = c.toDataURL('image/jpeg', 0.82);
+localStorage.setItem('rilsin:bozzaMini', JSON.stringify({ id: bozzaId, img: dati }));
+const ic = this.h && !this.h.hidden && this.h.querySelector('[data-home="riprendi"] .hc-ic');
+if (ic) { ic.classList.add('hc-mini'); ic.innerHTML = `<img src="${dati}" alt="">`; }
+} catch (e) {  }
+URL.revokeObjectURL(url); fine();
+};
+img.onerror = () => { URL.revokeObjectURL(url); fine(); };
+img.src = url;
+} catch (e) { fine(); }
+},
 showMenu(subito) {
 this.buildMenu(); this._attesa = null;
+if (RS.scene && RS.scene.elements.length && RS.storage && RS.storage._bozzaId) this.aggiornaMiniatura(RS.storage._bozzaId, true);
 this.h.hidden = false;
 if (subito) { this.h.classList.add('subito', 'show'); requestAnimationFrame(() => this.h.classList.remove('subito')); }
 else requestAnimationFrame(() => this.h.classList.add('show'));
@@ -113,7 +151,7 @@ if (this.w) { this.w.hidden = true; this.w.classList.remove('show'); }
 buildMenu() {
 const cs = cards().map(c =>
 `<button class="home-card${c.hot ? ' hot' : ''}" data-home="${c.act}">
-           <span class="hc-ic">${c.icon}</span>
+           <span class="hc-ic${c.mini ? ' hc-mini' : ''}">${c.mini ? `<img src="${c.mini}" alt="">` : c.icon}</span>
            <span class="hc-txt">
              <span class="hc-t">${c.t}${c.hot ? '<span class="hc-badge">bozza</span>' : ''}</span>
              <span class="hc-d">${c.d}</span>

@@ -536,6 +536,9 @@ border:1px solid rgba(76,141,255,.28);box-shadow:inset 0 1px 0 rgba(255,255,255,
 transition:transform .14s ease,box-shadow .14s ease}
 .home-card:hover .hc-ic{transform:scale(1.06);box-shadow:0 6px 18px rgba(76,141,255,.28)}
 .hc-ic svg{width:27px;height:27px;fill:none;stroke:#9dc0ff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hc-ic.hc-mini{width:96px;height:60px;padding:0;overflow:hidden;border-radius:10px;background:#f4f1e8;border:1px solid rgba(255,255,255,.18)}
+.hc-ic.hc-mini img{width:100%;height:100%;object-fit:cover;display:block}
+@media (max-width:560px){.hc-ic.hc-mini{width:68px;height:44px;border-radius:8px}.home-card.hot .hc-badge{display:none}}
 .hc-txt{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1 1 auto}
 .hc-t{font-size:15.5px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
 .hc-d{font-size:12.5px;color:var(--muted);line-height:1.4}
@@ -1660,3 +1663,22 @@ box-shadow:0 0 0 2px rgba(0,0,0,.35),inset 0 0 0 2px rgba(0,0,0,.25);pointer-eve
 background:rgba(20,24,30,.72);border-radius:14px;padding:10px 14px;line-height:1.35}
 .pr-bot{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:10px;padding:10px 12px max(14px,env(safe-area-inset-bottom))}
 .pr-bot .pano-b[hidden]{display:none}
+:root{--muted2:#7a8593;--titolo:#c3ccd8;--etich:#a9b4c2}
+body.light{--titolo:#36414d;--etich:#4a5663}
+body.sole{--titolo:#000;--etich:#000}
+.pal-item span{font-size:11.5px}
+.pal-section{font-size:11px}
+.props-head,.leg-toggle{font-size:12px;color:var(--titolo)}
+.psec>summary{font-size:12px;color:var(--titolo)}
+.psec>summary:hover{color:var(--txt)}
+.psec-r{font-size:12px}
+.ptipo{font-size:12px}
+.phead-t b{font-size:14px}
+.phead-t small{font-size:12px}
+#propsBody .fld label{font-size:12.5px;color:var(--etich)}
+#propsBody .fld input[type=number],#propsBody .fld input[type=text],#propsBody .fld select{font-size:13px}
+.mis-hint{font-size:12px}
+.tb-menu-sec{font-size:11.5px}
+.ver-sez,.ver-t small,.pm-qt,table.punti .mtag small,.lay-hint,.rec-note{font-size:11.5px}
+.ver-man{font-size:11.5px}
+.leg-row{font-size:12.5px}

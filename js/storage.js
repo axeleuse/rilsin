@@ -275,6 +275,7 @@ doc.bozzaId = this._bozzaId || (this._bozzaId = nuovaBozza());
 doc.autoSalvata = !!(RS.ui && RS.ui._ready && !RS.ui._dirty);
 scrivi(AUTO, JSON.stringify(alleggerisci(doc)));
 tuttoBene('bozza');
+if (RS.home && RS.home.aggiornaMiniatura && doc.elements && doc.elements.length) RS.home.aggiornaMiniatura(doc.bozzaId);
 return true;
 } catch (e) {
 avvisa('bozza', e);
@@ -306,7 +307,7 @@ async togliBozza(id) { try { await bozzeOp('readwrite', st => st.delete(id)); } 
 metteDaParte: bozzaDaParte,
 nCoinvolti(d) { return nCoinvolti(d); },
 getAutosave() { try { const s = localStorage.getItem(AUTO); return s ? completa(riparaTesti(JSON.parse(s))) : null; } catch (e) { return null; } },
-clearAutosave() { try { localStorage.removeItem(AUTO); pulisciImmagini(); } catch (e) {} },
+clearAutosave() { try { localStorage.removeItem(AUTO); localStorage.removeItem('rilsin:bozzaMini'); pulisciImmagini(); } catch (e) {} },
 versions() { try { return JSON.parse(localStorage.getItem(VERS) || '[]'); } catch (e) { return []; } },
 pushVersion(force) {
 const now = Date.now();

@@ -1,10 +1,14 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 264;
+RS.BUILD = 265;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 265, data: '2026-11-11', voci: [
+'Pagina iniziale: «Riprendi il disegno lasciato in sospeso» mostra una piccola immagine del disegno, così si riconosce a colpo d\'occhio quale rilievo è.',
+'Più leggibile, soprattutto all\'aperto: nel pannello delle proprietà e nella tavolozza le scritte più piccole sono di un punto più grandi, i titoli delle sezioni e le etichette dei campi hanno più contrasto, il grigio più chiaro è meno sbiadito.'
+] },
 { build: 264, data: '2026-11-11', voci: [
 'Aspetto: le icone di menu, pulsanti, finestre e avvisi sono ora disegni a linee nello stesso stile della barra in alto, al posto delle emoji (che cambiavano aspetto fra Android, iPhone e Windows e sui telefoni vecchi uscivano come quadratini). Il telemetro e il raddrizzamento hanno un\'icona loro.',
 'Tavolozza: ogni oggetto ha un\'anteprima a tutta larghezza in cima alla scheda, color carta come la tavola (asfalto per la segnaletica bianca), al posto dei riquadretti chiari; la ricerca ha la lente disegnata.',

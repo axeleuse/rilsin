@@ -65,6 +65,7 @@ semaforo: '<rect x="8" y="2.5" width="8" height="19" rx="2"/><circle cx="12" cy=
 freccia: '<path d="M4 12h15M14 6l6 6-6 6"/>',
 avviso: '<path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5"/><circle cx="12" cy="17.2" r=".7" fill="currentColor"/>',
 spunta: '<circle cx="12" cy="12" r="9"/><path d="M7.5 12.5l3 3 6-6.5"/>',
+chiaro: '<circle cx="12" cy="12" r="9"/>',
 raddrizza: '<path d="M5 6l6-2v16l-6-2z" stroke-dasharray="2.2 1.8"/><path d="M14 4h7v16h-7z"/><path d="M9.5 12h6M13.5 10l2 2-2 2"/>',
 laser: '<rect x="2.5" y="7.5" width="10" height="9" rx="1.6"/><circle cx="7.5" cy="12" r="1.6"/><path d="M12.5 12h9" stroke-dasharray="2 1.7"/><path d="M19.5 9.5l2 2.5-2 2.5"/>',
 griglia: '<rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 10h16M4 15h16M10 4v16M15 4v16"/>',
@@ -84,7 +85,7 @@ const MAPPA = {
 '🗂': 'livelli', '⚙': 'ingranaggio', '💬': 'fumetto', '🧭': 'bussola', '🚶': 'pedone', '🤝': 'cuore', '⛔': 'divieto',
 '✨': 'novita', '🔧': 'chiave', '🧰': 'cassetta', '📦': 'pacco', '🚨': 'sirena', '🏷': 'etichetta', '🖵': 'schermo',
 '🚦': 'semaforo', '➡': 'freccia', '⚠': 'avviso', '✎': 'matita', '✔': 'spunta',
-'▦': 'griglia', '▭': 'foglio', '▤': 'righelli', '⌒': 'raccordo', '🔦': 'laser', '🔲': 'raddrizza'
+'⬜': 'chiaro', '▦': 'griglia', '▭': 'foglio', '▤': 'righelli', '⌒': 'raccordo', '🔦': 'laser', '🔲': 'raddrizza'
 };
 const fuga = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const RX = new RegExp('(' + Object.keys(MAPPA).map(fuga).join('|') + ')\\uFE0F?[ \\u00A0]?', 'gu');
