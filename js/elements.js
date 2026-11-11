@@ -2208,6 +2208,11 @@ const m = miniatura(e, pxW, pxH); if (!m) return '';
 return `<svg viewBox="0 0 ${pxW} ${pxH}" width="${pxW}" height="${pxH}" aria-hidden="true">${m.outerHTML}</svg>`;
 }
 const LEG_ICONA = 2.2;
+function senzaMinimi(fn) { const ms = RS.minSimbolo; RS.minSimbolo = 0; try { fn(); } finally { RS.minSimbolo = ms; } }
+function scalaTesto(e) {
+const fs = e.fs || 0.6, k = RS.minTesto && fs < RS.minTesto ? RS.minTesto / fs : 1;
+return k > 1 ? ` scale(${k.toFixed(3)})` : '';
+}
 function drawLegend(g, e) {
 const fs = e.fs || 0.6, rows = legendRows(e), mt = legendMetrics(e, rows);
 panel(g, mt.w, mt.h, 'LEGENDA', fs);
@@ -2475,9 +2480,9 @@ g.setAttribute('transform', `translate(${x} ${y}) rotate(${rot})`); drawNorth(g,
 case 'graphscale':
 g.setAttribute('transform', `translate(${x} ${y})`); drawGraphScale(g, e); break;
 case 'legend':
-g.setAttribute('transform', `translate(${x} ${y})`); drawLegend(g, e); break;
+g.setAttribute('transform', `translate(${x} ${y})` + scalaTesto(e)); senzaMinimi(() => drawLegend(g, e)); break;
 case 'measuretable':
-g.setAttribute('transform', `translate(${x} ${y})`); drawMeasureTable(g, e); break;
+g.setAttribute('transform', `translate(${x} ${y})` + scalaTesto(e)); senzaMinimi(() => drawMeasureTable(g, e)); break;
 case 'skid': drawSkid(g, e); break;
 case 'path': drawSkid(g, e); break;
 case 'measure': drawMeasure(g, e); break;

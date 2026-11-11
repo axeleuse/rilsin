@@ -24,11 +24,12 @@ if (opts.grid) parts.push(`<g opacity="0.5">${s.gGrid.innerHTML}</g>`);
 const haScalaGrafica = s.elements.some(e => e.type === 'graphscale' && (!RS.layers || RS.layers.visible(e)));
 const poS = s.printOptions ? s.printOptions() : {};
 const minS = (!opts.miniatura && poS.simboli !== false && !s.fuoriScala) ? 0.0035 * (s.scaleDenom || 100) : 0;
+const minT = minS ? 0.0025 * (s.scaleDenom || 100) : 0;
 let contenuto = s.gElements.innerHTML;
 if (opts.bn || minS) {
-RS.bn = !!opts.bn; RS.minSimbolo = minS;
-try { s.render(true); if (opts.bn) stradeTecniche(s.gElements); contenuto = s.gElements.innerHTML; }
-finally { RS.bn = false; RS.minSimbolo = 0; s.render(true); }
+RS.bn = !!opts.bn; RS.minSimbolo = minS; RS.minTesto = minT;
+try { s.render(true); if (opts.bn) stradeTecniche(s.gElements); if (minT) ingrandisciTesti(s, minT); contenuto = s.gElements.innerHTML; }
+finally { RS.bn = false; RS.minSimbolo = 0; RS.minTesto = 0; s.render(true); }
 } else if (haScalaGrafica) { s.render(true); contenuto = s.gElements.innerHTML; }
 parts.push(`<g>${contenuto}</g>`);
 if (!opts.senzaCornice) parts.push(`<rect x="${bx+0.1}" y="${by+0.1}" width="${w-0.2}" height="${h-0.2}" fill="none" stroke="#222" stroke-width="0.08"/>`);
@@ -93,8 +94,16 @@ const po = s.printOptions ? s.printOptions() : {};
 const o = po.orient || 'auto', force = (o === 'portrait' || o === 'landscape') ? o : null;
 const geo = land => {
 const PW = land ? 271 : 184, PH = (land ? 184 : 271) - (meno || 0), testa = 9;
-const Ly = disposizione(land, s, po, s.meta || {}, PW, PH, testa), { ax, ay, Aw, Ah } = Ly;
-return { landscape: land, PW, PH, testa, ax, ay, Aw, Ah, Ly, Dmin: Math.max(cw * 1000 / (Aw - 4), ch * 1000 / (Ah - 4)) };
+const dmin = L => Math.max(cw * 1000 / (L.Aw - 4), ch * 1000 / (L.Ah - 4));
+let Ly = disposizione(land, s, po, s.meta || {}, PW, PH, testa);
+if ((po.disposizione || 'auto') === 'auto') {
+const alt = disposizione(land, s, Object.assign({}, po, { disposizione: Ly.pos === 'destra' ? 'basso' : 'destra' }), s.meta || {}, PW, PH, testa);
+const NICE = [50, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 5000, 10000];
+const den = L => { const d = dmin(L), sel = s.scaleDenom || 100; return sel >= d ? sel : (NICE.find(n => n >= d) || 1e9); };
+if (den(alt) < den(Ly)) Ly = alt;
+}
+const { ax, ay, Aw, Ah } = Ly;
+return { landscape: land, PW, PH, testa, ax, ay, Aw, Ah, Ly, Dmin: dmin(Ly) };
 };
 const L = geo(true), P = geo(false), cand = force ? [force === 'landscape' ? L : P] : [L, P];
 let g, denom, tagliata = false;
@@ -403,6 +412,38 @@ if (agg.length) fatta.push({ t: 'Altro', r: agg });
 return fatta;
 }
 exportUtil.legendaTavola = legendaTavola;
+function ingrandisciTesti(s, min) {
+const radice = s.gElements;
+const minL = min * 0.06;
+radice.querySelectorAll('[stroke-width]').forEach(n => {
+if (n.tagName === 'text' || n.closest('text')) return;
+const sw = parseFloat(n.getAttribute('stroke-width')); if (!(sw > 0)) return;
+let k = 1, p = n.parentNode, interno = false;
+while (p && p !== radice) {
+const tr = p.getAttribute && p.getAttribute('transform'), m = tr && /scale\(\s*([\d.]+)/.exec(tr);
+if (m) k *= +m[1];
+if (p.dataset && p.dataset.id) { const e = s.get(p.dataset.id); if (e && (e.type === 'legend' || e.type === 'measuretable')) interno = true; }
+p = p.parentNode;
+}
+if (interno || sw * k >= minL || n.getAttribute('stroke') === 'none') return;
+n.setAttribute('stroke-width', +(minL / k).toFixed(4));
+});
+radice.querySelectorAll('text').forEach(t => {
+let k = 1, n = t.parentNode, interno = false;
+while (n && n !== radice) {
+const tr = n.getAttribute && n.getAttribute('transform'), m = tr && /scale\(\s*([\d.]+)/.exec(tr);
+if (m) k *= +m[1];
+if (n.dataset && n.dataset.id) { const e = s.get(n.dataset.id); if (e && (e.type === 'legend' || e.type === 'measuretable')) interno = true; }
+n = n.parentNode;
+}
+if (interno) return;
+const fs = parseFloat(t.getAttribute('font-size'));
+if (!(fs > 0) || fs * k >= min) return;
+t.setAttribute('font-size', +(min / k).toFixed(3));
+const sw = parseFloat(t.getAttribute('stroke-width'));
+if (sw > 0) t.setAttribute('stroke-width', +(sw * min / (fs * k)).toFixed(3));
+});
+}
 const RIQUADRI = ['comando', 'dati', 'scala', 'firme'];
 const NOMI_RIQUADRI = { comando: 'Comando e logo', dati: 'Dati del rilievo', scala: 'Scala e Nord', firme: 'Firme dei verbalizzanti' };
 function ordineRiquadri(po) {

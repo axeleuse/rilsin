@@ -2200,7 +2200,7 @@ el('printBody').innerHTML =
            ${RS.verifica && !RS.verifica.chiuso()
 ? `<label class="pchk pchk-empty" title="Il rilievo non è chiuso: la filigrana c'è sempre. Si chiude da Dati e misure → Controllo e chiusura"><input type="checkbox" checked disabled> Filigrana “BOZZA” <span class="pchk-hint">(fino alla chiusura del rilievo)</span></label>`
 : chk('bozza','Filigrana “BOZZA”')}
-           ${chk('simboli','Simboli piccoli ingranditi (almeno 3,5 mm sul foglio)')}
+           ${chk('simboli','Simboli e scritte leggibili (simboli almeno 3,5 mm, scritte almeno 2,5 mm sul foglio)')}
          </div>
          <div class="sk-note">Le voci in grigio «(vuoto)» hanno il campo non compilato in <b>Dati e misure</b>: riempilo per poterle stampare. Il <b>titolo</b> vuoto usa la località dell'intestazione.</div>
          <h4 style="margin-top:16px">Anteprima del foglio</h4>
@@ -2429,7 +2429,15 @@ page.classList.toggle('land', !!p.landscape);
 page.innerHTML = p.svg.replace('<svg ', '<svg preserveAspectRatio="xMidYMid meet" ');
 const svg = page.querySelector('svg');
 if (svg) { svg.removeAttribute('width'); svg.removeAttribute('height'); }
-if (note) note.textContent = p.note;
+if (note) note.textContent = p.note + ' Tocca il foglio per vederlo in grande.';
+page.title = 'Tocca per vedere il foglio in grande';
+page.onclick = () => {
+const v = document.createElement('div'); v.className = 'pv-grande'; v.title = 'Tocca per chiudere';
+v.innerHTML = `<div class="pv-grande-f${p.landscape ? ' land' : ''}">${p.svg}</div><button class="pv-grande-x" type="button">✕ Chiudi</button>`;
+const s2 = v.querySelector('svg'); if (s2) { s2.removeAttribute('width'); s2.removeAttribute('height'); }
+v.onclick = ev => { if (ev.target === v || ev.target.closest('.pv-grande-x')) v.remove(); };
+document.body.appendChild(v);
+};
 } catch (e) {
 page.innerHTML = '';
 if (note) note.textContent = 'Anteprima non disponibile: ' + e.message;
@@ -4370,6 +4378,11 @@ const node = RS.elements.render(e);
 if (!node) return '';
 const b = Object.assign({}, RS.elements.bounds(e) || { x:-2,y:-2,w:4,h:4 });
 if (e.type === 'road' && e.marc) { b.y -= e.marc; b.h += e.marc * 2; }
+if (e.type === 'symbol' && e.letter) {
+const sz = e.size || 0.5, fs = sz * 1.3, x1 = sz * 0.9 + String(e.letter).length * fs * 0.7, y0 = -sz * 0.7 - fs * 0.85;
+const nx1 = Math.max(b.x + b.w, x1), ny0 = Math.min(b.y, y0);
+b.w = nx1 - b.x; b.h = b.y + b.h - ny0; b.y = ny0;
+}
 const m = Math.max(b.w, b.h) * 0.12 + 0.2;
 const vx = b.x - m, vy = b.y - m, vw = b.w + 2*m, vh = b.h + 2*m;
 const vb = `${vx.toFixed(2)} ${vy.toFixed(2)} ${vw.toFixed(2)} ${vh.toFixed(2)}`;

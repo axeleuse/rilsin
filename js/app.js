@@ -1,10 +1,17 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 270;
+RS.BUILD = 271;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 271, data: '2026-11-11', voci: [
+'Stampa dei disegni grandi (per esempio 100 m di strada): sul foglio le scritte sono almeno di 2,5 mm (nomi delle vie, quote, lettere, testi), le linee almeno di 0,15 mm e i simboli almeno di 3,5 mm; legenda e tabella misure disegnate si ingrandiscono intere, senza sovrapporsi. Si spegne con «Simboli e scritte leggibili».',
+'Con la disposizione automatica, se la fascia in basso lascia al disegno una scala più grande della colonna, si usa la fascia: la strada di 100 m della prova passa da 1:750 a 1:400.',
+'Anteprima di stampa: toccando il foglio si vede in grande, per controllare scritte e linee prima di stampare.',
+'Tavolozza «Misure e note»: la lettera del caposaldo non è più tagliata.',
+'Autodiagnosi: una prova nuova, 90 in tutto.'
+] },
 { build: 270, data: '2026-11-11', voci: [
 'iPhone e iPad: la stampa della planimetria ora funziona. L\'app installata dalla schermata Home non riesce ad aprire la stampa del sistema, quindi «Stampa o salva il PDF» prepara il foglio A4 come PDF a grandezza vera (la scala resta giusta) e apre il menu Condividi: «Stampa» per stamparlo, oppure «Salva su File», Mail, AirDrop.',
 'Autodiagnosi: una prova nuova per il PDF della planimetria, 89 in tutto.'
