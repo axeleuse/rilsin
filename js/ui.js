@@ -2710,18 +2710,26 @@ this._gmMostra();
 _gmMostra() {
 const g = this._gm, v = el('gmVelo'); if (!g || !v) return;
 const fine = g.pos >= g.coda.length;
-const esito = g.esito ? `<div class="gm-esito ${g.esito.ok ? 'ok' : 'ko'}">${g.esito.ok ? '✓' : '⚠'} ${escAttr(g.esito.testo)}</div>` : '';
+const voceOn = gmVoceAttiva();
+const tastoVoce = `<button class="gm-voce" data-gm="voce" title="${voceOn ? 'Lettura a voce attiva: tocca per spegnerla' : 'Lettura a voce spenta: tocca per accenderla'}">${voceOn ? '🔊' : '🔇'}</button>`;
+const ripBtn = r => `<button class="gm-k gm-pic gm-rip" data-gm="ripeti">↺ Ripeti ${escAttr(r.da + ' → ' + r.a)}</button>`;
+const esito = g.esito ? `<div class="gm-esito ${g.esito.ok ? 'ok' : 'ko'}">${g.esito.ok ? '✓' : '⚠'} ${escAttr(g.esito.testo)}${g.esito.ripeti ? ripBtn(g.esito.ripeti) : ''}</div>` : '';
+const prop = g.proposta ? `<div class="gm-esito ko gm-prop">📐 Il triangolo di <b>${escAttr(g.proposta.a)}</b> è ${g.proposta.liv === 'schiacciato' ? 'schiacciato' : 'poco favorevole'} (${escAttr(g.proposta.perche)}). Vuoi aggiungere la distanza dal caposaldo <b>${escAttr(g.proposta.da)}</b>?
+          <div class="gm-riga"><button class="gm-k gm-pic" data-gm="terza-si">Sì, misura ${escAttr(g.proposta.da + ' → ' + g.proposta.a)}</button><button class="gm-k gm-pic" data-gm="terza-no">No, va bene così</button></div></div>` : '';
 if (fine) {
-const c = RS.verifica ? RS.verifica.controllaMisure() : { esiti: [] }, err = c.esiti.filter(x => x.livello === 'errore').length;
+const c = RS.verifica ? RS.verifica.controllaMisure() : { esiti: [] }, errori = c.esiti.filter(x => x.livello === 'errore'), err = errori.length;
+g.fineRipeti = errori.filter(x => x.ripeti).slice(0, 3).map(x => x.ripeti);
 v.innerHTML = `<div class="gm-box">
-            <div class="gm-top"><span>Misure guidate</span><span>finito</span></div>
+            <div class="gm-top"><span>Misure guidate</span><span>finito</span>${tastoVoce}</div>
             <div class="gm-cosa"><div class="gm-ora">Giro completato</div><div class="gm-nome" style="font-size:26px">${g.fatte} ${g.fatte === 1 ? 'misura registrata' : 'misure registrate'}</div>
               <div class="gm-descr">${g.saltate ? g.saltate + (g.saltate === 1 ? ' saltata: resta vuota nel registro' : ' saltate: restano vuote nel registro') : 'nessuna saltata'}</div></div>
-            ${esito}
-            <div class="gm-esito ${err ? 'ko' : 'ok'}">${err ? '⚠ ' + err + (err === 1 ? ' misura che non torna: guardala nel rilievo dei punti prima di andare via' : ' misure che non tornano: guardale nel rilievo dei punti prima di andare via') : '✓ Le misure controllate tornano'}</div>
+            ${prop || esito}
+            <div class="gm-esito ${err ? 'ko' : 'ok'}">${err ? '⚠ ' + err + (err === 1 ? ' misura che non torna: guardala nel rilievo dei punti prima di andare via' : ' misure che non tornano: guardale nel rilievo dei punti prima di andare via') : '✓ Le misure controllate tornano'}
+              ${g.fineRipeti.map((r, i) => `<button class="gm-k gm-pic gm-rip" data-gm="rip:${i}">↺ Ripeti ${escAttr(r.da + ' → ' + r.a)}</button>`).join('')}</div>
             <button class="gm-invio" data-gm="verifica">Torna al rilievo dei punti</button>
             <div class="gm-riga"><button class="gm-k gm-pic" data-gm="indietro">Indietro</button><button class="gm-k gm-pic" data-gm="chiudi">Chiudi</button></div>
           </div>`;
+this._gmVoce(fine, null, err);
 return;
 }
 const x = g.coda[g.pos], p = gmParti(x.m.descr);
@@ -2731,58 +2739,142 @@ let daQui = 0;
 if (!p.base && (!prima || prima.base || prima.da !== p.da))
 for (let j = g.pos; j < g.coda.length; j++) { const q = gmParti(g.coda[j].m.descr); if (q.base || q.da !== p.da) break; daQui++; }
 const cambio = daQui ? `<div class="gm-cambio">📍 Nastro sul caposaldo <b>${escAttr(p.da)}</b>: ${daQui} ${daQui === 1 ? 'misura' : 'misure'} da qui, poi si passa al caposaldo seguente</div>` : '';
+const st = gmStima(p);
+const rip = g.ripetiPrima != null ? `<div class="gm-descr gm-ripdescr">↺ da ripetere · prima era ${escAttr(String(g.ripetiPrima).replace('.', ','))} m</div>` : '';
 v.innerHTML = `<div class="gm-box gm-misura">
-          <div class="gm-top"><span>Misure guidate</span><span>${g.pos + 1} di ${g.coda.length}</span><button class="gm-x" data-gm="chiudi" title="Chiudi (Esc)">✕</button></div>
+          <div class="gm-top"><span>Misure guidate</span><span>${g.pos + 1} di ${g.coda.length}</span>${tastoVoce}<button class="gm-x" data-gm="chiudi" title="Chiudi (Esc)">✕</button></div>
           <div class="gm-barra"><i style="width:${Math.round(g.pos / g.coda.length * 100)}%"></i></div>
+          ${prop}
           ${cambio}
-          <div class="gm-cosa"><div class="gm-ora">Ora misura</div><div class="gm-nome">${escAttr(p.nome)}</div><div class="gm-descr">${escAttr(p.descr)}</div></div>
+          <div class="gm-cosa"><div class="gm-ora">Ora misura</div><div class="gm-nome">${escAttr(p.nome)}</div><div class="gm-descr">${escAttr(p.descr)}</div>${rip}</div>
           ${(() => { const m = gmMini(p); return m ? `<div class="gm-mini">${m}</div>` : ''; })()}
           <div class="gm-val"><span>${g.testo ? escAttr(g.testo) : '<em>0,00</em>'}</span><small>m</small></div>
+          ${st ? `<div class="gm-stima">sul disegno circa ${escAttr(st.testo)} m</div>` : ''}
           ${RS.laser && RS.laser.stato === 'collegato' ? `<button class="gm-laser on" data-gm="laser">📏 ${escAttr(RS.laser.nome || 'Telemetro')}: punta e premi il tasto di misura del telemetro</button>` : ''}
           <div class="gm-tasti">${['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0'].map(t => `<button class="gm-k" data-gm="${t}">${t}</button>`).join('')}<button class="gm-k" data-gm="canc" title="Cancella">⌫</button></div>
           <button class="gm-invio" data-gm="ok">Invio · ${g.pos + 1 < g.coda.length ? 'misura seguente' : 'ultima misura'}</button>
           <div class="gm-riga"><button class="gm-k gm-pic" data-gm="salta">Salta</button><button class="gm-k gm-pic" data-gm="indietro"${g.pos ? '' : ' disabled'}>Indietro</button></div>
           ${RS.laser && RS.laser.stato !== 'collegato' && RS.laser.disponibile() ? `<button class="gm-laser" data-gm="laser">📏 Hai un telemetro laser Bluetooth? Collegalo</button>` : ''}
-          ${esito}
+          ${prop ? '' : esito}
           ${dopo ? `<div class="gm-dopo">Poi: ${escAttr(dopo)}</div>` : ''}
         </div>`;
+this._gmVoce(false, p, 0, daQui);
+},
+_gmVoce(fine, p, err, daQui) {
+const g = this._gm; if (!g) return;
+const chiave = [g.pos, fine ? 'f' : '', g.esito ? g.esito.testo : '', g.proposta ? g.proposta.da : '', g.ripetiPrima].join('|');
+if (g._detto === chiave) return;
+g._detto = chiave;
+if (!gmVoceAttiva()) return;
+const pezzi = [];
+if (g._annuncio) pezzi.push(g._annuncio);
+g._annuncio = '';
+if (g.proposta) pezzi.push('Il triangolo di ' + gmLettere(g.proposta.a) + ' è debole: vuoi misurare anche dal caposaldo ' + gmLettere(g.proposta.da) + '?');
+else if (g.esito && !g.esito.ok) pezzi.push('Attenzione. ' + (g.esito.voce || 'La misura non torna: guarda lo schermo.'));
+if (fine) pezzi.push(err ? 'Misure finite, ma ' + (err === 1 ? 'una misura non torna.' : err + ' misure non tornano.') : 'Misure finite. Tutto torna.');
+else if (p && !(g.esito && g.esito.conferma)) {
+if (g.ripetiPrima != null) pezzi.push('Ripeti la misura.');
+else if (daQui) pezzi.push('Nastro sul caposaldo ' + gmLettere(p.da) + '.');
+pezzi.push('Misura ' + gmLettere(p.descr) + '.');
+}
+this.parla(pezzi.join(' '));
+},
+parla(testo) {
+try {
+if (window.RilsinAndroid && window.RilsinAndroid.parla) { window.RilsinAndroid.parla(testo || ''); return; }
+if (!window.speechSynthesis) return;
+speechSynthesis.cancel();
+if (!testo) return;
+const u = new SpeechSynthesisUtterance(testo); u.lang = 'it-IT'; u.rate = 1.05;
+const vv = speechSynthesis.getVoices().find(x => /^it/i.test(x.lang)); if (vv) u.voice = vv;
+speechSynthesis.speak(u);
+} catch (e) {  }
 },
 _gmTasto(t) {
 const g = this._gm; if (!g) return;
 const S = RS.scene;
 if (t === 'chiudi') {
-el('gmVelo').hidden = true; this._gm = null;
+el('gmVelo').hidden = true; this._gm = null; this.parla('');
 this.refreshMeasures();
 if (g.fatte) this.toast(g.fatte + (g.fatte === 1 ? ' misura registrata' : ' misure registrate') + ' nel registro');
 if (RS.procedura) RS.procedura.finito('misure');
 return;
 }
-if (t === 'verifica') { el('gmVelo').hidden = true; this._gm = null; this._dataTab = 'triang'; this.openData(); return; }
+if (t === 'verifica') { el('gmVelo').hidden = true; this._gm = null; this.parla(''); this._dataTab = 'triang'; this.openData(); return; }
 if (t === 'laser') { if (RS.laser) RS.laser.apri(); return; }
+if (t === 'voce') {
+const on = !gmVoceAttiva();
+try { localStorage.setItem('rilsin:voce', on ? '1' : '0'); } catch (e) {}
+if (!on) this.parla(''); else g._detto = null;
+this.toast(on ? '🔊 Lettura a voce accesa' : '🔇 Lettura a voce spenta', 1800);
+return this._gmMostra();
+}
+if (t === 'terza-si' || t === 'terza-no') {
+const pr = g.proposta; g.proposta = null;
+if (t === 'terza-si' && pr) {
+const riga = { descr: pr.da + '→' + pr.a, val: '' };
+S.misure.push(riga); S.snapshot();
+g.coda.splice(g.pos, 0, { i: S.misure.length - 1, m: riga });
+g.esito = null; g.confermato = null; this._gmPrepara();
+}
+return this._gmMostra();
+}
+if (t === 'ripeti' || /^rip:\d+$/.test(t)) {
+const r = t === 'ripeti' ? (g.esito && g.esito.ripeti) : (g.fineRipeti || [])[+t.slice(4)];
+if (r) this._gmRipeti(r);
+return this._gmMostra();
+}
 const fine = g.pos >= g.coda.length;
 if (t === 'indietro') {
 if (!g.pos) return;
-g.pos--; const m = g.coda[g.pos].m;
+g.pos--; g.ritorno = null; g.ripetiPrima = null; g.proposta = null; g.confermato = null;
+const m = g.coda[g.pos].m;
 g.testo = m.val === '' || m.val == null ? '' : String(m.val).replace('.', ',');
 g.esito = null; return this._gmMostra();
 }
 if (fine) return;
+const avanti = () => { if (g.ritorno != null) { g.pos = g.ritorno; g.ritorno = null; } else g.pos++; g.ripetiPrima = null; g.confermato = null; this._gmPrepara(); };
 if (/^[0-9]$/.test(t)) { if (g.testo.replace(',', '').length < 6 && !/,\d\d$/.test(g.testo)) g.testo += t; }
 else if (t === ',') { if (g.testo.indexOf(',') < 0) g.testo = (g.testo || '0') + ','; }
 else if (t === 'canc') g.testo = g.testo.slice(0, -1);
-else if (t === 'salta') { g.saltate++; g.testo = ''; g.esito = null; g.pos++; this._gmPrepara(); }
+else if (t === 'salta') { g.saltate++; g.testo = ''; g.esito = null; g.proposta = null; avanti(); }
 else if (t === 'ok') {
 const val = parseFloat(g.testo.replace(',', '.'));
-if (!(val > 0)) { g.esito = { ok: false, testo: 'Scrivi la distanza misurata, in metri' }; return this._gmMostra(); }
-const x = g.coda[g.pos], eraVuota = x.m.val === '' || x.m.val == null;
+if (!(val > 0)) { g.esito = { ok: false, testo: 'Scrivi la distanza misurata, in metri', voce: 'Scrivi la distanza.' }; return this._gmMostra(); }
+const x = g.coda[g.pos], p = gmParti(x.m.descr);
+const st = gmStima(p);
+if (st && g.confermato !== g.testo && Math.abs(val - st.v) > Math.max(st.v * 0.4, 1)) {
+g.confermato = g.testo;
+g.esito = { ok: false, testo: `${g.testo} m, ma sul disegno è circa ${st.testo} m: controlla il numero (cifre scambiate, virgola). Se è giusto, premi di nuovo Invio.`,
+voce: gmMetri(val) + ', ma sul disegno sono circa ' + gmMetri(st.v) + '. Controlla il numero. Se è giusto premi di nuovo Invio.', conferma: true };
+this.vibra('60,80,60');
+return this._gmMostra();
+}
+const eraVuota = x.m.val === '' || x.m.val == null;
 x.m.val = Math.round(val * 100) / 100;
 if (eraVuota) g.fatte++;
 S.render(); S.snapshot();
-g.esito = gmControllo(gmParti(x.m.descr));
+g.esito = gmControllo(p);
+g.proposta = g.esito && !g.esito.ok && g.esito.livello === 'errore' ? null : gmTerza(p);
+if (g.proposta && g.esito && !g.esito.ok) g.esito = null;
 this.vibra(g.esito && !g.esito.ok ? '60,80,60,80,60' : '35');
-g.pos++; this._gmPrepara();
+g._annuncio = 'Registrata: ' + gmMetri(x.m.val) + '.';
+avanti();
 }
 this._gmMostra();
+},
+_gmRipeti(r) {
+const g = this._gm, S = RS.scene;
+let idx = /^M\d+$/.test(r.rif || '') ? +r.rif.slice(1) - 1 : -1;
+const stessa = m => { const k = gmParti(m && m.descr); return k && ((k.da === r.da && k.a === r.a) || (k.da === r.a && k.a === r.da)); };
+if (!(idx >= 0 && stessa(S.misure[idx]))) idx = S.misure.findIndex(stessa);
+if (idx < 0) { S.misure.push({ descr: r.da + '→' + r.a, val: '' }); idx = S.misure.length - 1; S.snapshot(); }
+const m = S.misure[idx];
+let j = g.coda.findIndex(x => x.i === idx), torna = g.pos;
+if (j < 0) { g.coda.splice(g.pos, 0, { i: idx, m }); j = g.pos; torna = g.pos + 1; }
+g.ritorno = j === g.pos && torna === g.pos ? null : torna;
+g.pos = j; g.ripetiPrima = m.val === '' || m.val == null ? null : m.val;
+g.testo = ''; g.esito = null; g.proposta = null; g.confermato = null;
 },
 misuraDaLaser(v) {
 const g = this._gm, gv = el('gmVelo');
@@ -4346,13 +4438,69 @@ return tit + svg.outerHTML + verso;
 }
 function gmControllo(p) {
 if (!p || p.base || !RS.verifica) return null;
-const problemi = RS.verifica.controllaMisure().esiti.filter(x => x.punto === p.a && x.livello !== 'info');
-if (problemi.length) return { ok: false, testo: problemi[0].testo };
+const problemi = RS.verifica.controllaMisure().esiti.filter(x => x.punto === p.a && x.livello !== 'info')
+.sort((a, b) => (a.livello === 'errore' ? 0 : 1) - (b.livello === 'errore' ? 0 : 1));
+if (problemi.length) return { ok: false, testo: problemi[0].testo, ripeti: problemi[0].ripeti || null, livello: problemi[0].livello,
+voce: problemi[0].livello === 'errore' ? 'Le misure di ' + gmLettere(p.a) + ' non tornano: guarda lo schermo.' : 'Guarda lo schermo per il punto ' + gmLettere(p.a) + '.' };
 const n = (RS.scene.misure || []).filter(m => m.val !== '' && m.val != null && (gmParti(m.descr) || {}).a === p.a && !(gmParti(m.descr) || {}).base).length;
 if (n >= 3) return { ok: true, testo: p.a + ': le ' + n + ' distanze tornano fra loro' };
 if (n === 2) return { ok: true, testo: p.a + ': due distanze, il punto è determinato (con una terza si può verificare)' };
 return null;
 }
+function gmDove(p) {
+if (!p) return null;
+const els = RS.scene.elements, cap = els.find(e => e.letter && String(e.letter).toUpperCase() === p.da); if (!cap) return null;
+const k = /^([A-Z]{1,3})(\d*)$/.exec(p.a) || [], L = k[1], n = k[2];
+let T = null;
+if (n) {
+const V = els.find(e => e.type === 'vehicle' && String(e.label || '').toUpperCase() === L && (!e.fase || e.fase === 'quiete') && e.rilpts && e.rilpts.some(r => String(r.n) === n));
+if (V) { const r = V.rilpts.find(x => String(x.n) === n), a = (V.rot || 0) * Math.PI / 180; T = { x: V.x + r.lx * Math.cos(a) - r.ly * Math.sin(a), y: V.y + r.lx * Math.sin(a) + r.ly * Math.cos(a) }; }
+else { const sp = els.find(e => e.type === 'surveypt' && L === 'P' && String(e.n) === n); if (sp) T = { x: sp.x, y: sp.y }; }
+} else { const c2 = els.find(e => e.letter && String(e.letter).toUpperCase() === L); if (c2) T = { x: c2.x, y: c2.y }; }
+return T ? { cap, T } : null;
+}
+function gmStima(p) {
+const d = gmDove(p); if (!d) return null;
+const v = Math.hypot(d.T.x - d.cap.x, d.T.y - d.cap.y);
+return v >= 0.3 ? { v, testo: (Math.round(v * 10) / 10).toFixed(1).replace('.', ',') } : null;
+}
+function gmTerza(p) {
+if (!p || p.base || !RS.verifica || !RS.verifica.qualitaTriangolo) return null;
+const S = RS.scene, caps = S.elements.filter(e => e.letter), capL = L => caps.find(c => String(c.letter).toUpperCase() === L);
+const prese = (S.misure || []).filter(m => m.val !== '' && m.val != null).map(m => ({ q: gmParti(m.descr), v: +m.val })).filter(o => o.q && !o.q.base && o.q.a === p.a);
+const da = prese.map(o => o.q.da).filter((L, i, a) => a.indexOf(L) === i);
+if (da.length !== 2) return null;
+const A = capL(da[0]), B = capL(da[1]); if (!A || !B) return null;
+const dA = prese.find(o => o.q.da === da[0]).v, dB = prese.find(o => o.q.da === da[1]).v, Q = RS.verifica.qualitaTriangolo;
+const q = Q(Math.hypot(B.x - A.x, B.y - A.y), dA, dB, da);
+if (!q || (q.liv !== 'schiacciato' && q.liv !== 'accettabile')) return null;
+if ((S.misure || []).some(m => { const k = gmParti(m.descr); return k && !k.base && k.a === p.a && da.indexOf(k.da) < 0; })) return null;
+const dv = gmDove(p); if (!dv) return null;
+const RANGO = { ottimo: 0, buono: 1, accettabile: 2, schiacciato: 3 };
+let best = null;
+caps.forEach(C => {
+const L = String(C.letter).toUpperCase(); if (da.indexOf(L) >= 0) return;
+const dC = Math.hypot(dv.T.x - C.x, dv.T.y - C.y);
+[[A, dA], [B, dB]].forEach(([X, dX]) => {
+const r = Q(Math.hypot(C.x - X.x, C.y - X.y), dX, dC, [String(X.letter), L]); if (!r) return;
+const voto = RANGO[r.liv] * 1000 + Math.abs(r.ang - 90);
+if (!best || voto < best.voto) best = { voto, da: L, liv: r.liv };
+});
+});
+if (!best || RANGO[best.liv] >= RANGO[q.liv]) return null;
+return { da: best.da, a: p.a, liv: q.liv, perche: q.testo };
+}
+function gmVoceAttiva() {
+let s = null; try { s = localStorage.getItem('rilsin:voce'); } catch (e) {}
+if (s === '1') return true; if (s === '0') return false;
+return !!(window.RilsinAndroid || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches));
+}
+function gmMetri(v) {
+const cm = Math.round(v * 100), m = Math.floor(cm / 100), c = cm % 100;
+const mt = m === 1 ? '1 metro' : m + ' metri';
+return c ? (m ? mt + ' e ' + c : c + ' centimetri') : mt;
+}
+function gmLettere(s) { return String(s || '').replace(/→/g, ' a ').replace(/([A-Z])(\d)/g, '$1 $2'); }
 function triMisurato(L, k) {
 const t = String(L).toUpperCase() + '→' + k;
 const prima = s => String(s || '').trim().split(/\s/)[0].toUpperCase();

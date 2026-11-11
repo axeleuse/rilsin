@@ -1,10 +1,17 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 262;
+RS.BUILD = 263;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 263, data: '2026-11-11', voci: [
+'Misure guidate, controllo col disegno: sotto il valore «sul disegno circa 5,2 m»; se il numero scritto è molto diverso l\'app chiede di controllarlo (cifre scambiate, virgola dimenticata). Se è giusto basta premere di nuovo Invio.',
+'Lettura a voce: l\'app dice la misura da prendere, quando cambiare caposaldo, la misura registrata («5 metri e 12») e se qualcosa non torna. Voce del telefono, senza internet; accesa su telefono e tablet, si spegne con l\'altoparlante in alto.',
+'Terza distanza: se il triangolo di un punto è schiacciato o poco favorevole, l\'app propone la distanza da un terzo caposaldo (il migliore per quel punto). Si sceglie: «Sì, misura» oppure «No, va bene così».',
+'Ripeti: quando le distanze di un punto non tornano, il tasto «↺ Ripeti» porta direttamente alla misura sbagliata (con il valore di prima in vista) e poi torna dove si era; anche dal riepilogo finale.',
+'Autodiagnosi: una prova nuova, 83 in tutto.'
+] },
 { build: 262, data: '2026-11-11', voci: [
 'Misure guidate: la piantina del veicolo mostra sempre tutta la sagoma e tutti i punti numerati, anche sui telefoni e con i veicoli lunghi; i numeri stanno fuori dalla sagoma e il veicolo è più grande.'
 ] },

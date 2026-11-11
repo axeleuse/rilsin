@@ -312,7 +312,7 @@ oss.forEach(o => { const k = [o.da, o.a].sort().join('|'); (coppie[k] = coppie[k
 Object.keys(coppie).forEach(k => {
 const g = coppie[k]; if (g.length < 2) return;
 const min = Math.min.apply(null, g.map(o => o.d)), max = Math.max.apply(null, g.map(o => o.d));
-if (max - min > tolMisura(max)) esiti.push({ livello: 'errore', punto: g[0].a,
+if (max - min > tolMisura(max)) esiti.push({ livello: 'errore', punto: g[0].a, ripeti: { da: g[0].da, a: g[0].a, rif: (g.find(o => o.registro) || g[0]).rif },
 testo: `La misura ${nome(g[0])} è registrata con valori diversi: ${g.map(o => o.rif + ' = ' + m2(o.d) + ' m').join(', ')}. Ripetila e correggi il valore sbagliato.` });
 });
 const perPunto = {};
@@ -352,13 +352,13 @@ if (g.length >= 4) {
 const ok = prove.filter(p => p.altreOk).sort((a, b) => Math.abs(b.scarto) - Math.abs(a.scarto));
 if (ok.length === 1 || (ok.length && Math.abs(ok[0].scarto) > 2 * Math.abs((ok[1] || { scarto: 0 }).scarto))) {
 const p = ok[0];
-esiti.push({ livello: 'errore', punto: T, testo: `Punto ${T}: la misura ${conRif(p.o)} non torna con le altre ${g.length - 1} ` +
+esiti.push({ livello: 'errore', punto: T, ripeti: { da: p.o.da, a: T, rif: p.o.rif }, testo: `Punto ${T}: la misura ${conRif(p.o)} non torna con le altre ${g.length - 1} ` +
 `(scarto ${cm(p.scarto)}): senza di lei il punto quadra. Ripeti questa misura; con le altre risulterebbe ${m2(p.o.d + p.scarto)} m.` });
 } else esiti.push({ livello: 'errore', punto: T, testo: `Punto ${T}: le ${g.length} distanze non individuano lo stesso punto (scarto fino a ${cm(peggio)}) e più di una sembra errata. Ripeti le misure di ${T}.` });
 } else {
 const ord = prove.slice().sort((a, b) => disegnato ? a.lontano - b.lontano : Math.abs(b.scarto) - Math.abs(a.scarto));
 const p = ord[0];
-esiti.push({ livello: 'errore', punto: T, testo: `Punto ${T}: le tre distanze non tornano (scarto fino a ${cm(peggio)}), quindi una è sbagliata. ` +
+esiti.push({ livello: 'errore', punto: T, ripeti: { da: p.o.da, a: T, rif: p.o.rif }, testo: `Punto ${T}: le tre distanze non tornano (scarto fino a ${cm(peggio)}), quindi una è sbagliata. ` +
 `La più probabile è ${conRif(p.o)}: con le altre due risulterebbe ${m2(p.o.d + p.scarto)} m. Ripetila; per esserne certi prendi anche una quarta distanza.` });
 }
 }
