@@ -105,10 +105,11 @@ G.forEach((h, j) => { if (j === i) return; const d = norm(G[i].A - h.A); if (d >
 return best;
 }
 const fasciaBinari = c => (c.pl && +c.pl.binari === 2 ? 4.5 : 2.2);
+const marginiStrada = road => RS.elements.margini ? RS.elements.margini(road) : { su: +road.banch || 0, giu: +road.banch || 0 };
 function corsieEntranti(g, road) {
-const off = (road.x - g.o.x) * g.n.x + (road.y - g.o.y) * g.n.y, hw = road.wid / 2, banch = +road.banch || 0;
+const off = (road.x - g.o.x) * g.n.x + (road.y - g.o.y) * g.n.y, hw = road.wid / 2, mg = marginiStrada(road), banch = mg.su;
 const n = Math.max(1, road.cA + road.cB), spart = road.cA && road.cB ? (+road.spart || 0) : 0;
-const cr = (road.wid - 2 * banch - spart) / n, yTop = off - hw + banch;
+const cr = (road.wid - mg.su - mg.giu - spart) / n, yTop = off - hw + banch;
 return { off, hw, yTop, yC: yTop + road.cB * cr, cr };
 }
 function genera(c) {
@@ -241,7 +242,7 @@ const road = strade[i]; if (!road) return;
 if (unito && unito[i] != null && fine[i] == null) return;
 const im = immette && immette[i], a0 = im ? im.a : 0;
 const k = corsieEntranti(g, road), d = fine[i] != null ? fine[i] : boccaBase(G, i);
-const ya = k.off - k.hw + (+road.banch || 0) + 0.15, yb = k.off + k.hw - (+road.banch || 0) - 0.15;
+const mr = marginiStrada(road), ya = k.off - k.hw + mr.su + 0.15, yb = k.off + k.hw - mr.giu - 0.15;
 if (d > a0 && yb > ya) tagli.push([P(g, a0, ya), P(g, d, ya), P(g, d, yb), P(g, a0, yb)]);
 if (im) {
 const m = im.m, lat = p => ((p.x - m.o.x) * m.n.x + (p.y - m.o.y) * m.n.y) * im.sg;

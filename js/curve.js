@@ -8,7 +8,8 @@ const it = (v, d) => Number(v).toFixed(d == null ? 1 : d).replace('.', ',');
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const SEZ = { cA: 1, cB: 1, corsia: 3.5, spart: 0, banch: 0.5, marc: 0 };
 const sezione = e => Object.assign({}, SEZ, e.sez || {});
-const largh = s => r2((s.cA + s.cB) * s.corsia + (s.cA && s.cB ? (+s.spart || 0) : 0) + 2 * (+s.banch || 0));
+const margini = s => RS.elements.margini ? RS.elements.margini(s) : { su: +s.banch || 0, giu: +s.banch || 0 };
+const largh = s => { const m = margini(s); return r2((s.cA + s.cB) * s.corsia + (s.cA && s.cB ? (+s.spart || 0) : 0) + m.su + m.giu); };
 const GUARD = [['', 'nessuno'], ['est', "sul lato esterno"], ['int', "sul lato interno"], ['both', 'su entrambi i lati']];
 const raggioDa = (c, f) => (c > 0 && f > 0) ? c * c / (8 * f) + f / 2 : 0;
 const cache = new Map();
@@ -95,9 +96,9 @@ if (!(G.marc > 0)) mk('path', { d: asf, fill: 'none', stroke: '#6b7178', 'stroke
 else [[-hw, G.mSx], [hw, G.mDx]].forEach(([y, m]) => {
 if (!(m > 0)) mk('path', { d: linD(off(P, y)), fill: 'none', stroke: '#6b7178', 'stroke-width': 0.05 }, marks);
 });
-const banch = Math.max(0, +s.banch || 0), spart = s.cA && s.cB ? Math.max(0, +s.spart || 0) : 0;
-const yL0 = -hw + banch, yC = yL0 + s.cB * s.corsia, yLA = yC + spart, yF = yLA + s.cA * s.corsia;
-const es = e.edge || 'cont';
+const mg = margini(s), spart = s.cA && s.cB ? Math.max(0, +s.spart || 0) : 0;
+const yL0 = -hw + mg.su, yC = yL0 + s.cB * s.corsia, yLA = yC + spart, yF = yLA + s.cA * s.corsia;
+const es = e.edge || 'cont', tipoSp = e.spTipo || 'aiuola';
 if (es !== 'none') {
 const ew = es === 'wide' ? 0.18 : 0.1, tr = es === 'disc';
 [Math.max(yL0, -hw + ew / 2 + 0.05), Math.min(yF, hw - ew / 2 - 0.05)].forEach(y => linea(marks, P, y, tr ? 'disc' : 'cont', ew));
@@ -105,7 +106,18 @@ const ew = es === 'wide' ? 0.18 : 0.1, tr = es === 'disc';
 for (let i = 1; i < s.cB; i++) linea(marks, P, yL0 + i * s.corsia, 'disc');
 for (let i = 1; i < s.cA; i++) linea(marks, P, yLA + i * s.corsia, 'disc');
 if (s.cA && s.cB) {
-if (spart > 0) {
+if (spart > 0 && tipoSp !== 'aiuola') {
+const ew = es === 'wide' ? 0.18 : 0.1, yM = yC + spart / 2, w = Math.min(0.6, spart * 0.5);
+if (es !== 'none') { linea(marks, P, yC + ew / 2, 'cont', ew); linea(marks, P, yLA - ew / 2, 'cont', ew); }
+if (tipoSp === 'newjersey') {
+mk('path', { d: fascia(P, yM - w / 2, yM + w / 2), fill: '#dcdcdc', stroke: '#8f8f8f', 'stroke-width': 0.05 }, marks);
+mk('path', { d: linD(off(P, yM)), fill: 'none', stroke: '#b3b3b3', 'stroke-width': 0.06 }, marks);
+} else [-1, 1].forEach(k => {
+const d = linD(off(P, yM + k * w * 0.35));
+mk('path', { d, fill: 'none', stroke: '#555', 'stroke-width': 0.12 }, marks);
+mk('path', { d, fill: 'none', stroke: '#555', 'stroke-width': w * 0.35, 'stroke-dasharray': '0.08 1.92' }, marks);
+});
+} else if (spart > 0) {
 const d = fascia(P, yC, yLA);
 mk('path', { d, fill: '#cfc8b6', stroke: '#8a8478', 'stroke-width': 0.06 }, marks);
 if (spart > 1.2) mk('path', { d: fascia(P, yC + 0.3, yLA - 0.3), fill: '#a9bf8e' }, marks);
@@ -206,6 +218,8 @@ return `<div class="inc-pan">
           <label>Corsia (m)${numIn('data-cs="corsia"', s.corsia, 0.1, 2)}</label>
           <label>Banchina (m)${numIn('data-cs="banch"', s.banch, 0.05, 0)}</label>
           <label>Spartitraffico (m)${numIn('data-cs="spart"', s.spart || 0, 0.1, 0)}</label>
+          <label>Corsia di emergenza (m)${numIn('data-cs="emerg"', s.emerg || 0, 0.05, 0)}</label>
+          ${s.cA && s.cB && s.spart > 0 ? `<label class="inc-wide">Spartitraffico${selIn('data-cp="spTipo"', e.spTipo || 'aiuola', [['aiuola', 'rialzato / aiuola'], ['newjersey', 'new jersey (autostrada)'], ['guardrail', 'doppio guard-rail (autostrada)']])}</label>` : ''}
           <label class="inc-wide">Striscia centrale${selIn('data-cp="line"', e.line || 'disc', [['disc', 'tratteggiata'], ['cont', 'continua'], ['double', 'doppia continua'], ['mixed', 'continua e tratteggiata'], ['none', 'nessuna']])}</label>
           <label class="inc-wide">Strisce di margine${selIn('data-cp="edge"', e.edge || 'cont', [['cont', 'continue'], ['disc', 'tratteggiate'], ['wide', 'continue larghe'], ['none', 'nessuna']])}</label>
           <label class="inc-wide">Guard-rail${selIn('data-cp="guard"', e.guard || '', GUARD)}</label>

@@ -1039,6 +1039,23 @@ mk('line', { x1: 0, y1: h*0.5, x2: 0, y2: h*1.0, stroke: col, 'stroke-width': 0.
 mk('rect', { x: -h, y: -h*0.55, width: s, height: h*1.05, rx: h*0.14, fill: '#fff', stroke: col, 'stroke-width': 0.08 }, g);
 symText(g, e.text || 'km 0+000', h*0.42, '#111', e.rot);
 break;
+case 'triangolo':
+mk('path', { d: `M0 ${-h} L${h * 1.1} ${h * 0.85} L${-h * 1.1} ${h * 0.85} Z`, fill: col, stroke: '#fff', 'stroke-width': h * 0.06, 'stroke-linejoin': 'round' }, g);
+mk('path', { d: `M0 ${-h * 0.45} L${h * 0.6} ${h * 0.55} L${-h * 0.6} ${h * 0.55} Z`, fill: '#fff' }, g);
+break;
+case 'freccialum': {
+mk('rect', { x: -h, y: -h * 0.62, width: s, height: h * 1.24, rx: h * 0.12, fill: '#1c1c1c', stroke: col, 'stroke-width': h * 0.07 }, g);
+const T = (x, y) => `${(x * h).toFixed(3)} ${(y * h).toFixed(3)}`;
+mk('path', { d: `M${T(-0.72, -0.16)} L${T(0.18, -0.16)} L${T(0.18, -0.42)} L${T(0.74, 0)} L${T(0.18, 0.42)} L${T(0.18, 0.16)} L${T(-0.72, 0.16)} Z`, fill: col }, g);
+for (let i = -2; i <= 2; i++) mk('circle', { cx: h * 0.3 * i, cy: -h * 0.48, r: h * 0.05, fill: col }, g);
+break;
+}
+case 'pmv': {
+const t = String(e.text || 'INCIDENTE');
+mk('rect', { x: -h, y: -h * 0.34, width: s, height: h * 0.68, rx: h * 0.06, fill: '#111', stroke: '#555', 'stroke-width': h * 0.04 }, g);
+symText(g, t, Math.min(h * 0.36, s * 1.55 / Math.max(4, t.length)), col, e.rot);
+break;
+}
 case 'cono':
 mk('circle', { cx: 0, cy: 0, r: h, fill: col }, g);
 mk('circle', { cx: 0, cy: 0, r: h*0.6, fill: '#fff' }, g);
@@ -1142,15 +1159,19 @@ if (style === 'wide') return '';
 return '';
 }
 function edgeWidth(style) { return style === 'wide' ? 0.18 : 0.1; }
-const SEZIONE_K = { cA: 1, cB: 1, corsia: 1, spart: 1, banch: 1 };
+const SEZIONE_K = { cA: 1, cB: 1, corsia: 1, spart: 1, banch: 1, emerg: 1 };
+function margini(o) {
+const cA = Math.max(0, Math.round(+o.cA || 0)), cB = Math.max(0, Math.round(+o.cB || 0));
+const banch = Math.max(0, o.banch != null ? +o.banch : 0.25), em = Math.max(0, +o.emerg || 0);
+return { su: em > 0 && cB > 0 ? em : banch, giu: em > 0 && cA > 0 ? em : banch, banch, emerg: em };
+}
 function sezione(e) {
 if (e.cA == null) return null;
 const cA = Math.max(0, Math.round(+e.cA || 0)), cB = Math.max(0, Math.round(+e.cB || 0));
-const n = Math.max(1, cA + cB);
-const banch = Math.max(0, e.banch != null ? +e.banch : 0.25);
+const n = Math.max(1, cA + cB), m = margini(e);
 const spart = (cA && cB) ? Math.max(0, +e.spart || 0) : 0;
-const corsia = Math.max(0.5, (e.wid - spart - 2 * banch) / n);
-return { cA, cB, n, banch, spart, corsia };
+const corsia = Math.max(0.5, (e.wid - spart - m.su - m.giu) / n);
+return { cA, cB, n, banch: m.banch, emerg: m.emerg, su: m.su, giu: m.giu, spart, corsia };
 }
 function avviaSezione(e) {
 if (e.cA != null) return;
@@ -1165,7 +1186,7 @@ if (e.cA == null) return;
 const s = sezione(e);
 if (k === 'wid') { e.corsia = Math.round(s.corsia * 100) / 100; return; }
 const corsia = Math.max(0.5, +e.corsia || 3.5);
-e.wid = Math.round((s.n * corsia + s.spart + 2 * s.banch) * 100) / 100;
+e.wid = Math.round((s.n * corsia + s.spart + s.su + s.giu) * 100) / 100;
 e.lanes = s.n;
 }
 function frecciaCorsia(par, x, y, lu, verso) {
@@ -1176,7 +1197,7 @@ mk('path', { d, fill: '#fff', transform: `translate(${x} ${y})${verso < 0 ? ' ro
 function drawRoadCorsie(g, e, s, marks) {
 const L = e.len, W = e.wid, hl = L/2, hw = W/2;
 const es = e.edge || 'cont', ew = edgeWidth(es), ed = edgeDash(es);
-const yLane0 = -hw + s.banch;
+const yLane0 = -hw + s.su;
 const yCentro = yLane0 + s.cB * s.corsia;
 const yLaneA = yCentro + s.spart;
 const yFine = yLaneA + s.cA * s.corsia;
@@ -1189,11 +1210,21 @@ for (let i = 1; i < s.cB; i++) laneLine(marks, -hl, hl, yLane0 + i * s.corsia, '
 for (let i = 1; i < s.cA; i++) laneLine(marks, -hl, hl, yLaneA + i * s.corsia, 'disc');
 if (s.cA && s.cB) {
 if (s.spart > 0) {
+const tipo = e.spTipo || 'aiuola';
+if (tipo === 'aiuola') {
 mk('rect', { x: -hl, y: yCentro, width: L, height: s.spart, fill: '#cfc8b6', stroke: '#8a8478', 'stroke-width': 0.06 }, marks);
 if (s.spart > 1.2) mk('rect', { x: -hl, y: yCentro + 0.3, width: L, height: s.spart - 0.6, fill: '#a9bf8e' }, marks);
 if (es !== 'none') {
 mk('line', { x1: -hl, y1: yCentro - 0.17, x2: hl, y2: yCentro - 0.17, stroke: '#fff', 'stroke-width': 0.1 }, marks);
 mk('line', { x1: -hl, y1: yLaneA + 0.17, x2: hl, y2: yLaneA + 0.17, stroke: '#fff', 'stroke-width': 0.1 }, marks);
+}
+} else {
+const yM = yCentro + s.spart / 2;
+if (es !== 'none') {
+mk('line', { x1: -hl, y1: yCentro + ew / 2, x2: hl, y2: yCentro + ew / 2, stroke: '#fff', 'stroke-width': ew }, marks);
+mk('line', { x1: -hl, y1: yLaneA - ew / 2, x2: hl, y2: yLaneA - ew / 2, stroke: '#fff', 'stroke-width': ew }, marks);
+}
+barrieraCentrale(marks, tipo, -hl, hl, yM, Math.min(0.6, s.spart * 0.5));
 }
 } else {
 laneLine(marks, -hl, hl, yCentro, e.line || 'disc');
@@ -1204,6 +1235,30 @@ const lu = Math.min(4.5, L / 5), dx = hl - Math.min(6, L * 0.2) - lu / 2;
 for (let i = 0; i < s.cB; i++) { const y = yLane0 + (i + 0.5) * s.corsia; frecciaCorsia(marks, -dx, y, lu, -1); if (L > 30) frecciaCorsia(marks, dx, y, lu, -1); }
 for (let i = 0; i < s.cA; i++) { const y = yLaneA + (i + 0.5) * s.corsia; frecciaCorsia(marks, dx, y, lu, 1); if (L > 30) frecciaCorsia(marks, -dx, y, lu, 1); }
 }
+if (s.emerg > 0 && L >= 18) {
+const lati = [];
+if (s.cB > 0) lati.push((-hw + yLane0) / 2);
+if (s.cA > 0) lati.push((yFine + hw) / 2);
+lati.forEach(y => scrittaCorsia(marks, 'corsia di emergenza', 0, y, Math.min(0.7, s.emerg * 0.26), e.rot || 0));
+}
+}
+function scrittaCorsia(par, testo, x, y, fs, rot) {
+const r = (((rot || 0) % 360) + 360) % 360, a = r > 90 && r <= 270 ? 180 : 0;
+const at = { x: +x.toFixed(3), y: +y.toFixed(3), 'font-size': fs, fill: '#fff', opacity: 0.8, 'text-anchor': 'middle', dy: '0.35em',
+'font-style': 'italic', 'letter-spacing': fs * 0.05, class: 'scritta-corsia' };
+if (a) at.transform = `rotate(180 ${at.x} ${at.y})`;
+mk('text', at, par).textContent = testo;
+}
+function barrieraCentrale(par, tipo, x1, x2, y, w) {
+const L = x2 - x1;
+if (tipo === 'newjersey') {
+mk('rect', { x: x1, y: y - w / 2, width: L, height: w, fill: '#dcdcdc', stroke: '#8f8f8f', 'stroke-width': 0.05 }, par);
+mk('line', { x1, y1: y, x2, y2: y, stroke: '#b3b3b3', 'stroke-width': 0.06 }, par);
+for (let x = x1 + 1.2; x < x2 - 0.05; x += 1.2) mk('line', { x1: x, y1: y - w / 2, x2: x, y2: y + w / 2, stroke: '#9a9a9a', 'stroke-width': 0.05 }, par);
+return;
+}
+[-1, 1].forEach(k => mk('line', { x1, y1: y + k * w * 0.35, x2, y2: y + k * w * 0.35, stroke: '#555', 'stroke-width': 0.12 }, par));
+for (let x = x1; x <= x2 + 0.001; x += 2) mk('line', { x1: x, y1: y - w * 0.35, x2: x, y2: y + w * 0.35, stroke: '#555', 'stroke-width': 0.08 }, par);
 }
 function latiMarc(o) {
 const m = Math.max(0, +(o && o.marc) || 0);
@@ -1739,6 +1794,28 @@ const L = e.len, W = e.wid, hl = L/2, hw = W/2, sub = e.sub;
 if (sub === 'dosso') {
 mk('rect', { x: -hl, y: -hw, width: L, height: W, fill: '#b9b9b9', stroke: '#888', 'stroke-width': 0.05 }, g);
 for (let x = -hl + 0.35; x < hl - 0.1; x += 0.65) mk('path', { d: `M${x} ${-hw} L${x+0.32} 0 L${x} ${hw}`, fill: 'none', stroke: '#fff', 'stroke-width': 0.13 }, g);
+return;
+}
+if (sub === 'piazzola') {
+const t = Math.min(L * 0.25, 12), d = `M${-hl} ${-hw} L${hl} ${-hw} L${hl - t} ${hw} L${-hl + t} ${hw} Z`;
+mk('path', { d, fill: e.color || '#9aa0a6' }, g);
+mk('path', { d, fill: 'url(#patAsfalto)' }, g);
+mk('path', { d: `M${-hl} ${-hw} L${-hl + t} ${hw} L${hl - t} ${hw} L${hl} ${-hw}`, fill: 'none', stroke: '#6b7178', 'stroke-width': 0.05 }, g);
+mk('line', { x1: -hl, y1: -hw + 0.06, x2: hl, y2: -hw + 0.06, stroke: '#fff', 'stroke-width': 0.12, 'stroke-dasharray': '1.5 1.5' }, g);
+if (L >= 14 && W >= 1.5) scrittaCorsia(g, 'piazzola di sosta', 0, 0.15, Math.min(0.7, W * 0.24), e.rot || 0);
+return;
+}
+if (sub === 'antirumore') {
+mk('rect', { x: -hl, y: -hw, width: L, height: W, fill: e.color || '#4f7382', stroke: '#2f4650', 'stroke-width': 0.04 }, g);
+for (let x = -hl; x <= hl + 0.001; x += 2) mk('rect', { x: x - 0.08, y: -hw - 0.04, width: 0.16, height: W + 0.08, fill: '#2f4650' }, g);
+return;
+}
+if (sub === 'attenuatore') {
+const r = Math.min(hw, L / 4);
+const d = `M${-hl + r} ${-hw} L${hl} ${-hw} L${hl} ${hw} L${-hl + r} ${hw} A${r} ${hw} 0 0 1 ${-hl + r} ${-hw} Z`;
+mk('path', { d, fill: e.color || '#f2c200', stroke: '#111', 'stroke-width': 0.05 }, g);
+for (let x = -hl + r * 0.9; x < hl - 0.3; x += Math.max(0.6, W * 0.9))
+mk('path', { d: `M${x + W * 0.35} ${-hw * 0.75} L${x} 0 L${x + W * 0.35} ${hw * 0.75}`, fill: 'none', stroke: '#111', 'stroke-width': Math.min(0.12, W * 0.14), 'stroke-linejoin': 'round' }, g);
 return;
 }
 if (sub === 'guardrail') {
@@ -2363,7 +2440,7 @@ return { w: e.size || 0.6, h: e.size || 0.6 };
 };
 RS.elements.FASI = FASI; RS.elements.DANNI = DANNI;
 RS.elements.miniaturaSvg = miniaturaSvg;
-RS.elements.sezione = sezione; RS.elements.avviaSezione = avviaSezione; RS.elements.aggiornaSezione = aggiornaSezione;
+RS.elements.sezione = sezione; RS.elements.margini = margini; RS.elements.barrieraCentrale = barrieraCentrale; RS.elements.avviaSezione = avviaSezione; RS.elements.aggiornaSezione = aggiornaSezione;
 RS.elements.latiMarc = latiMarc; RS.elements.impostaMarc = impostaMarc; RS.elements.etichettaVia = etichettaVia;
 RS.elements.SEZIONE_K = SEZIONE_K; RS.elements.geometriaRaccordo = geometriaRaccordo; RS.elements.strisciaRaccordo = strisciaRaccordo; RS.elements.puntiRaccordo = puntiRaccordo;
 RS.elements.locale = locale; RS.elements.snodoInfo = snodoInfo; RS.elements.DUE_RUOTE = DUE_RUOTE;

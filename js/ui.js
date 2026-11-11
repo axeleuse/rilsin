@@ -3569,9 +3569,11 @@ const n0 = Math.max(1, e.lanes || 2), s = RS.elements.sezione(e) ||
 { cA: Math.ceil(n0 / 2), cB: Math.floor(n0 / 2), corsia: (e.wid - 0.5) / n0, spart: 0, banch: 0.25 };
 let c = `<div class="prow">${numFld('Corsie ' + FRC.avanti, 'cA', s.cA, 1, 0, 0)}${numFld('Corsie ' + FRC.indietro, 'cB', s.cB, 1, 0, 0)}</div>`;
 c += `<div class="prow">${numFld('Corsia (m)', 'corsia', round(s.corsia), 0.05, 0.5)}${numFld('Banchina (m)', 'banch', round(s.banch), 0.05, 0)}</div>`;
-c += numFld('Spartitraffico (m)', 'spart', round(s.spart), 0.1, 0);
+c += `<div class="prow">${numFld('Spartitraffico (m)', 'spart', round(s.spart), 0.1, 0)}${numFld('Corsia emergenza (m)', 'emerg', round(s.emerg || 0), 0.05, 0)}</div>`;
+if (s.cA && s.cB && s.spart > 0) c += selFld('Tipo di spartitraffico', 'spTipo', e.spTipo || 'aiuola',
+[['aiuola', 'Rialzato / aiuola'], ['newjersey', 'New jersey (autostrada)'], ['guardrail', 'Doppio guard-rail (autostrada)']]);
 c += chkFld('Frecce di corsia', 'frecce', !!e.frecce);
-c += `<div class="mis-hint">${FRC.avanti} verso la fine del tratto, ${FRC.indietro} verso l'inizio (si guida a destra). La carreggiata si ricalcola dalle corsie; il marciapiede sta fuori.</div>`;
+c += `<div class="mis-hint">${FRC.avanti} verso la fine del tratto, ${FRC.indietro} verso l'inizio (si guida a destra). La carreggiata si ricalcola dalle corsie; il marciapiede sta fuori. La corsia di emergenza (autostrade, di solito 3 m) prende il posto della banchina a destra di ogni senso di marcia: 0 = nessuna.</div>`;
 h += section('Corsie e sezione', c, true, { riass: s.cA + ' + ' + s.cB + ' corsie' });
 h += section('Marciapiedi', marciapiediHtml(e), true, { riass: riassMarc(e) });
 h += selFld('Striscia centrale', 'line', e.line || 'disc',
@@ -3656,6 +3658,7 @@ h += `<div class="pbtns"><button class="pbtn" data-b="lblreset">↺ Riporta la l
 else h += textFld('Etichetta', 'label', e.label || '');
 if (e.sym === 'limite') h += textFld('Valore', 'text', e.text || '50');
 if (e.sym === 'chilometrica') h += textFld('Progressiva', 'text', e.text || 'km 0+000');
+if (e.sym === 'pmv') h += textFld('Messaggio', 'text', e.text || 'INCIDENTE');
 if (e.sym === 'freccia_terra') h += selFld('Direzione', 'dir', e.dir || 'dritto', [['dritto','Dritto'],['dritto_sx','Dritto e sinistra'],['dritto_dx','Dritto e destra']]);
 if (e.sym === 'obbligo') h += selFld('Direzione', 'dir', e.dir || 'dritto', [['dritto','Dritto'],['destra','A destra'],['sinistra','A sinistra']]);
 if (e.sym === 'persona') {

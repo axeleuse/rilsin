@@ -1,10 +1,16 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 258;
+RS.BUILD = 259;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 259, data: '2026-11-11', voci: [
+'Autostrade: nella scheda Strade il gruppo «Autostrada», con carreggiata autostradale a 2 o a 3 corsie (corsia di emergenza a destra, banchina interna a sinistra), autostrada 2+2 con new jersey, 3+3 con doppio guard-rail, curva autostradale e piazzola di sosta. Misure di partenza: corsie 3,75 m, emergenza 3,00 m, banchina interna 0,70 m.',
+'Corsia di emergenza su ogni strada per corsie e sulle curve a raggio misurato: nelle proprietà, campo «Corsia emergenza» (0 = nessuna). Prende il posto della banchina alla destra di ogni senso di marcia, con la scritta sulla tavola. Lo spartitraffico può essere rialzato con aiuola, new jersey o doppio guard-rail.',
+'Elementi nuovi: barriera antirumore e attenuatore d\'urto (Strade, Barriere stradali); triangolo di pericolo, freccia luminosa / carrello segnaletico e pannello a messaggio variabile con il testo mostrato (Arredo, Segnalazione del sinistro e cantieri).',
+'Autodiagnosi: una prova nuova per le autostrade, 80 in tutto.'
+] },
 { build: 258, data: '2026-11-11', voci: [
 'Panoramica a 360° ripresa direttamente da RILSIN: Altro, Rilievo, «🌐 Panoramica 360°», «📸 Riprendi ora con RILSIN». Si apre la fotocamera con dei pallini bianchi: porti un pallino al centro del cerchio, stai fermo un attimo e lo scatto parte da solo. 24 foto (16 attorno all\'orizzonte e 8 più in basso, per l\'asfalto), circa un minuto; le scritte dicono da che parte girare. Alla fine RILSIN unisce le foto e chiede di toccare sulla tavola il punto in cui eri.',
 'RILSIN misura da solo l\'ampiezza dell\'obiettivo del telefono confrontando le foto vicine; su Android la bussola orienta il segnaposto (con la freccia del Nord sulla tavola). Le foto si uniscono secondo i sensori: dove si toccano possono vedersi piccole imperfezioni, soprattutto su oggetti vicini o in movimento. Resta possibile scegliere una panoramica già fatta (fotocamera a 360°, la qualità migliore).',

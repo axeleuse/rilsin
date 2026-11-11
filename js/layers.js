@@ -2,7 +2,7 @@
 'use strict';
 const el = (id) => document.getElementById(id);
 const SEGNI = new Set(['cartello', 'semaforo', 'stop', 'precedenza', 'divieto', 'limite',
-'passlivello', 'disabile', 'freccia_terra', 'lavori']);
+'passlivello', 'disabile', 'freccia_terra', 'lavori', 'triangolo', 'freccialum', 'pmv']);
 const ARREDO = new Set(['caposaldo', 'palo', 'albero', 'cono', 'delineatore', 'idrante',
 'tombino', 'fermata', 'distributore', 'chilometrica', 'sos', 'telecamera']);
 const DEFS = [

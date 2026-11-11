@@ -44,10 +44,12 @@ const VEICOLI = [
 { id: 'carrozzina',   nome: 'Carrozzina disabili', len: 1.1, wid: 0.66, kind: 'carrozzina', color: '#34495e' },
 { id: 'monopattino',  nome: 'Monopattino',     len: 1.1,  wid: 0.45, kind: 'monopattino',color: '#16a085' }
 ];
-function sez(cA, cB, corsia, spart, banch, marc, frecce) {
-const s = { cA, cB, corsia, spart: spart || 0, banch: banch || 0, marc: marc || 0, frecce: !!frecce };
-return { sez: s, wid: Math.round(((cA + cB) * corsia + s.spart + 2 * s.banch) * 100) / 100, lanes: cA + cB };
+function sez(cA, cB, corsia, spart, banch, marc, frecce, extra) {
+const s = Object.assign({ cA, cB, corsia, spart: spart || 0, banch: banch || 0, marc: marc || 0, frecce: !!frecce }, extra || {});
+const em = +s.emerg || 0, su = em && cB ? em : s.banch, giu = em && cA ? em : s.banch;
+return { sez: s, wid: Math.round(((cA + cB) * corsia + (cA && cB ? s.spart : 0) + su + giu) * 100) / 100, lanes: cA + cB };
 }
+const AUTO = { emerg: 3.0 };
 const STRADE = [
 Object.assign({ id: 'strada',     nome: 'Tratto rettilineo', sec: 'Carreggiata', tool: 'road', color: '#9aa0a6' }, sez(1, 1, 3.25, 0, 0.25)),
 Object.assign({ id: 'strada_urb', nome: 'Urbana con marciapiedi', sec: 'Carreggiata', tool: 'road', color: '#9aa0a6' }, sez(1, 1, 3.0, 0, 0.25, 1.5)),
@@ -55,6 +57,11 @@ Object.assign({ id: 'strada_ext', nome: 'Extraurbana con banchine', sec: 'Carreg
 Object.assign({ id: 'strada_su',  nome: 'Senso unico a 2 corsie', sec: 'Carreggiata', tool: 'road', color: '#9aa0a6' }, sez(2, 0, 3.0, 0, 0.25, 1.5, true)),
 Object.assign({ id: 'strada_4',   nome: '4 corsie con spartitraffico', sec: 'Carreggiata', tool: 'road', color: '#9aa0a6' }, sez(2, 2, 3.5, 2.0, 0.5, 0, true)),
 { id: 'stradacurva',nome: 'Strada curva / libera',sec: 'Carreggiata',tool:'roadpath',  wid: 7,  color: '#9aa0a6' },
+Object.assign({ id: 'auto_2',  nome: 'Carreggiata autostradale a 2 corsie', sec: 'Autostrada', tool: 'road', color: '#9aa0a6' }, sez(2, 0, 3.75, 0, 0.7, 0, true, AUTO)),
+Object.assign({ id: 'auto_3',  nome: 'Carreggiata autostradale a 3 corsie', sec: 'Autostrada', tool: 'road', color: '#9aa0a6' }, sez(3, 0, 3.75, 0, 0.7, 0, true, AUTO)),
+Object.assign({ id: 'auto_22', nome: 'Autostrada 2+2 con new jersey', sec: 'Autostrada', tool: 'road', color: '#9aa0a6' }, sez(2, 2, 3.75, 2.0, 0.7, 0, true, Object.assign({ spTipo: 'newjersey' }, AUTO))),
+Object.assign({ id: 'auto_33', nome: 'Autostrada 3+3 con guard-rail', sec: 'Autostrada', tool: 'road', color: '#9aa0a6' }, sez(3, 3, 3.75, 2.6, 0.7, 0, true, Object.assign({ spTipo: 'guardrail' }, AUTO))),
+{ id: 'piazzola',   nome: 'Piazzola di sosta', sec: 'Autostrada', tool: 'band', sub: 'piazzola', wid: 3.0, color: '#9aa0a6' },
 { id: 'rotatoria',  nome: 'Rotatoria',         sec: 'Carreggiata', tool: 'roundabout',size: 20, ring: 6, color: '#9aa0a6' },
 { id: 'corsiaimm',  nome: 'Corsia immissione', sec: 'Carreggiata', tool: 'ramp', kind: 'in',  len: 30, wid: 3.5, color: '#9aa0a6' },
 { id: 'corsiausc',  nome: 'Corsia uscita',     sec: 'Carreggiata', tool: 'ramp', kind: 'out', len: 30, wid: 3.5, color: '#9aa0a6' },
@@ -70,6 +77,8 @@ Object.assign({ id: 'strada_4',   nome: '4 corsie con spartitraffico', sec: 'Car
 { id: 'ciclabile',  nome: 'Pista ciclabile',   sec: 'Bordi e marciapiedi', tool: 'band', sub: 'ciclabile',wid: 1.5, color: '#b5563a' },
 { id: 'barriera',   nome: 'Guard-rail',        sec: 'Barriere e confini', tool: 'band', sub: 'guardrail',wid: 0.4, color: '#555' },
 { id: 'newjersey',  nome: 'New jersey',        sec: 'Barriere e confini', tool: 'band', sub: 'newjersey',wid: 0.6, color: '#dcdcdc' },
+{ id: 'antirumore', nome: 'Barriera antirumore', sec: 'Barriere e confini', tool: 'band', sub: 'antirumore', wid: 0.3, color: '#4f7382' },
+{ id: 'attenuatore',nome: "Attenuatore d'urto", sec: 'Barriere e confini', tool: 'band', sub: 'attenuatore', wid: 0.9, color: '#f2c200' },
 { id: 'muro',       nome: 'Muro',              sec: 'Barriere e confini', tool: 'band', sub: 'muro',     wid: 0.3, color: '#b9b3a8' },
 { id: 'siepe',      nome: 'Siepe',             sec: 'Barriere e confini', tool: 'band', sub: 'siepe',    wid: 0.8, color: '#3f8f4f' },
 { id: 'recinzione', nome: 'Recinzione',        sec: 'Barriere e confini', tool: 'band', sub: 'recinzione',wid: 0.2, color: '#777777' },
@@ -102,7 +111,8 @@ curva('cur_chicane', 'Chicane', [R_(8), C_(14, 22), C_(14, 22, 'sx'), R_(8)]),
 curva('cur_raccordo', 'Curva di raccordo', [R_(12), C_(8, 90, 'sx'), R_(12)]),
 curva('cur_ext', 'Curva extraurbana con guard-rail', [R_(10), C_(60, 60), R_(10)], { sez: sez(1, 1, 3.75, 0, 1.25).sez, guard: 'est', line: 'cont' }),
 curva('cur_urb', 'Curva urbana con marciapiedi', [R_(8), C_(15, 90), R_(8)], { sez: sez(1, 1, 3.0, 0, 0.25, 1.5).sez }),
-curva('cur_4', 'Curva a 4 corsie con spartitraffico', [R_(10), C_(80, 45), R_(10)], { sez: sez(2, 2, 3.5, 2.0, 0.5).sez })
+curva('cur_4', 'Curva a 4 corsie con spartitraffico', [R_(10), C_(80, 45), R_(10)], { sez: sez(2, 2, 3.5, 2.0, 0.5).sez }),
+curva('cur_auto', 'Curva autostradale (2 corsie + emergenza)', [R_(15), C_(250, 20), R_(15)], { sez: sez(2, 0, 3.75, 0, 0.7, 0, false, AUTO).sez, guard: 'both' })
 ];
 const ASF = '#9aa0a6', VERDE = '#7fae6a';
 const IC = {
@@ -252,6 +262,9 @@ const FISSI = [
 { id: 'distributore',nome: 'Distributore',     tool: 'symbol', sym: 'distributore',size: 1.2, color: '#e05a2b' },
 { id: 'chilometrica',nome: 'Progressiva chilometrica', tool:'symbol', sym: 'chilometrica',size: 1.6, color: '#1a6d2f', text: 'km 0+000' },
 { id: 'sos',        nome: 'Colonnina SOS',     tool: 'symbol', sym: 'sos',       size: 0.55, color: '#e08a00' },
+{ id: 'triangolo',  nome: 'Triangolo di pericolo', tool: 'symbol', sym: 'triangolo', size: 0.7, color: '#d0141c' },
+{ id: 'freccialum', nome: 'Freccia luminosa / carrello segnaletico', tool: 'symbol', sym: 'freccialum', size: 1.8, color: '#ffb000' },
+{ id: 'pmv',        nome: 'Pannello a messaggio variabile', tool: 'symbol', sym: 'pmv', size: 2.4, color: '#ff9a1f', text: 'INCIDENTE' },
 { id: 'telecamera', nome: 'Telecamera / varco',tool: 'symbol', sym: 'telecamera',size: 0.55, color: '#333' },
 { id: 'paracarro',  nome: 'Paracarro / fittone',tool: 'symbol', sym: 'paracarro', size: 0.35, color: '#c33' },
 { id: 'dissuasore', nome: 'Dissuasore sosta',  tool: 'symbol', sym: 'dissuasore', size: 0.3,  color: '#333' },
@@ -296,11 +309,12 @@ const PALETTE = [
 { id: 'strade', nome: 'Strade', type: 'tool', items: scheda([
 ['Tratti di strada', ['strada', 'strada_urb', 'strada_ext', 'strada_su', 'strada_4', 'stradacurva']],
 ['Curve', ['cur_mis', 'cur_dolce', 'cur_45', 'cur_90', 'cur_135', 'cur_gomito', 'cur_tornante', 'cur_esse', 'cur_doppia', 'cur_chicane', 'cur_raccordo']],
+['Autostrada', ['auto_2', 'auto_3', 'auto_22', 'auto_33', 'cur_auto', 'piazzola']],
 ['Curve con sezione completa', ['cur_ext', 'cur_urb', 'cur_4']],
 ['Corsie di immissione e uscita', ['corsiaimm', 'corsiausc']],
 ['Bordi, marciapiedi e isole', ['marciapiede', 'banchina', 'spartitraffico', 'ciclabile', 'isola', 'isolatri', 'isolagoc']],
 ['Sosta', ['parcheggio', 'parchspina', 'parchlinea']],
-['Barriere stradali', ['barriera', 'newjersey']],
+['Barriere stradali', ['barriera', 'newjersey', 'antirumore', 'attenuatore']],
 ['Zebrate e dossi', ['zebrata', 'zebracurva', 'dosso']]]) },
 { id: 'incroci', nome: 'Incroci', type: 'tool', items: scheda([
 ['A croce', ['inc_x', 'inc_xu', 'inc_x45', 'inc_sf', 'inc_x4']],
@@ -328,7 +342,8 @@ const PALETTE = [
 ['Acqua e ferrovia', ['canale', 'fosso', 'binari']]]) },
 { id: 'fissi', nome: 'Arredo', type: 'tool', items: scheda([
 ['Pali e impianti', ['palo', 'telecamera', 'sos', 'chilometrica', 'delineatore']],
-['Ostacoli e dissuasori', ['cono', 'paracarro', 'dissuasore']],
+['Segnalazione del sinistro e cantieri', ['triangolo', 'cono', 'freccialum', 'pmv']],
+['Ostacoli e dissuasori', ['paracarro', 'dissuasore']],
 ['Servizi', ['fermata', 'distributore', 'idrante', 'tombino', 'panchina', 'cestino']]]) },
 { id: 'annota', nome: 'Misure e note', type: 'tool', items: scheda([
 ['Rilievo', ['caposaldo', 'misura', 'angolo']],
