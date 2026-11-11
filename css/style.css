@@ -825,6 +825,30 @@ border-radius:var(--r-sm);background:var(--panel2);cursor:pointer}
 border-radius:var(--r-sm);padding:6px 9px;font:inherit;font-size:12.5px}
 .leg-ed-in:focus{outline:none;border-color:var(--accent)}
 .leg-ed-add{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}
+.lp-intro{font-size:12px;color:var(--muted);line-height:1.4;margin:2px 0 6px}
+.lp-sez{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--titolo,var(--muted));margin:12px 0 4px}
+.lp-riga{display:flex;align-items:center;gap:6px;padding:2px 0;border-radius:var(--r-sm)}
+.lp-riga:hover{background:var(--panel2)}
+.lp-ico{flex:0 0 32px;height:20px;display:flex;align-items:center;justify-content:center;background:#f4f1e8;border-radius:4px;overflow:hidden}
+.lp-ico svg{display:block;max-width:30px;max-height:18px}
+.lp-segno{font-size:13px;color:#555;font-weight:700}
+.lp-nome{flex:1 1 auto;min-width:0;font:inherit;font-size:13px;color:var(--txt);background:transparent;border:1px solid transparent;border-radius:var(--r-sm);padding:5px 7px;cursor:text;text-overflow:ellipsis}
+.lp-nome:hover{border-color:var(--line2)}
+.lp-nome:focus{outline:none;border-color:var(--accent);background:var(--panel2)}
+.lp-nome.cambiato{font-style:italic}
+.lp-btn{flex:0 0 auto;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:var(--r-sm);background:transparent;color:var(--muted);cursor:pointer;font-size:14px;padding:0}
+.lp-btn:hover{background:var(--panel3);color:var(--txt)}
+.lp-btn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.lp-occhio{color:var(--accent)}
+.lp-riga.spenta .lp-nome{color:var(--muted2);text-decoration:line-through}
+.lp-riga.spenta .lp-ico{opacity:.35}
+.lp-riga.spenta .lp-occhio{color:var(--muted2)}
+.lp-agg{display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.lp-nuova{border-color:var(--line2);border-style:dashed}
+.lp-piu{color:var(--accent);font-size:16px}
+.lp-reset{display:block;margin:10px 0 2px;border:none;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;padding:4px 0;text-decoration:underline}
+.lp-reset:hover{color:var(--txt)}
+body.light .lp-ico{background:#f4f1e8}
 #legenda{max-height:52%}
 #legenda .leg-ed-h{margin:12px 0 4px}
 .leg-nota{font-size:12px;color:var(--muted);line-height:1.4;margin:2px 0 4px}

@@ -2191,6 +2191,7 @@ txt(g, n*seg/2, bh + fs*1.25, (RS.scene && RS.scene.fuoriScala) ? 'metri (riferi
 function copiaMiniatura(e) {
 const c = Object.assign({}, e, { x: 0, y: 0, rot: 0, id: null });
 delete c.rilpts; c.spigoli = false; c.snodo = 0; c.evidenzia = false; c.llx = null; c.lly = null;
+c.freccia = false; delete c.danni;
 if (c.letter != null) c.letter = '';
 return c;
 }
@@ -2286,8 +2287,24 @@ rows.push({ key: 'sym:' + k, ref: e, c: e.color, t: (e.nome || e.sym) + (e.stato
 });
 return rows;
 }
+function chiavePlanimetria(r) {
+const k = String(r.key || '');
+if (k.indexOf('veh:') === 0) return 'veic:' + k.slice(4);
+if (k.indexOf('cap:') === 0) return k;
+if (k.indexOf('fase:') === 0 && r.ref) return 'fase:' + siglaFase(r.ref);
+if (k.indexOf('sym:') === 0 && r.ref && r.ref.nome) return 'sim:' + r.ref.nome;
+if (r.t && !r.custom && !/^(veh|cap|fase|sym|x)\d*:/.test(k)) return 'str:' + r.t;
+return '';
+}
 function legendRows(le) {
 let rows = legendAutoRows();
+const LP = (RS.scene && RS.scene.meta && RS.scene.meta.legenda) || null;
+if (LP) {
+const no = LP.no || {}, nomi = LP.nomi || {};
+rows = rows.filter(r => !no[chiavePlanimetria(r)]);
+rows.forEach(r => { const n = String(nomi[chiavePlanimetria(r)] || '').trim(); if (n) r.t = n; });
+(LP.agg || []).map(t => String(t || '').trim()).filter(Boolean).forEach((t, i) => rows.push({ key: 'agg:' + i, c: '#b9b9b9', t, custom: true }));
+}
 if (le && le.hidden && le.hidden.length) rows = rows.filter(r => le.hidden.indexOf(r.key) < 0);
 if (le && le.labels) rows.forEach(r => { const o = le.labels[r.key]; if (o != null && o !== '') r.t = o; });
 if (le && le.extra) le.extra.forEach((x, i) => rows.push({ key: 'x' + i, c: x.c || '#888', t: x.t || '', custom: true }));

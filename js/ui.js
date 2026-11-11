@@ -3235,44 +3235,73 @@ if (at) at.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.prev
 },
 renderLegend() {
 const box = el('legenda'), S = RS.scene;
-if (box.contains(document.activeElement) && document.activeElement.tagName === 'INPUT' && document.activeElement.type !== 'checkbox') return;
+if (box.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;
 const voci = RS.exportUtil && RS.exportUtil.legendaTavola ? RS.exportUtil.legendaTavola(S, true) : [];
 const L = S.meta.legenda || {}, no = L.no || {}, nomi = L.nomi || {}, agg = L.agg || [];
 const tutte = [].concat.apply([], voci.map(x => x.r)), mostrate = tutte.filter(v => !no[v.k]).length + agg.filter(t => String(t).trim()).length;
-let h = `<p class="leg-nota">Le voci della legenda stampata nel riquadro della planimetria. Togli la spunta per non stamparla; scrivi un nome per cambiarlo (vuoto = automatico). La legenda disegnata sulla tavola, se l'hai inserita, si modifica selezionandola.</p>`;
+const els = S.elements;
+const rif = k => {
+const [t, ...r] = k.split(':'), v = r.join(':');
+if (t === 'cap') return els.find(e => e.letter === v);
+if (t === 'veic') return els.find(e => e.type === 'vehicle' && (e.label || '?') === v && (!e.fase || e.fase === 'quiete')) || els.find(e => e.type === 'vehicle' && (e.label || '?') === v);
+if (t === 'fase') return els.find(e => e.type === 'vehicle' && e.fase && RS.elements.siglaFase && RS.elements.siglaFase(e) === v);
+if (t === 'sim') return els.find(e => e.type === 'symbol' && e.nome === v);
+if (t === 'P') return els.find(e => e.type === 'surveypt' && String(e.n) === v);
+if (t === 'tr') return els.find(e => e.type === 'skid');
+if (t === 'quote') return els.find(e => e.type === 'measure');
+return null;
+};
+const SEGNO = { base: '↔', metodo: '△', str: '✚', curva: '⌒' };
+const icona = k => { const e = rif(k), m = e && RS.elements.miniaturaSvg ? RS.elements.miniaturaSvg(e, 30, 18) : '';
+return m || `<span class="lp-segno">${SEGNO[k.split(':')[0]] || '•'}</span>`; };
+const OCCHIO = '<svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const CHIUSO = '<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.6A9.8 9.8 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 3.9M6.4 6.9C3.9 8.6 2.5 12 2.5 12s3.5 6.5 9.5 6.5c1.6 0 3-.4 4.3-1"/></svg>';
+let h = `<p class="lp-intro">Così esce la legenda della planimetria (e quella disegnata sulla tavola). Tocca un nome per cambiarlo; l'occhio mostra o toglie la voce.</p>`;
 voci.forEach(sez => {
-h += `<div class="leg-ed-h">${escAttr(sez.t)}</div>`;
+h += `<div class="lp-sez">${escAttr(sez.t)}</div>`;
 sez.r.forEach(v => {
-h += `<div class="leg-ed-row${no[v.k] ? ' spenta' : ''}"><input type="checkbox" data-lpk="${escAttr(v.k)}"${no[v.k] ? '' : ' checked'} title="Stampa / non stampare">` +
-`<input class="leg-ed-in" data-lpn="${escAttr(v.k)}" value="${escAttr(nomi[v.k] || '')}" placeholder="${escAttr(v.t)}" title="Nome nella legenda (vuoto = ${escAttr(v.t)})"></div>`;
+const spenta = !!no[v.k], nome = String(nomi[v.k] || '').trim(), cambiato = !!nome && nome !== v.t;
+h += `<div class="lp-riga${spenta ? ' spenta' : ''}"><span class="lp-ico">${icona(v.k)}</span>` +
+`<input class="lp-nome${cambiato ? ' cambiato' : ''}" data-lpn="${escAttr(v.k)}" data-auto="${escAttr(v.t)}" value="${escAttr(nome || v.t)}" aria-label="Nome nella legenda" title="Tocca per cambiare il nome">` +
+(cambiato ? `<button class="lp-btn" data-lpauto="${escAttr(v.k)}" title="Torna al nome automatico: ${escAttr(v.t)}">↺</button>` : '') +
+`<button class="lp-btn lp-occhio" data-lpk="${escAttr(v.k)}" title="${spenta ? 'Non si stampa: tocca per rimetterla' : 'Si stampa: tocca per toglierla'}" aria-pressed="${spenta ? 'false' : 'true'}">${spenta ? CHIUSO : OCCHIO}</button></div>`;
 });
 });
-h += `<div class="leg-ed-h">Voci aggiunte a mano</div>`;
-agg.forEach((t, i) => { h += `<div class="leg-ed-row custom"><input class="leg-ed-in" data-lpa="${i}" value="${escAttr(t)}" placeholder="descrizione…"><button class="leg-ed-x" data-lpdel="${i}" title="Togli la voce">✕</button></div>`; });
-h += `<div class="leg-ed-add"><input id="lpAgg" class="leg-ed-in" placeholder="nuova voce, per esempio «area di cantiere»"><button class="pbtn" data-lpadd="1">＋ Aggiungi</button></div>`;
-if (Object.keys(no).length || Object.keys(nomi).length || agg.length) h += `<div class="pbtns"><button class="pbtn" data-lpreset="1">↺ Torna alla legenda automatica</button></div>`;
+if (agg.length) {
+h += `<div class="lp-sez">Altro</div>`;
+agg.forEach((t, i) => { h += `<div class="lp-riga"><span class="lp-ico"><span class="lp-segno">•</span></span><input class="lp-nome" data-lpa="${i}" value="${escAttr(t)}" aria-label="Voce aggiunta"><button class="lp-btn" data-lpdel="${i}" title="Togli la voce">✕</button></div>`; });
+}
+h += `<div class="lp-agg"><input id="lpAgg" class="lp-nome lp-nuova" placeholder="＋ Aggiungi una voce (es. area di cantiere)" aria-label="Nuova voce"><button class="lp-btn lp-piu" data-lpadd="1" title="Aggiungi">＋</button></div>`;
+if (Object.keys(no).length || Object.keys(nomi).length || agg.length) h += `<button class="lp-reset" data-lpreset="1">↺ Torna alla legenda automatica</button>`;
 box.innerHTML = tutte.length || agg.length ? h : '<p class="leg-empty">La legenda si compone da sola con gli oggetti disegnati.</p>';
 if (!box._legato) {
 box._legato = true;
-const salva = () => { S.snapshot(); this._dirty = true; if (this.updateStatus) this.updateStatus(); };
+const salva = () => { S.snapshot(); this._dirty = true; if (this.updateStatus) this.updateStatus(); S.render(); };
 const leg = () => (S.meta.legenda = S.meta.legenda || {});
 box.addEventListener('change', ev => {
 const t = ev.target, lg = leg();
-if (t.dataset.lpk) { lg.no = lg.no || {}; if (t.checked) delete lg.no[t.dataset.lpk]; else lg.no[t.dataset.lpk] = true; }
-else if (t.dataset.lpn) { lg.nomi = lg.nomi || {}; const v = t.value.trim(); if (v) lg.nomi[t.dataset.lpn] = v; else delete lg.nomi[t.dataset.lpn]; }
+if (t.dataset.lpn) { lg.nomi = lg.nomi || {}; const v = t.value.trim(); if (v && v !== t.dataset.auto) lg.nomi[t.dataset.lpn] = v; else delete lg.nomi[t.dataset.lpn]; }
 else if (t.dataset.lpa != null) { lg.agg = lg.agg || []; lg.agg[+t.dataset.lpa] = t.value.trim(); lg.agg = lg.agg.filter(Boolean); }
 else return;
 salva(); setTimeout(() => this.renderLegend(), 0);
 });
 box.addEventListener('click', ev => {
-const b = ev.target.closest('[data-lpadd],[data-lpdel],[data-lpreset]'); if (!b) return;
+const b = ev.target.closest('[data-lpk],[data-lpauto],[data-lpadd],[data-lpdel],[data-lpreset]'); if (!b) return;
 const lg = leg();
-if (b.dataset.lpadd) { const i = el('lpAgg'), v = i && i.value.trim(); if (!v) { if (i) i.focus(); return; } (lg.agg = lg.agg || []).push(v); }
+if (b.dataset.lpk) { lg.no = lg.no || {}; if (lg.no[b.dataset.lpk]) delete lg.no[b.dataset.lpk]; else lg.no[b.dataset.lpk] = true; }
+else if (b.dataset.lpauto) { if (lg.nomi) delete lg.nomi[b.dataset.lpauto]; }
+else if (b.dataset.lpadd) { const i = el('lpAgg'), v = i && i.value.trim(); if (!v) { if (i) i.focus(); return; } (lg.agg = lg.agg || []).push(v); }
 else if (b.dataset.lpdel != null) { (lg.agg || []).splice(+b.dataset.lpdel, 1); }
 else if (b.dataset.lpreset) { delete S.meta.legenda; }
+if (document.activeElement && box.contains(document.activeElement)) document.activeElement.blur();
 salva(); this.renderLegend();
 });
-box.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.id === 'lpAgg') { ev.preventDefault(); const b = box.querySelector('[data-lpadd]'); if (b) b.click(); } });
+box.addEventListener('keydown', ev => {
+if (ev.key !== 'Enter') return;
+ev.preventDefault();
+if (ev.target.id === 'lpAgg') { const b = box.querySelector('[data-lpadd]'); if (b) b.click(); }
+else ev.target.blur();
+});
 }
 this._legendaApribile(mostrate);
 },

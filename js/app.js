@@ -1,10 +1,16 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 271;
+RS.BUILD = 272;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 272, data: '2026-11-11', voci: [
+'Legenda laterale rifatta: ogni voce come esce in stampa, con la sua sagoma; un tocco sul nome per cambiarlo, ↺ per tornare al nome automatico, l\'occhio per togliere la voce o rimetterla; in fondo le voci aggiunte a mano.',
+'La legenda disegnata sulla tavola segue le scelte della legenda laterale (nomi, voci tolte e aggiunte), così le due legende dicono le stesse cose. Nelle sue proprietà si possono ancora fare scelte solo sue.',
+'Nelle legende i veicoli compaiono senza la freccia di marcia e senza le zone dei danni.',
+'Autodiagnosi: una prova nuova, 91 in tutto.'
+] },
 { build: 271, data: '2026-11-11', voci: [
 'Stampa dei disegni grandi (per esempio 100 m di strada): sul foglio le scritte sono almeno di 2,5 mm (nomi delle vie, quote, lettere, testi), le linee almeno di 0,15 mm e i simboli almeno di 3,5 mm; legenda e tabella misure disegnate si ingrandiscono intere, senza sovrapporsi. Si spegne con «Simboli e scritte leggibili».',
 'Con la disposizione automatica, se la fascia in basso lascia al disegno una scala più grande della colonna, si usa la fascia: la strada di 100 m della prova passa da 1:750 a 1:400.',
