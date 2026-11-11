@@ -1,10 +1,13 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 255;
+RS.BUILD = 256;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 256, data: '2026-11-11', voci: [
+'Schermata di apertura: il logo è animato. Le due strade si disegnano dal centro, il veicolo blu e quello verde arrivano all\'incrocio e compare il punto d\'urto rosso, con un\'onda che si allarga e poi pulsa piano. Sui telefoni impostati con «riduci animazioni» il logo resta fermo.'
+] },
 { build: 255, data: '2026-11-11', voci: [
 'Schizzo collaudato con 800 disegni simulati come fatti col dito (tratti tremolanti, inizi e fine imprecisi, a zoom diversi): croci, incroci a T, strade oblique dal centro o che attraversano l\'incrocio, prosecuzioni, rotatorie e strade aggiunte alla rotatoria. Corretti i casi in cui qualcosa spariva o si deformava:',
 '— con la vista lontana, due strade corte che si incrociano avevano le punte vicine e venivano unite in un angolo: ora, se si attraversano, restano un incrocio;',

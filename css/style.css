@@ -449,6 +449,24 @@ animation:welRise .7s cubic-bezier(.2,.8,.2,1) both}
 filter:drop-shadow(0 8px 26px rgba(0,0,0,.55));
 animation:welLogo 1s cubic-bezier(.2,.8,.2,1) both,welGlow 3.6s ease-in-out 1s infinite}
 @keyframes welLogo{from{opacity:0;transform:scale(.6) translateY(6px)}to{opacity:1;transform:none}}
+.wl-anim{overflow:visible}
+.wl-anim *{transform-box:fill-box}
+.wl-via{stroke-dasharray:70;stroke-dashoffset:70;animation:wlVia .55s cubic-bezier(.3,.7,.3,1) forwards}
+.wl-via-o{animation-delay:.25s}.wl-via-o2{animation-delay:.3s}.wl-via-v{animation-delay:.38s}.wl-via-v2{animation-delay:.43s}
+@keyframes wlVia{to{stroke-dashoffset:0}}
+.wl-blu{opacity:0;animation:wlBlu .6s cubic-bezier(.25,.9,.3,1.08) .85s forwards}
+@keyframes wlBlu{from{opacity:0;transform:translateX(-46px)}35%{opacity:1}to{opacity:1;transform:none}}
+.wl-verde{opacity:0;animation:wlVerde .6s cubic-bezier(.25,.9,.3,1.08) 1s forwards}
+@keyframes wlVerde{from{opacity:0;transform:translateY(46px)}35%{opacity:1}to{opacity:1;transform:none}}
+.wl-urto{opacity:0;transform-origin:center;animation:wlUrto .45s cubic-bezier(.3,1.6,.5,1) 1.55s forwards,wlBatti 2.4s ease-in-out 2.4s infinite}
+@keyframes wlUrto{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+@keyframes wlBatti{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.wl-onda{opacity:0;transform-origin:center;animation:wlOnda 2.4s ease-out 1.6s infinite}
+@keyframes wlOnda{0%{opacity:.85;transform:scale(1)}70%,100%{opacity:0;transform:scale(3.4)}}
+@media (prefers-reduced-motion: reduce){
+.wl-via,.wl-blu,.wl-verde,.wl-urto,.wl-onda{animation:none !important;opacity:1;stroke-dashoffset:0;transform:none}
+.wl-onda{opacity:0}
+}
 @keyframes welGlow{0%,100%{filter:drop-shadow(0 8px 26px rgba(0,0,0,.55))}
 50%{filter:drop-shadow(0 8px 30px rgba(0,0,0,.55)) drop-shadow(0 0 14px rgba(76,141,255,.28))}}
 .wel-title{font-size:58px;font-weight:800;letter-spacing:6px;color:#fff;line-height:1.05;margin:6px 0 2px}
