@@ -1,0 +1,36 @@
+RILSIN - Rilievo planimetrico dei sinistri stradali
+Copyright (c) 2026 MANZONI Alessandro. Tutti i diritti riservati.
+
+Il software RILSIN (codice, grafica, testi, guida e documenti generati
+dai suoi modelli) è opera dell'autore ed è protetto dalla legge sul
+diritto d'autore (L. 22 aprile 1941, n. 633, e successive modifiche).
+
+COSA È CONSENTITO
+- Usare gratuitamente l'app, così come viene pubblicata, per il proprio
+  lavoro: dal sito, dall'app Android o dalla versione per PC.
+- Conservare e stampare i documenti prodotti con l'app (verbali,
+  planimetrie, fascicoli, atti di scambio dati).
+
+COSA NON È CONSENTITO senza il permesso scritto dell'autore
+- Copiare, modificare, adattare o tradurre il codice, in tutto o in parte.
+- Ridistribuire o ripubblicare l'app o parti di essa, anche gratuitamente
+  e anche con un altro nome.
+- Usare il codice o parti di esso in altri programmi.
+- Vendere l'app o servizi basati su di essa.
+
+Il fatto che il codice sia consultabile su questo sito non concede alcun
+diritto oltre a quelli elencati sopra.
+
+COMPONENTI DI TERZI
+La cartella «ocr» contiene componenti di terzi, che restano soggetti alle
+loro licenze: ONNX Runtime Web (Microsoft, licenza MIT) e modelli di
+riconoscimento del testo derivati da PaddleOCR (PaddlePaddle, licenza
+Apache 2.0).
+
+NESSUNA GARANZIA
+L'app è uno strumento di ausilio fornito così com'è, senza garanzie.
+Misure, calcoli ed elaborati vanno sempre verificati da chi li firma.
+RILSIN non è un applicativo distribuito dall'Arma dei Carabinieri né da
+altre amministrazioni.
+
+Per permessi, segnalazioni e domande: rilsin.app@gmail.com

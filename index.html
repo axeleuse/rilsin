@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file: data: blob:; script-src 'self' file: data: 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' file: data: 'unsafe-inline'; img-src 'self' file: data: blob: http://wms.pcn.minambiente.it https://wms.pcn.minambiente.it; connect-src 'self' file: data: blob: http://wms.pcn.minambiente.it https://wms.pcn.minambiente.it; font-src 'self' file: data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>RILSIN — Rilievo planimetrico dei sinistri stradali</title>
+<meta name="theme-color" content="#0e1116">
+<meta name="rilsin-archive" content="server">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="RILSIN">
+<link rel="stylesheet" href="css/style.css?v=252">
+</head>
+<body>
+
+<div id="welcome" class="welcome show">
+  <div class="wel-inner">
+    <img class="wel-logo" src="icon.svg" alt="" onerror="this.style.display='none'">
+    <div class="wel-title">RILSIN</div>
+    <div class="wel-sub">Rilievo planimetrico dei sinistri stradali</div>
+    <div class="wel-tricolor"><span></span><span></span><span></span></div>
+    <div class="wel-cred" id="welCred"></div>
+    <div class="wel-hint">Tocca per continuare</div>
+  </div>
+</div>
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <img src="icon.svg" alt="RILSIN" width="38" height="38">
+      </span>
+      <div class="brand-txt">
+        <strong>RILSIN</strong>
+        <small>rilievo planimetrico dei sinistri</small>
+      </div>
+    </div>
+
+    <div class="tb-group" data-nome="File">
+      <button class="tb" data-act="home" title="Menu iniziale"><svg viewBox="0 0 24 24"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span>Menu</span></button>
+      <button class="tb m-hide" data-act="nuovo" title="Nuova tavola"><svg viewBox="0 0 24 24"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/><path d="M12 11.5v5M9.5 14h5"/></svg><span>Nuovo</span></button>
+      <button class="tb" data-act="salva" title="Salva (Ctrl+S)"><svg viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7"/><path d="M8 21v-6h8v6"/></svg><span>Salva</span></button>
+      <button class="tb m-hide" data-act="apri" title="Apri tavola salvata"><svg viewBox="0 0 24 24"><path d="M3 7h6l2 2h10v9H3z"/></svg><span>Apri</span></button>
+    </div>
+
+    <div class="tb-group" data-nome="Rilievo">
+      <button class="tb solo-mob" data-act="schizzo" title="Schizzo: disegna col dito, l'app capisce strade, veicoli, frenate e crea gli oggetti"><svg viewBox="0 0 24 24"><path d="M3 20c3-1 4-6 7-6s2 4 5 3 4-6 6-8"/><path d="M14.5 5.5l3.5 3.5"/><path d="M12.5 12.5L18 7a1.8 1.8 0 0 1 2.6 2.6L15 15z"/></svg><span>Schizzo</span></button>
+      <button class="tb" data-act="coinvolti" data-mob="Coinvolti" title="Coinvolti: veicoli, conducenti, assicurazioni, passeggeri, pedoni e testimoni; foto e lettura dei documenti; verifiche sulle banche dati"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.6 2.7-6.2 6-6.2s6 2.6 6 6.2"/><circle cx="17" cy="9" r="2.5"/><path d="M15.8 14.1c2.8.4 5.2 2.6 5.2 5.9"/></svg><span>Coinvolti</span></button>
+      <button class="tb" data-act="misure" data-mob="Misure" title="Dati e misure: intestazione, rilievo dei punti, altre misure, controllo e chiusura"><svg viewBox="0 0 24 24"><circle cx="10" cy="11" r="6.5"/><circle cx="10" cy="11" r="1.8"/><path d="M16.5 14.5H21v3h-9"/><path d="M18 14.5v1.6M15 17.5v-1.3"/></svg><span>Dati e misure</span></button>
+      <button class="tb m-hide" data-act="triangola" title="Triangolazione guidata: clicca due capisaldi e inserisci le distanze"><svg viewBox="0 0 24 24"><path d="M4 20L12 5l8 15z"/><circle cx="4" cy="20" r="1.4" fill="currentColor" stroke="none"/><circle cx="20" cy="20" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none"/></svg><span>Triangola</span></button>
+      <button class="tb m-hide" data-act="righello" title="Righello rapido: misura al volo senza creare una quota"><svg viewBox="0 0 24 24"><path d="M3.5 16.5L16.5 3.5l4 4L7.5 20.5z"/><path d="M7.5 12.5l2 2M10.5 9.5l1.5 1.5M13.5 6.5l2 2"/></svg><span>Righello</span></button>
+      <button class="tb m-hide" data-act="sfondo" title="Importa/seleziona foto aerea di sfondo"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="1.5"/><path d="M7 19.5C9 14 13 10 20.5 9"/><path d="M11.5 19.5c1.5-3.5 4.5-5.5 9-6"/><circle cx="8" cy="9" r="1.6"/></svg><span>Sfondo</span></button>
+    </div>
+
+    <div class="tb-group" data-nome="Documenti">
+      <span class="tb-dd m-hide">
+        <button class="tb" data-act="atto-menu" title="Atti: verbale di rilievi, scambio dati tra le parti, fascicolo completo"><svg viewBox="0 0 24 24"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/><path d="M9 12h7M9 15h7M9 18h4"/></svg><span>Atti<i class="caret">▾</i></span></button>
+        <div class="tb-menu" id="attoMenu" hidden>
+          <button data-act="atto">📄 Verbale di rilievi in PDF (stampa)</button>
+          <button data-act="atto-word">📝 Verbale di rilievi in Word (.doc)</button>
+          <button data-act="scambio">🔁 Scambio dati tra le parti (stampa o e-mail)</button>
+          <button data-act="completo">📚 Fascicolo completo (PDF unico)</button>
+        </div>
+      </span>
+      <button class="tb" data-act="fascicolo" data-mob="Foto" title="Fascicolo fotografico: foto guidate del luogo e dei veicoli, didascalie e stampa"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="13" height="11" rx="1.5"/><path d="M8 4h13v11"/><circle cx="8" cy="11.5" r="1.6"/><path d="M3 16l3.5-3 2.5 2 3-2.5 4 3.5"/></svg><span>Fascicolo foto</span></button>
+      <button class="tb solo-mob" data-act="atti" title="Atti: verbale, scambio dati, fascicolo, planimetria"><svg viewBox="0 0 24 24"><path d="M14 3v5h5"/><path d="M6 3h8l5 5v13H6z"/><path d="M9 12h7M9 15h7M9 18h4"/></svg><span>Atti</span></button>
+      <button class="tb m-hide" data-act="stampa" title="Stampa in scala A4"><svg viewBox="0 0 24 24"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M8 17h8v4H8z"/><circle cx="16.5" cy="12" r=".6" fill="currentColor" stroke="none"/></svg><span>Stampa</span></button>
+    </div>
+
+    <div class="tb-group" data-nome="&#160;">
+      <button class="tb m-hide" data-act="undo" title="Annulla (Ctrl+Z)"><svg viewBox="0 0 24 24"><polyline points="9 7 4 12 9 17"/><path d="M4 12h10a5 5 0 0 1 0 10H9"/></svg><span>Annulla</span></button>
+      <button class="tb m-hide" data-act="redo" title="Ripeti (Ctrl+Y)"><svg viewBox="0 0 24 24"><polyline points="15 7 20 12 15 17"/><path d="M20 12H10a5 5 0 0 0 0 10h5"/></svg><span>Ripeti</span></button>
+      <button class="tb tgl m-hide" data-act="pan" title="Sposta la tavola: trascina per muoverti sul disegno (o tieni premuta la barra spaziatrice)"><svg viewBox="0 0 24 24"><path d="M10 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M13 11V4.5a1.5 1.5 0 0 1 3 0V11"/><path d="M16 11V6.5a1.5 1.5 0 0 1 3 0V13c0 4-2.5 7-6.5 7S7 17.5 7 14v-1.5l-2-2a1.5 1.5 0 0 1 2.1-2.1L10 11.5"/></svg><span>Sposta</span></button>
+      <span class="tb-dd m-hide">
+        <button class="tb" data-act="vista-menu" title="Griglia, foglio, aggancio, righelli, livelli e altre opzioni di vista"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Vista<i class="caret">▾</i></span></button>
+        <div class="tb-menu tb-menu-vista" id="vistaMenu" hidden>
+          <button class="tb tgl" data-act="griglia" title="Mostra/nascondi griglia"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 10h16M4 15h16M10 4v16M15 4v16"/></svg><span>Griglia</span></button>
+          <button class="tb tgl" data-act="foglio" title="Mostra/nascondi l'area di stampa (cornice del foglio A4)"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="1" stroke-dasharray="3 2.2"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4"/></svg><span>Foglio di stampa</span></button>
+          <button class="tb tgl on" data-act="snap" title="Aggancio alla griglia"><svg viewBox="0 0 24 24"><path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M6 4h4v6.5M18 4h-4v6.5"/></svg><span>Aggancio alla griglia</span></button>
+          <button class="tb tgl" data-act="righelli" title="Righelli e guide"><svg viewBox="0 0 24 24"><path d="M3 3h18v4H7v14H3z"/><path d="M11 3v2M15 3v2M19 3v2M3 11h2M3 15h2M3 19h2"/><path d="M13 10v11M10 14h11" stroke-dasharray="2 2"/></svg><span>Righelli e guide</span></button>
+          <button class="tb tgl" data-act="livelli" title="Livelli: mostra/nascondi gruppi di elementi"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg><span>Livelli…</span></button>
+          <button class="tb tgl" data-act="minimappa" title="Minimappa (navigatore)"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M9 4v16M9 8l6-2v12l-6 2"/></svg><span>Minimappa</span></button>
+          <button class="tb tgl" data-act="orient" title="Ruota la vista: verticale oppure orizzontale"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="1.6"/><path d="M4.5 15.5a8 8 0 0 0 3 3"/><path d="M4 12.5V16h3.5"/></svg><span>Verticale / orizzontale</span></button>
+          <button class="tb" data-act="aspetto" title="Aspetto: scuro, chiaro, pieno sole (all'aperto) o notte"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor"/></svg><span>Aspetto</span></button>
+          <button class="tb tgl" data-act="present" title="Modalità presentazione: nasconde griglia e maniglie (per screenshot)"><svg viewBox="0 0 24 24"><path d="M3 5h18v11H3z"/><path d="M12 16v3M8 21h8"/></svg><span>Vista pulita</span></button>
+        </div>
+      </span>
+      <span class="tb-dd m-hide">
+        <button class="tb" data-act="altro-menu" title="Comandi meno usati: schizzo, raddrizza, calcoli, esportazioni, aspetto, guida"><svg viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg><span>Altro<i class="caret">▾</i></span></button>
+        <div class="tb-menu tb-menu-dx" id="altroMenu" hidden>
+          <div class="tb-menu-sec">Rilievo</div>
+          <button data-act="schizzo">✏️ Schizzo a mano libera</button>
+          <button data-act="foto">📷 Punto di ripresa di una foto sul disegno</button>
+          <button data-act="raddrizza">📐 Raddrizza una foto</button>
+          <button data-act="recon">🧮 Ricostruzione (calcoli)</button>
+          <button data-act="raccorda">⌒ Raccorda gli incroci</button>
+          <button data-act="luoghi">🗺 Libreria dei luoghi</button>
+          <div class="tb-menu-sec">Tavola</div>
+          <button data-act="salva-come">📑 Salva come nuova tavola…</button>
+          <button data-act="condividi" class="solo-browser solo-condividi">📤 Condividi la tavola</button>
+          <button data-act="esporta-json" class="solo-browser">💾 Esporta la tavola (.json)</button>
+          <button data-act="esporta-png">🖼 Esporta immagine PNG</button>
+          <button data-act="esporta-svg">✎ Esporta vettoriale SVG</button>
+          <div class="tb-menu-sec">Applicazione</div>
+          <button data-act="testo">🔠 Dimensione del testo</button>
+          <button data-act="guida">❓ Guida</button>
+          <button data-act="info">ℹ️ Informazioni</button>
+          <button data-act="segnala" class="solo-segnala">🐞 Segnala un problema</button>
+        </div>
+      </span>
+    </div>
+
+    <div class="tb-group right m-hide">
+      <label class="tb-lab">Scala
+        <select id="scala">
+          <option value="nis">fuori scala</option>
+          <option value="50">1:50</option>
+          <option value="100" selected>1:100</option>
+          <option value="200">1:200</option>
+          <option value="250">1:250</option>
+          <option value="500">1:500</option>
+          <option value="1000">1:1000</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <aside id="palette">
+      <div class="pal-search"><input id="palSearch" type="search" placeholder="🔍 Cerca oggetto…"></div>
+      <div class="pal-tabs" id="palTabs"></div>
+      <div class="pal-items" id="palItems"></div>
+    </aside>
+
+    <main id="stage">
+      <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
+        <defs id="defs"></defs>
+        <defs id="defsDyn"></defs>
+        <g id="gGrid"></g>
+        <g id="gElements"></g>
+        <g id="gFoglio" pointer-events="none"></g>
+        <g id="gGuides"></g>
+        <g id="gOverlay"></g>
+      </svg>
+      <canvas id="rulerTop" class="ruler ruler-top" hidden></canvas>
+      <canvas id="rulerLeft" class="ruler ruler-left" hidden></canvas>
+      <div id="rulerCorner" class="ruler-corner" title="Cancella tutte le guide" hidden>⌫</div>
+      <div id="hint" class="hint"></div>
+      <div id="minimap" hidden><span class="mm-head">Minimappa</span></div>
+      <div id="strumAttivo" class="strum-attivo" hidden><span id="saNome"></span><button type="button" data-act="fine-strumento" title="Torna a Seleziona (Esc)">&#10003; Fine</button></div>
+      <div id="skBar" class="sk-bar" hidden></div>
+      <div id="skEsito" class="sk-esito" hidden><button type="button" id="skX" class="sk-x" title="Chiudi" aria-label="Chiudi">&#10005;</button><div id="skT"></div><div id="skB" class="sk-bott"></div><div id="skErr" class="sk-err"></div></div>
+      <div id="scalaVista" class="scala-vista" aria-hidden="true"><span class="sv-barra"><i></i><i></i></span><span id="svTesto"></span></div>
+      <div id="zoomTela" class="zoom-tela">
+        <button data-act="zoom-in" title="Ingrandisci">＋</button>
+        <button data-act="zoom-out" title="Riduci">−</button>
+        <button data-act="fit" title="Adatta al disegno">⤢</button>
+        <button data-act="adatta-foglio" title="Adatta al foglio di stampa">▭</button>
+        <span id="ztInfo"></span>
+      </div>
+      <div id="barraRapida" class="barra-rapida" hidden>
+        <button data-br="ruota" title="Ruota di 15° (Maiusc: −15°)">⟳</button>
+        <button data-br="duplica" title="Duplica">⧉</button>
+        <button data-br="specchia" title="Specchia">⇋</button>
+        <button data-br="avanti" title="Porta avanti">⬆</button>
+        <button data-br="indietro" title="Porta indietro">⬇</button>
+        <button data-br="elimina" class="br-del" title="Elimina">🗑</button>
+        <button data-br="altro" title="Tutte le proprietà">⋯</button>
+      </div>
+      <div id="nomeHover" class="nome-hover" hidden></div>
+      <div id="tavolaVuota" class="tavola-vuota" hidden>
+        <div class="tv-box">
+          <div class="tv-testa"><span class="tv-tit">Inizia il disegno</span><button data-tv="chiudi" class="tv-x" title="Chiudi" aria-label="Chiudi">&#10005;</button></div>
+          <button class="tv-proc" data-tv="procedura"><span class="tv-ic">🧭</span><span class="tv-tx"><b>Procedura guidata</b><small>Dati, disegno, misure, foto e atti, un passo alla volta</small></span><span class="tv-go">›</span></button>
+          <div class="tv-voci">
+            <button data-tv="schizzo"><span class="tv-ic">✏️</span><span class="tv-tx"><b>Schizzo</b><small>Col dito, l'app capisce</small></span></button>
+            <button data-tv="incrocio"><span class="tv-ic">🚦</span><span class="tv-tx"><b>Incrocio pronto</b><small>Croce, T, rotatoria</small></span></button>
+            <button data-tv="geoportale"><span class="tv-ic">🛰</span><span class="tv-tx"><b>Foto aerea</b><small>Geoportale, già in scala</small></span></button>
+            <button data-tv="gmaps"><span class="tv-ic">🌍</span><span class="tv-tx"><b>Google Maps</b><small>Più recente, da calibrare</small></span></button>
+            <button data-tv="luogo" class="tv-largo"><span class="tv-ic">🗺</span><span class="tv-tx"><b>Luogo salvato</b><small>Strade, segnaletica e capisaldi già pronti</small></span></button>
+          </div>
+          <div class="tv-nota">Oppure prendi un oggetto dalla tavolozza.</div></div>
+      </div>
+    </main>
+
+    <aside id="props">
+      <div class="props-head">Proprietà<button class="props-aiuto" data-act="aiuti" title="Mostra o nasconde le spiegazioni sotto i campi"><svg class="pa-ic" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.6"/><path d="M8 7.2v4.3M8 4.6v.1"/></svg>Spiegazioni</button></div>
+      <div id="propsBody" class="props-body">
+        <p class="muted">Nessun elemento selezionato.<br>Seleziona un oggetto sulla tavola o scegline uno dalla tavolozza.</p>
+      </div>
+      <div class="props-head">Legenda</div>
+      <div id="legenda" class="legenda"></div>
+    </aside>
+  </div>
+
+  <div class="mob-menu" id="mobMenu" hidden>
+    <div class="mob-menu-sec">Documenti</div>
+    <div class="mob-grid">
+      <button data-act="atto"><i>📄</i><span>Verbale in PDF</span></button>
+      <button data-act="scambio"><i>🔁</i><span>Scambio dati</span></button>
+      <button data-act="atto-word"><i>📝</i><span>Verbale in Word</span></button>
+      <button data-act="completo"><i>📚</i><span>Fascicolo completo</span></button>
+      <button data-act="stampa"><i>🖨</i><span>Stampa in scala</span></button>
+      <button data-act="esporta-png"><i>🖼</i><span>Immagine PNG</span></button>
+      <button data-act="esporta-svg"><i>✎</i><span>Vettoriale SVG</span></button>
+    </div>
+    <div class="mob-menu-sec">Tavola</div>
+    <div class="mob-grid">
+      <button data-act="nuovo"><i>➕</i><span>Nuova tavola</span></button>
+      <button data-act="apri"><i>📂</i><span>Apri tavola</span></button>
+      <button data-act="salva-come"><i>📑</i><span>Salva come…</span></button>
+      <button data-act="condividi" class="solo-browser solo-condividi"><i>📤</i><span>Condividi</span></button>
+      <button data-act="esporta-json" class="solo-browser"><i>💾</i><span>Esporta .json</span></button>
+    </div>
+    <label class="mob-scala">Scala della tavola
+      <select id="scalaMob">
+        <option value="nis">fuori scala</option>
+        <option value="50">1:50</option>
+        <option value="100">1:100</option>
+        <option value="200">1:200</option>
+        <option value="250">1:250</option>
+        <option value="500">1:500</option>
+        <option value="1000">1:1000</option>
+      </select>
+    </label>
+    <div class="mob-menu-sec">Rilievo</div>
+    <div class="mob-grid">
+      <button data-act="triangola"><i>📐</i><span>Triangola</span></button>
+      <button data-act="righello"><i>📏</i><span>Righello</span></button>
+      <button data-act="foto"><i>📷</i><span>Punto di ripresa foto</span></button>
+      <button data-act="sfondo"><i>🛰</i><span>Foto aerea</span></button>
+      <button data-act="verifica"><i>✔</i><span>Controllo e chiusura</span></button>
+      <button data-act="recon"><i>🧮</i><span>Ricostruzione</span></button>
+      <button data-act="luoghi"><i>🗺</i><span>Luoghi salvati</span></button>
+      <button data-act="raccorda"><i>⌒</i><span>Raccorda incroci</span></button>
+      <button data-act="raddrizza"><i>📐</i><span>Raddrizza foto</span></button>
+    </div>
+    <div class="mob-menu-sec">Vista</div>
+    <div class="mob-grid">
+      <button data-act="aspetto"><i>🎨</i><span>Aspetto</span></button>
+      <button data-act="orient"><i>🔄</i><span>Verticale / orizzontale</span></button>
+      <button data-act="pan"><i>✋</i><span>Sposta la tavola</span></button>
+      <button data-act="griglia"><i>▦</i><span>Griglia</span></button>
+      <button data-act="foglio"><i>▭</i><span>Area di stampa</span></button>
+      <button data-act="snap"><i>🧲</i><span>Aggancio</span></button>
+      <button data-act="righelli"><i>▤</i><span>Righelli e guide</span></button>
+      <button data-act="livelli"><i>🗂</i><span>Livelli</span></button>
+      <button data-act="present"><i>🖵</i><span>Vista pulita</span></button>
+    </div>
+    <div class="mob-menu-sec">Applicazione</div>
+    <div class="mob-grid">
+      <button data-act="testo"><i>🔠</i><span>Dimensione testo</span></button>
+      <button data-act="guida"><i>❓</i><span>Guida</span></button>
+      <button data-act="info"><i>ℹ️</i><span>Informazioni</span></button>
+      <button data-act="segnala" class="solo-segnala mob-segnala"><i>🐞</i><span>Segnala un problema</span></button>
+    </div>
+  </div>
+
+  <div class="mobbar" id="mobbar">
+    <button class="mobbtn mob-fine" data-act="fine-strumento" hidden><span>&#10003;</span>Fine</button>
+    <button class="mobbtn" data-act="mob-palette"><span>🧰</span>Oggetti</button>
+    <button class="mobbtn" data-act="mob-props"><span>⚙️</span>Proprietà</button>
+    <button class="mobbtn" data-act="undo"><span>↶</span>Annulla</button>
+    <button class="mobbtn" data-act="redo"><span>↷</span>Ripeti</button>
+    <button class="mobbtn" data-act="mob-menu"><span>⋯</span>Altro</button>
+  </div>
+  <div class="mob-scrim" id="mobScrim" hidden></div>
+
+  <footer id="status">
+    <button id="stProc" class="st-rilievo st-proc" type="button" hidden title="Procedura guidata: i passi"></button>
+    <span id="stTool">Strumento: Seleziona</span>
+    <span id="stCoord">x: – ; y: –</span>
+    <span id="stZoom">Zoom 100%</span>
+    <span id="stScale">Scala 1:100</span>
+    <span id="stSel">—</span>
+    <span id="stFile" class="st-file" hidden></span>
+    <button id="stRilievo" class="st-rilievo" type="button" hidden></button>
+    <span id="stVer" class="st-ver"></span>
+  </footer>
+</div>
+
+<div id="layersPanel" class="lay-panel" hidden></div>
+
+<div id="triPanel" class="pop-panel" hidden></div>
+
+
+
+<div id="home" class="home" hidden></div>
+
+<div id="fascicolo" class="fascicolo" hidden></div>
+
+<input type="file" id="fileOpen" accept="application/json,.json" hidden>
+<input type="file" id="imgOpen" accept="image/*" hidden>
+<input type="file" id="fotoOpen" accept="image/*" capture="environment" hidden>
+
+<div id="reconModal" class="modal" hidden>
+  <div class="modal-box" style="width:min(820px,95vw)">
+    <div class="modal-head">
+      <span>🧮 Ricostruzione cinematica</span>
+      <button class="modal-x" data-act="recon-close" title="Chiudi">✕</button>
+    </div>
+    <div class="modal-body" id="reconBody"></div>
+  </div>
+</div>
+
+<div id="luoghiModal" class="modal" hidden>
+  <div class="modal-box" style="width:min(640px,95vw)">
+    <div class="modal-head">
+      <span>🗺 Libreria dei luoghi</span>
+      <button class="modal-x" data-act="luoghi-close" title="Chiudi">✕</button>
+    </div>
+    <div class="modal-body" id="luoghiBody"></div>
+  </div>
+</div>
+
+<div id="completoModal" class="modal" hidden>
+  <div class="modal-box" style="width:min(520px,95vw)">
+    <div class="modal-head">
+      <span>📚 Fascicolo completo</span>
+      <button class="modal-x" data-act="completo-close" title="Chiudi">✕</button>
+    </div>
+    <div class="modal-body" id="completoBody"></div>
+  </div>
+</div>
+
+<div id="printModal" class="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <span>🖨 Opzioni di stampa</span>
+      <button class="modal-x" data-act="stampa-close" title="Chiudi">✕</button>
+    </div>
+    <div class="modal-body" id="printBody"></div>
+  </div>
+</div>
+
+<div id="dataModal" class="modal" hidden>
+  <div class="modal-box">
+    <div class="modal-head">
+      <span>📋 Dati e misure</span>
+      <button class="modal-x" data-act="dati-close" title="Chiudi">✕</button>
+    </div>
+    <div class="modal-body" id="dataBody"></div>
+  </div>
+</div>
+
+<div id="archiveModal" class="modal" hidden>
+  <div class="modal-box" style="width:min(920px,96vw)">
+    <div class="modal-head">
+      <span>🗂️ Archivio condiviso delle tavole</span>
+      <button class="modal-x" data-act="arch-close" title="Chiudi">✕</button>
+    </div>
+    <div class="modal-body" id="archiveBody"></div>
+  </div>
+</div>
+
+<div id="guidaModal" class="modal" hidden>
+  <div class="modal-box" style="width:min(520px,95vw)">
+    <div class="modal-head">
+      <span>❓ Guida</span>
+      <button class="modal-x" data-act="guida-close" title="Chiudi">✕</button>
+    </div>
+    <div class="modal-body">
+      <button class="guida-opt" data-g="coach">
+        <span class="guida-ic">▶</span>
+        <span class="guida-txt"><b>Mini-guida interattiva</b>
+          <small>Un giro guidato dei comandi principali, direttamente sullo schermo.</small></span>
+      </button>
+      <button class="guida-opt" data-g="pdf">
+        <span class="guida-ic">📖</span>
+        <span class="guida-txt"><b>Guida completa e FAQ (PDF)</b>
+          <small>Manuale di funzionamento e domande frequenti: si apre in una nuova scheda, stampabile.</small></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="coach" class="coach" hidden>
+  <div class="coach-mask"></div>
+  <div class="coach-ring"></div>
+  <div class="coach-tip">
+    <h4 id="coachTitle"></h4>
+    <p id="coachText"></p>
+    <div class="coach-nav">
+      <span class="coach-step" id="coachStep"></span>
+      <div class="coach-btns">
+        <button class="coach-skip" id="coachSkip">Salta</button>
+        <button class="coach-next" id="coachNext">Avanti</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="infoModal" class="modal" hidden>
+  <div class="modal-box" style="width:min(560px,95vw)">
+    <div class="modal-head">
+      <span>ℹ Informazioni</span>
+      <button class="modal-x" data-act="info-close" title="Chiudi">✕</button>
+    </div>
+    <div class="modal-body" id="infoBody"></div>
+  </div>
+</div>
+
+<script src="js/segnala.js?v=252"></script>
+<script src="js/ios.js?v=252"></script>
+<script src="js/catalog.js?v=252"></script>
+<script src="js/recon.js?v=252"></script>
+<script src="js/verifica.js?v=252"></script>
+<script src="js/luoghi.js?v=252"></script>
+<script src="js/ortofoto.js?v=252"></script>
+<script src="js/raccordi.js?v=252"></script>
+<script src="js/incroci.js?v=252"></script>
+<script src="js/curve.js?v=252"></script>
+<script src="js/cartelli.js?v=252"></script>
+<script src="js/raddrizza.js?v=252"></script>
+<script src="js/scene.js?v=252"></script>
+<script src="js/elements.js?v=252"></script>
+<script src="js/tools.js?v=252"></script>
+<script src="js/sketch.js?v=252"></script>
+<script src="js/storage.js?v=252"></script>
+<script src="js/export.js?v=252"></script>
+<script src="js/ui.js?v=252"></script>
+<script src="js/overlays.js?v=252"></script>
+<script src="js/layers.js?v=252"></script>
+<script src="js/home.js?v=252"></script>
+<script src="js/fascicolo.js?v=252"></script>
+<script src="js/comuni.js?v=252"></script>
+<script src="js/pdf.js?v=252"></script>
+<script src="js/ocr-web.js?v=252"></script>
+<script src="js/coinvolti.js?v=252"></script>
+<script src="js/menucontesto.js?v=252"></script>
+<script src="js/loghi-scelti.js?v=252"></script>
+<script src="js/app.js?v=252"></script>
+</body>
+</html>
