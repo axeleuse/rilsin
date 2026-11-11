@@ -1,10 +1,13 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 252;
+RS.BUILD = 253;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 253, data: '2026-11-11', voci: [
+'PC, RILSIN installato come app da Edge o Chrome (dal sito, icona «Installa app» nella barra dell\'indirizzo): una tavola salvata si apre con un doppio clic sul file, o con il tasto destro, «Apri con», RILSIN, come un documento di Word. Se RILSIN è già aperto la tavola arriva in quella finestra; se quella aperta ha modifiche non salvate, prima lo chiede. Restano gli avvisi di Apri (tavola di un collega, salvata con una versione più nuova). Il primo Salva chiede il permesso di scrivere nel file.'
+] },
 { build: 252, data: '2026-11-11', voci: [
 'Pagina di presentazione di RILSIN: axeleuse.github.io/rilsin/presentazione.html. Dice che cosa fa l\'app, come si installa su Android, iPhone, iPad e PC, con le novità delle ultime versioni, la guida e i contatti. È il link da passare ai colleghi; l\'app dal sito resta allo stesso indirizzo di prima.',
 'App per Android scaricabile anche dalla pagina di presentazione (tasto «Scarica per Android»), sempre all\'ultima versione. Resta disponibile anche sul canale Telegram.',
@@ -191,6 +194,11 @@ RS.layers.init();
 RS.home.init();
 RS.fascicolo.init();
 RS.menuContesto.init();
+try {
+if ('launchQueue' in window) window.launchQueue.setConsumer(p => {
+if (p && p.files && p.files.length) setTimeout(() => RS.ui.apriFileDaWindows(p.files[0]), 300);
+});
+} catch (e) {}
 RS.storage.leggiPostazione();
 window.addEventListener('keydown', e => {
 const tag = e.target.tagName;

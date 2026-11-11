@@ -1244,7 +1244,22 @@ if (!k) return;
 if (k === 'browser') { this._dirty = false; return this._apriDalBrowser(); }
 if (k === 'versioni') return this._apriVersioneFile(conVersioni);
 try {
-const l = await ST.leggiFile(k === 'altro' ? null : rec[+k.slice(1)].h);
+await this._apriLetto(await ST.leggiFile(k === 'altro' ? null : rec[+k.slice(1)].h));
+} catch (e) {
+if (!(e && e.name === 'AbortError')) alert('Impossibile aprire la tavola: ' + (e && e.message || e));
+}
+},
+async apriFileDaWindows(h) {
+const ST = RS.storage;
+if (!h || !ST.fileDisponibile()) return;
+if (RS.home && RS.home.hide) RS.home.hide(true);
+if (!(await this.confermaSostituzione('aprire «' + h.name + '»'))) return;
+try { await this._apriLetto(await ST.leggiFile(h, true)); }
+catch (e) { alert('Impossibile aprire «' + h.name + '»: ' + (e && e.message || e)); }
+},
+async _apriLetto(l) {
+const ST = RS.storage;
+{
 let copia = false;
 if (l.build) {
 const b = await this.scelta({
@@ -1278,8 +1293,6 @@ await new Promise(r => setTimeout(r, 0));
 if (RS.fascicolo && RS.fascicolo._coda) await RS.fascicolo._coda;
 RS.scene.fit(); this.markClean(); this.updateStatus(); this.renderProps(); this.renderLegend();
 this.toast(copia ? 'Aperta una copia di «' + nome + '»: con Salva scegli dove metterla' : 'Aperta: ' + nome);
-} catch (e) {
-if (!(e && e.name === 'AbortError')) alert('Impossibile aprire la tavola: ' + (e && e.message || e));
 }
 },
 async _apriVersioneFile(tavole) {

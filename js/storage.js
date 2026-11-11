@@ -610,9 +610,9 @@ try { this._fileMod = (await h.getFile()).lastModified; } catch (e) { this._file
 await ricordaFile(h, doc.id, doc.nome);
 return h.name;
 },
-async leggiFile(h) {
+async leggiFile(h, soloLettura) {
 if (!h) [h] = await window.showOpenFilePicker({ id: 'rilsin', types: TIPO_FILE });
-else if (!(await permesso(h))) throw new Error('permesso negato per «' + h.name + '»');
+else if (!soloLettura && !(await permesso(h))) throw new Error('permesso negato per «' + h.name + '»');
 const f = await h.getFile();
 const doc = completa(riparaTesti(JSON.parse(await f.text())));
 if (!doc || (!doc.elements && !doc.fascicolo)) throw new Error('«' + h.name + '» non è una tavola di RILSIN');
