@@ -1,10 +1,16 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 257;
+RS.BUILD = 258;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 258, data: '2026-11-11', voci: [
+'Panoramica a 360° ripresa direttamente da RILSIN: Altro, Rilievo, «🌐 Panoramica 360°», «📸 Riprendi ora con RILSIN». Si apre la fotocamera con dei pallini bianchi: porti un pallino al centro del cerchio, stai fermo un attimo e lo scatto parte da solo. 24 foto (16 attorno all\'orizzonte e 8 più in basso, per l\'asfalto), circa un minuto; le scritte dicono da che parte girare. Alla fine RILSIN unisce le foto e chiede di toccare sulla tavola il punto in cui eri.',
+'RILSIN misura da solo l\'ampiezza dell\'obiettivo del telefono confrontando le foto vicine; su Android la bussola orienta il segnaposto (con la freccia del Nord sulla tavola). Le foto si uniscono secondo i sensori: dove si toccano possono vedersi piccole imperfezioni, soprattutto su oggetti vicini o in movimento. Resta possibile scegliere una panoramica già fatta (fotocamera a 360°, la qualità migliore).',
+'App Android: ora chiede il permesso della fotocamera, la prima volta che si fa una ripresa o una foto (serve per la panoramica dentro l\'app). La fotocamera si usa solo dentro RILSIN, mai per un sito.',
+'Autodiagnosi: una prova nuova per la ripresa a 360°, 79 in tutto.'
+] },
 { build: 257, data: '2026-11-11', voci: [
 'Panoramiche a 360° della scena (Altro, Rilievo, «🌐 Panoramica 360°»): si sceglie la foto a 360° (fotocamera a 360°, Photo Sphere o Panorama di Android, Pano di iPhone) e si tocca sulla tavola il punto da cui è stata fatta. Compare il segnaposto viola P1, P2… con lo spicchio che indica dove guarda il centro della foto.',
 'La panoramica si guarda a tutto schermo e si gira col dito (due dita per avvicinare), anche senza rete; in alto dice verso dove si guarda, se sulla tavola c\'è la freccia del Nord. Serve a tornare sul posto quando la scena non c\'è più: che cosa vedeva un conducente, se un segnale era visibile, dov\'era un ostacolo.',

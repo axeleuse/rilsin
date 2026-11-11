@@ -1616,6 +1616,7 @@ const sc = el('sceltaModal');
 if (sc && !sc.hidden) { const a = sc.querySelector('.scelta-annulla'); if (a) a.click(); else sc.hidden = true; return 'si'; }
 if (RS.menuContesto && RS.menuContesto._box) { RS.menuContesto.chiudi(); return 'si'; }
 if (vis('firstSetup')) { const s = el('fsSkip'); if (s) s.click(); return 'si'; }
+if (vis('panoRipresa') && RS.panorama) { RS.panorama.chiudiRipresa(); return 'si'; }
 if (vis('panoViewer') && RS.panorama) { RS.panorama.chiudi(); return 'si'; }
 if (vis('ritaglioOv')) { const a = el('ritaglioOv').querySelector('[data-r="annulla"]'); if (a) a.click(); return 'si'; }
 if (vis('coach')) { this.coachEnd(); return 'si'; }
