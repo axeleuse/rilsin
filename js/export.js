@@ -93,8 +93,8 @@ const po = s.printOptions ? s.printOptions() : {};
 const o = po.orient || 'auto', force = (o === 'portrait' || o === 'landscape') ? o : null;
 const geo = land => {
 const PW = land ? 271 : 184, PH = (land ? 184 : 271) - (meno || 0), testa = 9;
-const ax = 0, ay = testa, Aw = land ? PW - 74 : PW, Ah = land ? PH - testa : PH - testa - 72;
-return { landscape: land, PW, PH, testa, ax, ay, Aw, Ah, Dmin: Math.max(cw * 1000 / (Aw - 4), ch * 1000 / (Ah - 4)) };
+const Ly = disposizione(land, s, po, s.meta || {}, PW, PH, testa), { ax, ay, Aw, Ah } = Ly;
+return { landscape: land, PW, PH, testa, ax, ay, Aw, Ah, Ly, Dmin: Math.max(cw * 1000 / (Aw - 4), ch * 1000 / (Ah - 4)) };
 };
 const L = geo(true), P = geo(false), cand = force ? [force === 'landscape' ? L : P] : [L, P];
 let g, denom, tagliata = false;
@@ -153,79 +153,78 @@ ln(0, testa, PW, testa, 0.35);
 const titolo = po.titolo || (s.fuoriScala ? 'SCHIZZO PLANIMETRICO DEL CAMPO DEL SINISTRO' : 'PLANIMETRIA DEL CAMPO DEL SINISTRO');
 t(3, 6, 3.6, titolo, ' font-weight="bold" letter-spacing="0.15"');
 t(PW - 3, 6, 2.7, 'Allegato al verbale di rilievi' + (meta.numero && po.numero !== false ? ' n. ' + meta.numero + ' di prot.' : ''), ' text-anchor="end"');
-let leg, car;
-if (T.landscape) {
-const x0 = PW - 74; ln(x0, testa, x0, PH, 0.35);
-car = { x: x0, w: 74, y1: PH }; leg = { x: x0, w: 74, y0: testa };
-} else {
-const y0 = PH - 72; ln(0, y0, PW, y0, 0.35); ln(PW * 0.55, y0, PW * 0.55, PH, 0.35);
-leg = { x: 0, w: PW * 0.55, y0, y1: PH }; car = { x: PW * 0.55, w: PW * 0.45, y1: PH, y0 };
-}
-const X = car.x + 3, W = car.w - 6;
-let y = car.y1;
-y -= 17; ln(car.x, y, car.x + car.w, y, 0.25);
-t(car.x + car.w / 2, y + 4.5, 2.6, 'I VERBALIZZANTI', ' text-anchor="middle" font-weight="bold"');
+const Ly = T.Ly, P = Ly.pann;
+const disegnaRiquadro = (quale, x, y, w, h) => {
+const X = x + 3, W = w - 6;
+if (quale === 'firme') {
+t(x + w / 2, y + 4.5, 2.6, 'I VERBALIZZANTI', ' text-anchor="middle" font-weight="bold"');
 ln(X + 4, y + 10.5, X + W - 4, y + 10.5, 0.2, ' stroke-dasharray="0.6 0.8"');
 ln(X + 4, y + 15, X + W - 4, y + 15, 0.2, ' stroke-dasharray="0.6 0.8"');
-const yS = y - 14; ln(car.x, yS, car.x + car.w, yS, 0.25);
+} else if (quale === 'scala') {
 const nordSulDisegno = s.elements.some(e => e.type === 'north' && (!RS.layers || RS.layers.visible(e)));
 const nord = po.nord !== false && !nordSulDisegno;
 if (nord) {
-const nx = car.x + car.w - 8, ny = yS + 8;
+const nx = x + w - 8, ny = y + 8;
 out.push(`<path d="M${nx} ${ny - 4.5} L${nx + 1.9} ${ny + 2.4} L${nx} ${ny + 0.9} L${nx - 1.9} ${ny + 2.4} Z" fill="${C}"/>`);
 t(nx, ny - 5.3, 2.6, 'N', ' text-anchor="middle" font-weight="bold"');
 }
-if (s.fuoriScala) { t(X, yS + 5.5, 3.2, 'NON IN SCALA', ' font-weight="bold" fill="#b00"'); t(X, yS + 10, 2.3, 'schizzo proporzionato, valgono le misure'); }
+if (s.fuoriScala) { t(X, y + 5.5, 3.2, 'NON IN SCALA', ' font-weight="bold" fill="#b00"'); t(X, y + 10, 2.3, 'schizzo proporzionato, valgono le misure'); }
 else if (po.scala !== false) {
-t(X, yS + 5.2, 3.2, 'Scala 1:' + D, ' font-weight="bold"');
+t(X, y + 5.2, 3.2, 'Scala 1:' + D, ' font-weight="bold"');
 if (!s.elements.some(e => e.type === 'graphscale' && (!RS.layers || RS.layers.visible(e)))) {
 const disp = W - (nord ? 14 : 2), NICE = [0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 500];
 let seg = NICE[0]; NICE.forEach(v => { if (v * k * 5 <= disp) seg = v; });
-for (let i = 0; i < 5; i++) out.push(`<rect x="${f(X + i * seg * k)}" y="${f(yS + 8.2)}" width="${f(seg * k)}" height="1.3" fill="${i % 2 ? '#fff' : C}" stroke="${C}" stroke-width="0.15"/>`);
-t(X, yS + 12.4, 2, '0', ' text-anchor="middle"');
-t(X + 5 * seg * k, yS + 12.4, 2, String(+(seg * 5).toFixed(2)).replace('.', ',') + ' m', ' text-anchor="middle"');
+for (let i = 0; i < 5; i++) out.push(`<rect x="${f(X + i * seg * k)}" y="${f(y + 8.2)}" width="${f(seg * k)}" height="1.3" fill="${i % 2 ? '#fff' : C}" stroke="${C}" stroke-width="0.15"/>`);
+t(X, y + 12.4, 2, '0', ' text-anchor="middle"');
+t(X + 5 * seg * k, y + 12.4, 2, String(+(seg * 5).toFixed(2)).replace('.', ',') + ' m', ' text-anchor="middle"');
 }
 }
-const dati = [];
-const viaT = viaSenzaComune(meta), comT = nomeComune(meta);
-if (viaT) dati.push(['Luogo', viaT]);
-if (comT) dati.push(['Comune', comT]);
-if (po.data !== false) dati.push(['Data e ora', meta.data || new Date().toLocaleDateString('it-IT')]);
-if (po.numero !== false && meta.numero) dati.push(['Prot. n.', meta.numero]);
-if (po.operatore !== false && meta.operatore) dati.push(['Rilevatore', meta.operatore]);
-if (po.coordinate !== false && meta.coordinate) dati.push(['Coordinate', meta.coordinate]);
-if (po.condizioni && meta.condizioni) dati.push(['Condizioni', meta.condizioni]);
-if (po.condizioni && meta.luce) dati.push(['Luce', meta.luce]);
-dati.push(['Stato', bozza ? 'BOZZA (rilievo non chiuso)' : 'DEFINITIVO']);
-const righeDati = []; dati.forEach(d => wrap(d[1], W - 17, 2.3).forEach((rr, i) => righeDati.push([i ? '' : d[0], rr])));
-const hD = righeDati.length * 3.1 + 2.5, yD = yS - hD; ln(car.x, yD, car.x + car.w, yD, 0.25);
-righeDati.forEach((d, i) => { const yy = yD + 3.6 + i * 3.1; if (d[0]) t(X, yy, 2.1, d[0], ' fill="#444"'); t(X + 17, yy, 2.3, d[1]); });
-const logoOk = po.logo !== false, lw = logoOk ? 12 : 0;
-const cmd = [po.comando !== false ? meta.comando : '', po.comando !== false ? meta.comando2 : '', po.stazione !== false ? meta.stazione : ''].filter(Boolean);
-const righeCmd = []; cmd.forEach((c, i) => wrap(c, W - lw - 2, i ? 2.4 : 2.6).forEach(rr => righeCmd.push([rr, i === 0])));
-const hC = Math.max(lw + 3, righeCmd.length * 3.2 + 3), yC = yD - hC; ln(car.x, yC, car.x + car.w, yC, 0.25);
-if (logoOk) {
+} else if (quale === 'dati') {
+righeDatiRilievo(po, meta, W).forEach((d, i) => { const yy = y + 3.6 + i * 3.1; if (d[0]) t(X, yy, 2.1, d[0], ' fill="#444"'); t(X + 17, yy, 2.3, d[1]); });
+} else if (quale === 'comando') {
+const c = righeComandoTav(po, meta, W), hC = altezzaRiquadro('comando', po, meta, W), yC = y + Math.max(0, (h - hC) / 2);
+if (c.logoOk) {
 const logo = RS.logoCC || (typeof location !== 'undefined' ? new URL('logocc.png', location.href).href : 'logocc.png');
-out.push(`<image href="${logo}" xlink:href="${logo}" x="${f(X)}" y="${f(yC + (hC - lw) / 2)}" width="${lw}" height="${lw}" preserveAspectRatio="xMidYMid meet"/>`);
+out.push(`<image href="${logo}" xlink:href="${logo}" x="${f(X)}" y="${f(yC + (hC - c.lw) / 2)}" width="${c.lw}" height="${c.lw}" preserveAspectRatio="xMidYMid meet"/>`);
 }
-const yc0 = yC + (hC - righeCmd.length * 3.2) / 2 + 2.4;
-righeCmd.forEach((c, i) => t(X + lw + 2, yc0 + i * 3.2, c[1] ? 2.6 : 2.4, c[0], c[1] ? ' font-weight="bold"' : ''));
-const legY1 = T.landscape ? yC : leg.y1, LX = leg.x + 3, LW = leg.w - 6;
-let ly = leg.y0 + 4.5;
+const yc0 = yC + (hC - c.righe.length * 3.2) / 2 + 2.4;
+c.righe.forEach((r2, i) => t(X + c.lw + 2, yc0 + i * 3.2, r2[1] ? 2.6 : 2.4, r2[0], r2[1] ? ' font-weight="bold"' : ''));
+}
+};
+const disegnaLegenda = (x, y0, w, y1) => {
+const LX = x + 3, LW = w - 6; let ly = y0 + 4.5, pieno = false;
 t(LX, ly, 2.9, 'LEGENDA', ' font-weight="bold" letter-spacing="0.2"'); ly += 4.6;
-const voci = legendaTavola(s);
-let pieno = false;
-voci.forEach(sez => {
+legendaTavola(s).forEach(sez => {
 if (pieno) return;
-if (ly + 3 > legY1 - 2) { pieno = true; return; }
+if (ly + 3 > y1 - 2) { pieno = true; return; }
 t(LX, ly, 2.6, sez.t, ' font-weight="bold"'); ly += 3.5;
-sez.r.forEach(rr => wrap(rr, LW - 2, 2.5).forEach((riga, i) => {
+sez.r.forEach(rr => aCapoMm(rr, LW - 2, 2.5).forEach((riga, i) => {
 if (pieno) return;
-if (ly > legY1 - 2.5) { t(LX + 1, ly, 2.5, '…'); pieno = true; return; }
+if (ly > y1 - 2.5) { t(LX + 1, ly, 2.5, '…'); pieno = true; return; }
 t(LX + (i ? 3 : 1), ly, 2.5, riga); ly += 3.3;
 }));
 ly += 1.6;
 });
+};
+const pila = (x, w, y1) => {
+const hs = Ly.ordine.map(kk => kk === 'scala' ? 14 : kk === 'firme' ? 17 : altezzaRiquadro(kk, po, meta, w - 6));
+let y = y1 - hs.reduce((a, b) => a + b, 0); const inizio = y;
+Ly.ordine.forEach((kk, i) => { ln(x, y, x + w, y, 0.25); disegnaRiquadro(kk, x, y, w, hs[i]); y += hs[i]; });
+return inizio;
+};
+if (P.tipo === 'colonna') {
+const xl = Ly.pos === 'sinistra' ? P.x + P.w : P.x; ln(xl, P.y, xl, PH, 0.35);
+const yTop = pila(P.x, P.w, P.y + P.h);
+if (Ly.legenda) disegnaLegenda(P.x, P.y, P.w, yTop);
+} else if (P.tipo === 'fascia') {
+const yb = Ly.pos === 'alto' ? P.y + P.h : P.y; ln(0, yb, PW, yb, 0.35);
+const xr = PW * 0.55; ln(xr, P.y, xr, P.y + P.h, 0.35);
+pila(xr, PW - xr, P.y + P.h);
+disegnaLegenda(0, P.y, xr, P.y + P.h);
+} else {
+const yb = Ly.pos === 'alto' ? P.y + P.h : P.y; ln(0, yb, PW, yb, 0.35);
+P.celle.forEach((c, i) => { if (i) ln(c.x, P.y, c.x, P.y + P.h, 0.25); disegnaRiquadro(c.k, c.x, P.y + 0.5, c.w, P.h - 1); });
+}
 out.push('</svg>');
 const svg = opz.bn ? inGrigio(out.join('\n')) : out.join('\n');
 return { svg, sized: svg.replace('<svg ', `<svg width="${PW}mm" height="${PH}mm" `), landscape: T.landscape, denom: D, note: T.note, PW, PH };
@@ -370,7 +369,67 @@ if (agg.length) fatta.push({ t: 'Altro', r: agg });
 return fatta;
 }
 exportUtil.legendaTavola = legendaTavola;
+const RIQUADRI = ['comando', 'dati', 'scala', 'firme'];
+const NOMI_RIQUADRI = { comando: 'Comando e logo', dati: 'Dati del rilievo', scala: 'Scala e Nord', firme: 'Firme dei verbalizzanti' };
+function ordineRiquadri(po) {
+const o = Array.isArray(po && po.ordine) ? po.ordine.filter((k, i, a) => RIQUADRI.indexOf(k) >= 0 && a.indexOf(k) === i) : [];
+RIQUADRI.forEach(k => { if (o.indexOf(k) < 0) o.push(k); });
+return o;
+}
+function aCapoMm(txt, w, size) {
+const max = Math.max(8, Math.floor(w / (size * 0.5))), righe = []; let cur = '';
+String(txt).split(/\s+/).forEach(p => { if ((cur + ' ' + p).trim().length > max && cur) { righe.push(cur); cur = p; } else cur = (cur + ' ' + p).trim(); });
+if (cur) righe.push(cur); return righe;
+}
+function inBozza(po) { return !!(po.bozza || (RS.verifica && !RS.verifica.chiuso())); }
+function righeDatiRilievo(po, meta, W) {
+const dati = [], viaT = viaSenzaComune(meta), comT = nomeComune(meta);
+if (viaT) dati.push(['Luogo', viaT]);
+if (comT) dati.push(['Comune', comT]);
+if (po.data !== false) dati.push(['Data e ora', meta.data || new Date().toLocaleDateString('it-IT')]);
+if (po.numero !== false && meta.numero) dati.push(['Prot. n.', meta.numero]);
+if (po.operatore !== false && meta.operatore) dati.push(['Rilevatore', meta.operatore]);
+if (po.coordinate !== false && meta.coordinate) dati.push(['Coordinate', meta.coordinate]);
+if (po.condizioni && meta.condizioni) dati.push(['Condizioni', meta.condizioni]);
+if (po.condizioni && meta.luce) dati.push(['Luce', meta.luce]);
+dati.push(['Stato', inBozza(po) ? 'BOZZA (rilievo non chiuso)' : 'DEFINITIVO']);
+const r = []; dati.forEach(d => aCapoMm(d[1], W - 17, 2.3).forEach((rr, i) => r.push([i ? '' : d[0], rr])));
+return r;
+}
+function righeComandoTav(po, meta, W) {
+const logoOk = po.logo !== false, lw = logoOk ? 12 : 0;
+const cmd = [po.comando !== false ? meta.comando : '', po.comando !== false ? meta.comando2 : '', po.stazione !== false ? meta.stazione : ''].filter(Boolean);
+const righe = []; cmd.forEach((c, i) => aCapoMm(c, W - lw - 2, i ? 2.4 : 2.6).forEach(rr => righe.push([rr, i === 0])));
+return { logoOk, lw, righe };
+}
+function altezzaRiquadro(k, po, meta, W) {
+if (k === 'comando') { const c = righeComandoTav(po, meta, W); return Math.max(c.lw + 3, c.righe.length * 3.2 + 3); }
+if (k === 'dati') return righeDatiRilievo(po, meta, W).length * 3.1 + 2.5;
+if (k === 'scala') return 14;
+return 17;
+}
+function disposizione(land, s, po, meta, PW, PH, testa) {
+const legenda = po.legenda !== false, scelta = po.disposizione || 'auto';
+const pos = scelta !== 'auto' ? scelta : (land && legenda ? 'destra' : 'basso');
+const ordine = ordineRiquadri(po);
+if (pos === 'destra' || pos === 'sinistra') {
+const CW = 74, x = pos === 'sinistra' ? 0 : PW - CW;
+return { pos, legenda, ordine, ax: pos === 'sinistra' ? CW : 0, ay: testa, Aw: PW - CW, Ah: PH - testa,
+pann: { tipo: 'colonna', x, y: testa, w: CW, h: PH - testa } };
+}
+let Hs, celle = null;
+if (legenda) Hs = land ? 62 : 72;
+else {
+const PESO = { comando: 0.31, dati: 0.31, scala: 0.19, firme: 0.19 };
+let x = 0; celle = ordine.map(k => { const w = PW * PESO[k], c = { k, x, w, h: altezzaRiquadro(k, po, meta, w - 6) }; x += w; return c; });
+Hs = Math.max(22, ...celle.map(c => c.h)) + 1;
+}
+const y = pos === 'alto' ? testa : PH - Hs;
+return { pos, legenda, ordine, ax: 0, ay: pos === 'alto' ? testa + Hs : testa, Aw: PW, Ah: PH - testa - Hs,
+pann: { tipo: legenda ? 'fascia' : 'fila', x: 0, y, w: PW, h: Hs, celle } };
+}
 function righeComando(m) { return [m.comando, m.comando2, m.stazione].map(x => String(x || '').trim()).filter(Boolean); }
+exportUtil.ordineRiquadri = ordineRiquadri; exportUtil.NOMI_RIQUADRI = NOMI_RIQUADRI;
 function nomeComune(m) { return String(m.comune || '').trim().replace(/^(?:del\s+)?comune\s+di\s+/i, '').trim(); }
 function viaSenzaComune(m) {
 const v = String(m.localita || '').trim(), c = nomeComune(m).replace(/\s*\([^)]*\)\s*$/, '');

@@ -411,11 +411,15 @@ this._hpos++; this.elements = clona(this._hist[this._hpos]);
 this.selection = []; this.render(); this.emit('change'); this.emit('select');
 },
 printOptions() {
-let bn = false, scalaFissa = false;
-try { bn = localStorage.getItem('rilsin:stampaBn') === '1'; scalaFissa = localStorage.getItem('rilsin:scalaFissa') === '1'; } catch (e) {}
+let bn = false, scalaFissa = false, lay = {};
+try {
+bn = localStorage.getItem('rilsin:stampaBn') === '1'; scalaFissa = localStorage.getItem('rilsin:scalaFissa') === '1';
+lay = JSON.parse(localStorage.getItem('rilsin:stampaLayout') || '{}') || {};
+} catch (e) {}
 return Object.assign({
 titolo: '', orient: 'auto', comando: true, stazione: true, numero: true, data: true,
-operatore: true, condizioni: false, coordinate: true, scala: true, nord: true, logo: true, bozza: false, bn, simboli: true, scalaFissa
+operatore: true, condizioni: false, coordinate: true, scala: true, nord: true, logo: true, bozza: false, bn, simboli: true, scalaFissa,
+legenda: lay.legenda !== false, disposizione: lay.disposizione || 'auto', ordine: Array.isArray(lay.ordine) ? lay.ordine : null
 }, this.printOpts || {});
 },
 applyMetaDefaults() {

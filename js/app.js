@@ -1,10 +1,15 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 268;
+RS.BUILD = 269;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 269, data: '2026-11-11', voci: [
+'Stampa della planimetria, «Disposizione del foglio»: si sceglie se stampare la legenda; senza legenda i riquadri stanno affiancati in una fascia bassa e il disegno guadagna spazio (in orizzontale da 197×175 a 271×152 mm, in verticale da 184×190 a 184×239 mm).',
+'Si sceglie anche dove stanno legenda e riquadri (automatica, colonna a destra o a sinistra, fascia in basso o in alto) e l\'ordine dei riquadri (Comando e logo, dati del rilievo, scala e Nord, firme) con le frecce ↑ ↓. Le scelte restano per le tavole seguenti; «Ripristina tutto» torna a quelle di partenza.',
+'Autodiagnosi: una prova nuova per la disposizione del foglio, 88 in tutto.'
+] },
 { build: 268, data: '2026-11-11', voci: [
 'Stampa in scala: la foto aerea di sfondo non fa più ridurre la scala (prima, essendo molto più grande del sinistro, portava per esempio da 1:100 a 1:750). Ora riempie l\'area del disegno e si ritaglia ai bordi. Se il disegno stesso non sta nel foglio la scala si riduce ancora, ma nelle opzioni di stampa c\'è «Mantieni sempre la scala scelta»: la scala resta quella e si taglia ciò che esce dalla cornice tratteggiata.',
 'Fasce curve: guard-rail, new jersey, barriera antirumore, marciapiede, banchina, spartitraffico, pista ciclabile, muro, siepe, recinzione, binari, canale e fosso si piegano ad arco trascinando il pallino arancio, oppure scrivendo la freccia in metri nelle proprietà. Le estremità restano ferme.',

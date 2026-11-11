@@ -2170,6 +2170,18 @@ el('printBody').innerHTML =
            <div class="gfield" style="grid-column:1/-1"><label>Titolo del cartiglio</label>
              <input id="poTitolo" value="${escAttr(po.titolo||'')}" placeholder="${escAttr(meta.localita || 'Planimetria del sinistro stradale')}"></div>
          </div>
+         <h4>Disposizione del foglio</h4>
+         <div class="grid2" style="margin-bottom:8px">
+           <div class="gfield"><label>Legenda e riquadri</label>
+             <select id="poDisp">${[['auto', 'Automatica'], ['destra', 'In una colonna a destra'], ['sinistra', 'In una colonna a sinistra'], ['basso', 'In una fascia in basso'], ['alto', 'In una fascia in alto']]
+.map(([v, l]) => `<option value="${v}"${(po.disposizione || 'auto') === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+           <label class="pchk" style="align-self:end"><input type="checkbox" id="poLegenda"${po.legenda !== false ? ' checked' : ''}> Legenda <span class="pchk-hint">${po.legenda !== false ? '' : '(senza: il disegno ha più spazio)'}</span></label>
+         </div>
+         <div class="po-ordine" id="poOrdine">
+           <div class="po-ord-t">Ordine dei riquadri <span class="pchk-hint">(dall'alto in basso; affiancati da sinistra a destra quando non c'è la legenda)</span></div>
+           ${(RS.exportUtil.ordineRiquadri(po)).map((k, i, a) => `<div class="po-ord-r"><span>${i + 1}. ${escAttr(RS.exportUtil.NOMI_RIQUADRI[k])}</span>
+             <button class="mini" data-ord="${k}:-1"${i ? '' : ' disabled'} title="Sposta su">↑</button><button class="mini" data-ord="${k}:1"${i < a.length - 1 ? '' : ' disabled'} title="Sposta giù">↓</button></div>`).join('')}
+         </div>
          <h4>Cosa includere nel cartiglio</h4>
          <div class="pchk-grid">
            ${chk('comando','Comando (righe 1 e 2)')}
@@ -2206,6 +2218,19 @@ S.printOpts = S.printOpts || {}; S.printOpts.bn = el('poStile').value === 'bn';
 try { localStorage.setItem('rilsin:stampaBn', S.printOpts.bn ? '1' : '0'); } catch (e) {}
 this.renderPrintPreview();
 });
+const salvaLayout = () => {
+try { localStorage.setItem('rilsin:stampaLayout', JSON.stringify({ legenda: S.printOpts.legenda !== false, disposizione: S.printOpts.disposizione || 'auto', ordine: S.printOpts.ordine || null })); } catch (e) {}
+S._foglio = undefined; S.drawGrid(); S.drawFoglio();
+};
+el('poDisp').addEventListener('change', () => { S.printOpts = S.printOpts || {}; S.printOpts.disposizione = el('poDisp').value; salvaLayout(); this.renderPrintPreview(); });
+el('poLegenda').addEventListener('change', () => { S.printOpts = S.printOpts || {}; S.printOpts.legenda = el('poLegenda').checked; salvaLayout(); const sc = el('printBody').scrollTop; this.openPrint(); el('printBody').scrollTop = sc; });
+el('poOrdine').addEventListener('click', ev => {
+const b = ev.target.closest('[data-ord]'); if (!b) return;
+const [k, d] = b.dataset.ord.split(':'), o = RS.exportUtil.ordineRiquadri(S.printOptions()), i = o.indexOf(k), j = i + +d;
+if (j < 0 || j >= o.length) return;
+[o[i], o[j]] = [o[j], o[i]];
+S.printOpts = S.printOpts || {}; S.printOpts.ordine = o; salvaLayout(); const sc = el('printBody').scrollTop; this.openPrint(); el('printBody').scrollTop = sc;
+});
 el('poScalaFissa').addEventListener('change', () => {
 S.printOpts = S.printOpts || {}; S.printOpts.scalaFissa = el('poScalaFissa').checked;
 try { localStorage.setItem('rilsin:scalaFissa', S.printOpts.scalaFissa ? '1' : '0'); } catch (e) {}
@@ -2219,7 +2244,7 @@ this.renderPrintPreview();
 });
 });
 el('printBody').querySelectorAll('[data-po-act]').forEach(b => b.onclick = () => {
-if (b.dataset.poAct === 'reset') { S.printOpts = {}; this.openPrint(); return; }
+if (b.dataset.poAct === 'reset') { S.printOpts = {}; try { localStorage.removeItem('rilsin:stampaLayout'); } catch (e) {} S._foglio = undefined; S.drawGrid(); S.drawFoglio(); this.openPrint(); return; }
 this.closePrint(); RS.exportUtil.print();
 });
 },
