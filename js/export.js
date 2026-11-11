@@ -311,23 +311,24 @@ exportUtil.stradeTecniche = stradeTecniche;
 function ridisegnaSeScala(s) {
 if (s.elements.some(e => e.type === 'graphscale')) s.render(true);
 }
-function legendaTavola(s) {
+function legendaTavola(s, grezza) {
 const vis = e => !RS.layers || RS.layers.visible(e), els = s.elements.filter(vis), sez = [];
+const V = (k, t) => ({ k, t });
 const it2 = v => Number(v).toFixed(2).replace('.', ',');
 const caps = els.filter(e => e.letter).sort((a, b) => String(a.letter).localeCompare(String(b.letter)));
 if (caps.length) {
-const r = caps.map(c => c.letter + ' — ' + (c.descr || (c.nome && c.nome !== 'Caposaldo' ? c.nome : 'caposaldo')));
+const r = caps.map(c => V('cap:' + c.letter, c.letter + ' \u2014 ' + (c.descr || (c.nome && c.nome !== 'Caposaldo' ? c.nome : 'caposaldo'))));
 (s.misure || []).forEach(x => {
-const k = /^\s*([A-Za-z]{1,3})\s*(?:→|->)\s*([A-Za-z]{1,3})\s*\(base\)/i.exec(x.descr || '');
-if (k && x.val !== '' && x.val != null) r.push('Base ' + k[1].toUpperCase() + '–' + k[2].toUpperCase() + ': m ' + it2(x.val));
+const k = /^\s*([A-Za-z]{1,3})\s*(?:\u2192|->)\s*([A-Za-z]{1,3})\s*\(base\)/i.exec(x.descr || '');
+if (k && x.val !== '' && x.val != null) r.push(V('base', 'Base ' + k[1].toUpperCase() + '\u2013' + k[2].toUpperCase() + ': m ' + it2(x.val)));
 });
 const metodi = new Set((RS.verifica && RS.verifica.puntiRilevati ? RS.verifica.puntiRilevati() : []).map(p => p.metodo === 'ortogonali' ? 'coordinate ortogonali' : 'triangolazione'));
-if (metodi.size) r.push('Metodo: ' + [...metodi].join(' e '));
+if (metodi.size) r.push(V('metodo', 'Metodo: ' + [...metodi].join(' e ')));
 sez.push({ t: 'Capisaldi e base di misura', r });
 }
 const strada = [];
-if (RS.incroci) els.filter(e => e.type === 'incrocio').map(e => RS.incroci.descrizione(e)).filter((t, k, a) => t && a.indexOf(t) === k).forEach(t => strada.push(t));
-if (RS.curve) RS.curve.descrizioni().forEach(t => strada.push('Curva: ' + t));
+if (RS.incroci) els.filter(e => e.type === 'incrocio').map(e => RS.incroci.descrizione(e)).filter((t, k, a) => t && a.indexOf(t) === k).forEach(t => strada.push(V('str:' + t, t)));
+if (RS.curve) RS.curve.descrizioni().forEach(t => strada.push(V('curva:' + t, 'Curva: ' + t)));
 if (strada.length) sez.push({ t: 'Strada', r: strada });
 const veic = els.filter(e => e.type === 'vehicle');
 if (veic.length) {
@@ -338,24 +339,30 @@ if (!viste[L]) {
 viste[L] = true;
 const q = veic.find(x => (x.label || '?') === L && (!x.fase || x.fase === 'quiete')) || v;
 const tipo = (RS.catalog.veicoloById(q.catId) || {}).nome || 'veicolo';
-r.push(L + ' — ' + [q.modello || tipo, q.targa ? String(q.targa).toUpperCase() : ''].filter(Boolean).join(' ') + (q.fase === 'quiete' ? ' (quiete)' : ''));
+r.push(V('veic:' + L, L + ' \u2014 ' + [q.modello || tipo, q.targa ? String(q.targa).toUpperCase() : ''].filter(Boolean).join(' ') + (q.fase === 'quiete' ? ' (quiete)' : '')));
 }
-if (v.fase && v.fase !== 'quiete' && RS.elements.siglaFase) r.push(RS.elements.siglaFase(v) + ' — ' + (RS.elements.nomeFase(v.fase) || '').toLowerCase());
+if (v.fase && v.fase !== 'quiete' && RS.elements.siglaFase) { const sg = RS.elements.siglaFase(v); r.push(V('fase:' + sg, sg + ' \u2014 ' + (RS.elements.nomeFase(v.fase) || '').toLowerCase())); }
 });
 sez.push({ t: 'Veicoli', r });
 }
 const altri = [];
-els.filter(e => e.type === 'surveypt').sort((a, b) => (a.n || 0) - (b.n || 0)).forEach(e => altri.push('P' + e.n + ' — ' + (e.descr || 'punto di rilievo')));
+els.filter(e => e.type === 'surveypt').sort((a, b) => (a.n || 0) - (b.n || 0)).forEach(e => altri.push(V('P:' + e.n, 'P' + e.n + ' \u2014 ' + (e.descr || 'punto di rilievo'))));
 const nomiTracce = {};
 els.filter(e => e.type === 'skid').forEach(e => { const n = e.stile === 'solco' ? 'solco / abrasione' : e.dashed ? 'scarrocciamento' : 'traccia di frenata'; nomiTracce[n] = 1; });
-Object.keys(nomiTracce).forEach(n => altri.push(n));
+Object.keys(nomiTracce).forEach(n => altri.push(V('tr:' + n, n)));
 const simboli = {};
 els.filter(e => e.type === 'symbol' && !e.letter && !e.inc && e.nome).forEach(e => { simboli[e.nome] = 1; });
-Object.keys(simboli).forEach(n => altri.push(n.charAt(0).toLowerCase() + n.slice(1)));
-if (els.some(e => e.type === 'measure')) altri.push('quote in metri');
+Object.keys(simboli).forEach(n => altri.push(V('sim:' + n, n.charAt(0).toLowerCase() + n.slice(1))));
+if (els.some(e => e.type === 'measure')) altri.push(V('quote', 'quote in metri'));
 if (altri.length) sez.push({ t: 'Elementi rilevati', r: altri });
-return sez;
+if (grezza) return sez;
+const L = (s.meta && s.meta.legenda) || {}, no = L.no || {}, nomi = L.nomi || {};
+const fatta = sez.map(x => ({ t: x.t, r: x.r.filter(v => !no[v.k]).map(v => String(nomi[v.k] || '').trim() || v.t) })).filter(x => x.r.length);
+const agg = (L.agg || []).map(t => String(t || '').trim()).filter(Boolean);
+if (agg.length) fatta.push({ t: 'Altro', r: agg });
+return fatta;
 }
+exportUtil.legendaTavola = legendaTavola;
 function righeComando(m) { return [m.comando, m.comando2, m.stazione].map(x => String(x || '').trim()).filter(Boolean); }
 function nomeComune(m) { return String(m.comune || '').trim().replace(/^(?:del\s+)?comune\s+di\s+/i, '').trim(); }
 function viaSenzaComune(m) {

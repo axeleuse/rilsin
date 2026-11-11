@@ -1,10 +1,15 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 265;
+RS.BUILD = 266;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 266, data: '2026-11-11', voci: [
+'Legenda della planimetria su misura: nel pannello di destra, in fondo, «Legenda della planimetria» elenca le voci che si stampano nel riquadro del foglio. Si toglie la spunta per non stampare una voce, si scrive un nome per cambiarla (vuoto = quello automatico) e si aggiungono voci a mano; «Torna alla legenda automatica» annulla tutto. Le scelte restano con la tavola.',
+'La legenda disegnata sulla tavola continua ad avere le sue scelte, nelle sue proprietà.',
+'Autodiagnosi: una prova nuova per la legenda, 85 in tutto.'
+] },
 { build: 265, data: '2026-11-11', voci: [
 'Pagina iniziale: «Riprendi il disegno lasciato in sospeso» mostra una piccola immagine del disegno, così si riconosce a colpo d\'occhio quale rilievo è.',
 'Più leggibile, soprattutto all\'aperto: nel pannello delle proprietà e nella tavolozza le scritte più piccole sono di un punto più grandi, i titoli delle sezioni e le etichette dei campi hanno più contrasto, il grigio più chiaro è meno sbiadito.'

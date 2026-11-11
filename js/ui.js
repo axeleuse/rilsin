@@ -3194,27 +3194,47 @@ const at = body.querySelector('#legAddTxt');
 if (at) at.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); add.click(); } });
 },
 renderLegend() {
-const box = el('legenda');
-const els = RS.scene.elements;
-if (!els.length) { box.innerHTML = '<p class="leg-empty">Nessun elemento.</p>'; this._legendaApribile(0); return; }
-const rows = [];
-const vistiV = {};
-els.filter(e => e.type === 'vehicle').sort((a,b)=> (a.label||'').localeCompare(b.label||''))
-.forEach(e => {
-if (e.label) { if (vistiV[e.label]) return; vistiV[e.label] = 1; }
-const base = (e.label && els.find(v => v.type === 'vehicle' && v.label === e.label && (!v.fase || v.fase === 'quiete'))) || e;
-const descr = (base.modello && String(base.modello).trim()) || catName(base);
-rows.push(icona(e) + `<b>${escAttr(e.label || '')}</b> — ${escAttr(descr)}${base.targa ? ' (' + escAttr(String(base.targa).trim().toUpperCase()) + ')' : ''}`);
+const box = el('legenda'), S = RS.scene;
+if (box.contains(document.activeElement) && document.activeElement.tagName === 'INPUT' && document.activeElement.type !== 'checkbox') return;
+const voci = RS.exportUtil && RS.exportUtil.legendaTavola ? RS.exportUtil.legendaTavola(S, true) : [];
+const L = S.meta.legenda || {}, no = L.no || {}, nomi = L.nomi || {}, agg = L.agg || [];
+const tutte = [].concat.apply([], voci.map(x => x.r)), mostrate = tutte.filter(v => !no[v.k]).length + agg.filter(t => String(t).trim()).length;
+let h = `<p class="leg-nota">Le voci della legenda stampata nel riquadro della planimetria. Togli la spunta per non stamparla; scrivi un nome per cambiarlo (vuoto = automatico). La legenda disegnata sulla tavola, se l'hai inserita, si modifica selezionandola.</p>`;
+voci.forEach(sez => {
+h += `<div class="leg-ed-h">${escAttr(sez.t)}</div>`;
+sez.r.forEach(v => {
+h += `<div class="leg-ed-row${no[v.k] ? ' spenta' : ''}"><input type="checkbox" data-lpk="${escAttr(v.k)}"${no[v.k] ? '' : ' checked'} title="Stampa / non stampare">` +
+`<input class="leg-ed-in" data-lpn="${escAttr(v.k)}" value="${escAttr(nomi[v.k] || '')}" placeholder="${escAttr(v.t)}" title="Nome nella legenda (vuoto = ${escAttr(v.t)})"></div>`;
 });
-els.filter(e => e.letter).forEach(e => rows.push(icona(e) + `<b>${e.letter}</b> — Caposaldo`));
-if (RS.incroci) RS.incroci.vociLegenda().forEach(r => rows.push(icona(r.ref) + escAttr(r.t)));
-const seen = {};
-els.filter(e => e.type === 'symbol' && !e.letter && !e.inc).forEach(e => {
-if (seen[e.catId]) return; seen[e.catId] = 1;
-rows.push(icona(e) + (e.nome || e.sym));
 });
-box.innerHTML = rows.length ? rows.map(r => `<div class="leg-row">${r}</div>`).join('') : '<p class="leg-empty">—</p>';
-this._legendaApribile(rows.length);
+h += `<div class="leg-ed-h">Voci aggiunte a mano</div>`;
+agg.forEach((t, i) => { h += `<div class="leg-ed-row custom"><input class="leg-ed-in" data-lpa="${i}" value="${escAttr(t)}" placeholder="descrizione…"><button class="leg-ed-x" data-lpdel="${i}" title="Togli la voce">✕</button></div>`; });
+h += `<div class="leg-ed-add"><input id="lpAgg" class="leg-ed-in" placeholder="nuova voce, per esempio «area di cantiere»"><button class="pbtn" data-lpadd="1">＋ Aggiungi</button></div>`;
+if (Object.keys(no).length || Object.keys(nomi).length || agg.length) h += `<div class="pbtns"><button class="pbtn" data-lpreset="1">↺ Torna alla legenda automatica</button></div>`;
+box.innerHTML = tutte.length || agg.length ? h : '<p class="leg-empty">La legenda si compone da sola con gli oggetti disegnati.</p>';
+if (!box._legato) {
+box._legato = true;
+const salva = () => { S.snapshot(); this._dirty = true; if (this.updateStatus) this.updateStatus(); };
+const leg = () => (S.meta.legenda = S.meta.legenda || {});
+box.addEventListener('change', ev => {
+const t = ev.target, lg = leg();
+if (t.dataset.lpk) { lg.no = lg.no || {}; if (t.checked) delete lg.no[t.dataset.lpk]; else lg.no[t.dataset.lpk] = true; }
+else if (t.dataset.lpn) { lg.nomi = lg.nomi || {}; const v = t.value.trim(); if (v) lg.nomi[t.dataset.lpn] = v; else delete lg.nomi[t.dataset.lpn]; }
+else if (t.dataset.lpa != null) { lg.agg = lg.agg || []; lg.agg[+t.dataset.lpa] = t.value.trim(); lg.agg = lg.agg.filter(Boolean); }
+else return;
+salva(); setTimeout(() => this.renderLegend(), 0);
+});
+box.addEventListener('click', ev => {
+const b = ev.target.closest('[data-lpadd],[data-lpdel],[data-lpreset]'); if (!b) return;
+const lg = leg();
+if (b.dataset.lpadd) { const i = el('lpAgg'), v = i && i.value.trim(); if (!v) { if (i) i.focus(); return; } (lg.agg = lg.agg || []).push(v); }
+else if (b.dataset.lpdel != null) { (lg.agg || []).splice(+b.dataset.lpdel, 1); }
+else if (b.dataset.lpreset) { delete S.meta.legenda; }
+salva(); this.renderLegend();
+});
+box.addEventListener('keydown', ev => { if (ev.key === 'Enter' && ev.target.id === 'lpAgg') { ev.preventDefault(); const b = box.querySelector('[data-lpadd]'); if (b) b.click(); } });
+}
+this._legendaApribile(mostrate);
 },
 _legendaApribile(n) {
 const t = el('legToggle'), box = el('legenda'); if (!t || !box) return;
