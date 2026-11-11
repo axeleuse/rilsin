@@ -475,6 +475,7 @@ case 'atti': RS.procedura.atti(); break;
 case 'recon': RS.recon.open(); break;
 case 'foto': this._replaceFotoId = null; el('fotoOpen').click(); break;
 case 'panorama': if (RS.panorama) RS.panorama.comando(); break;
+case 'telemetro': if (RS.laser) RS.laser.apri(); break;
 case 'sfondo': {
 const img = RS.scene.elements.find(x => x.type === 'image');
 if (img) {
@@ -2737,9 +2738,11 @@ v.innerHTML = `<div class="gm-box gm-misura">
           <div class="gm-cosa"><div class="gm-ora">Ora misura</div><div class="gm-nome">${escAttr(p.nome)}</div><div class="gm-descr">${escAttr(p.descr)}</div></div>
           ${(() => { const m = gmMini(p); return m ? `<div class="gm-mini">${m}</div>` : ''; })()}
           <div class="gm-val"><span>${g.testo ? escAttr(g.testo) : '<em>0,00</em>'}</span><small>m</small></div>
+          ${RS.laser && RS.laser.stato === 'collegato' ? `<button class="gm-laser on" data-gm="laser">📏 ${escAttr(RS.laser.nome || 'Telemetro')}: punta e premi il tasto di misura del telemetro</button>` : ''}
           <div class="gm-tasti">${['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0'].map(t => `<button class="gm-k" data-gm="${t}">${t}</button>`).join('')}<button class="gm-k" data-gm="canc" title="Cancella">⌫</button></div>
           <button class="gm-invio" data-gm="ok">Invio · ${g.pos + 1 < g.coda.length ? 'misura seguente' : 'ultima misura'}</button>
           <div class="gm-riga"><button class="gm-k gm-pic" data-gm="salta">Salta</button><button class="gm-k gm-pic" data-gm="indietro"${g.pos ? '' : ' disabled'}>Indietro</button></div>
+          ${RS.laser && RS.laser.stato !== 'collegato' && RS.laser.disponibile() ? `<button class="gm-laser" data-gm="laser">📏 Hai un telemetro laser Bluetooth? Collegalo</button>` : ''}
           ${esito}
           ${dopo ? `<div class="gm-dopo">Poi: ${escAttr(dopo)}</div>` : ''}
         </div>`;
@@ -2755,6 +2758,7 @@ if (RS.procedura) RS.procedura.finito('misure');
 return;
 }
 if (t === 'verifica') { el('gmVelo').hidden = true; this._gm = null; this._dataTab = 'triang'; this.openData(); return; }
+if (t === 'laser') { if (RS.laser) RS.laser.apri(); return; }
 const fine = g.pos >= g.coda.length;
 if (t === 'indietro') {
 if (!g.pos) return;
@@ -2779,6 +2783,13 @@ this.vibra(g.esito && !g.esito.ok ? '60,80,60,80,60' : '35');
 g.pos++; this._gmPrepara();
 }
 this._gmMostra();
+},
+misuraDaLaser(v) {
+const g = this._gm, gv = el('gmVelo');
+if (!g || !gv || gv.hidden || g.pos >= g.coda.length || !(v > 0)) return false;
+g.testo = (Math.round(v * 100) / 100).toFixed(2).replace('.', ',');
+this._gmTasto('ok');
+return true;
 },
 _gmPrepara() {
 const g = this._gm, x = g.coda[g.pos];

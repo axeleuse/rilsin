@@ -1,10 +1,16 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 260;
+RS.BUILD = 261;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 261, data: '2026-11-11', voci: [
+'Telemetro laser Bluetooth, per chi lo possiede: Bosch GLM della serie C (GLM 50 C, 50-27 C, 100-25 C…) o Leica DISTO con Bluetooth. Altro, Rilievo, «📏 Telemetro laser Bluetooth» (o il pulsante nelle misure guidate): «Cerca il telemetro», poi il suo nome.',
+'Con le misure guidate aperte ogni misura presa col telemetro entra da sola nella misura corrente (al centimetro) e si passa alla seguente, con il controllo immediato; altrimenti va nella casella selezionata e il cursore passa alla seguente. In basso il nome del telemetro collegato: toccandolo lo si scollega.',
+'Funziona nell\'app Android (la prima volta chiede il permesso «Dispositivi nelle vicinanze») e con Chrome o Edge su PC e Android dal sito https. Non su iPhone e iPad: Apple non permette il Bluetooth alle app web. Sul Leica l\'unità di misura deve essere il metro.',
+'Autodiagnosi: una prova nuova per il telemetro, 82 in tutto.'
+] },
 { build: 260, data: '2026-11-11', voci: [
 'Corsie di immissione e di uscita rifatte come nella realtà: la rampa che arriva (o se ne va) di sbieco, la cuspide zebrata fra rampa e carreggiata, il tratto parallelo con la freccia e la scritta «corsia di accelerazione» o «di decelerazione», il raccordo in cui la corsia si chiude (o si apre), con la striscia tratteggiata larga verso la carreggiata e quella di margine continua all\'esterno.',
 'Aggancio automatico: trascinando la corsia vicino al bordo di una strada, si mette da sola sulla striscia di margine del lato giusto e nel verso di marcia di quel lato (anche sopra la corsia di emergenza delle autostrade). Nelle proprietà: angolo della rampa, lunghezza della cuspide e del raccordo, scritta sì o no e il tasto «🧲 Aggancia alla strada».',
