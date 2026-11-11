@@ -2222,7 +2222,7 @@ const S = RS.scene, P = RS.exportUtil.partiFascicolo();
 S.printOpts = S.printOpts || {};
 const sc = S.printOpts.completo || {};
 const ordine = ['plan', 'atto', 'calcoli', 'foto', 'radd'];
-const SPENTO = { radd: 'nessuna foto raddrizzata (facoltativo: 📐 Raddrizza)', plan: 'la tavola è vuota', calcoli: 'nessun calcolo da allegare (Ricostruzione → «Allega all\'atto»)', foto: 'il fascicolo fotografico non ha foto' };
+const SPENTO = { radd: 'nessuna foto raddrizzata (facoltativo: 🔲 Raddrizza)', plan: 'la tavola è vuota', calcoli: 'nessun calcolo da allegare (Ricostruzione → «Allega all\'atto»)', foto: 'il fascicolo fotografico non ha foto' };
 el('completoBody').innerHTML =
 `<div class="mis-hint" style="margin-top:0">Un solo documento con frontespizio e indice, pagine numerate «Pag. X di Y». Scegli che cosa includere:</div>
          <div class="cmp-lista">${ordine.map(k => {
@@ -2750,11 +2750,11 @@ v.innerHTML = `<div class="gm-box gm-misura">
           ${(() => { const m = gmMini(p); return m ? `<div class="gm-mini">${m}</div>` : ''; })()}
           <div class="gm-val"><span>${g.testo ? escAttr(g.testo) : '<em>0,00</em>'}</span><small>m</small></div>
           ${st ? `<div class="gm-stima">sul disegno circa ${escAttr(st.testo)} m</div>` : ''}
-          ${RS.laser && RS.laser.stato === 'collegato' ? `<button class="gm-laser on" data-gm="laser">📏 ${escAttr(RS.laser.nome || 'Telemetro')}: punta e premi il tasto di misura del telemetro</button>` : ''}
+          ${RS.laser && RS.laser.stato === 'collegato' ? `<button class="gm-laser on" data-gm="laser">🔦 ${escAttr(RS.laser.nome || 'Telemetro')}: punta e premi il tasto di misura del telemetro</button>` : ''}
           <div class="gm-tasti">${['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0'].map(t => `<button class="gm-k" data-gm="${t}">${t}</button>`).join('')}<button class="gm-k" data-gm="canc" title="Cancella">⌫</button></div>
           <button class="gm-invio" data-gm="ok">Invio · ${g.pos + 1 < g.coda.length ? 'misura seguente' : 'ultima misura'}</button>
           <div class="gm-riga"><button class="gm-k gm-pic" data-gm="salta">Salta</button><button class="gm-k gm-pic" data-gm="indietro"${g.pos ? '' : ' disabled'}>Indietro</button></div>
-          ${RS.laser && RS.laser.stato !== 'collegato' && RS.laser.disponibile() ? `<button class="gm-laser" data-gm="laser">📏 Hai un telemetro laser Bluetooth? Collegalo</button>` : ''}
+          ${RS.laser && RS.laser.stato !== 'collegato' && RS.laser.disponibile() ? `<button class="gm-laser" data-gm="laser">🔦 Hai un telemetro laser Bluetooth? Collegalo</button>` : ''}
           ${prop ? '' : esito}
           ${dopo ? `<div class="gm-dopo">Poi: ${escAttr(dopo)}</div>` : ''}
         </div>`;
@@ -3196,7 +3196,7 @@ if (at) at.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.prev
 renderLegend() {
 const box = el('legenda');
 const els = RS.scene.elements;
-if (!els.length) { box.innerHTML = '<p class="leg-empty">Nessun elemento.</p>'; return; }
+if (!els.length) { box.innerHTML = '<p class="leg-empty">Nessun elemento.</p>'; this._legendaApribile(0); return; }
 const rows = [];
 const vistiV = {};
 els.filter(e => e.type === 'vehicle').sort((a,b)=> (a.label||'').localeCompare(b.label||''))
@@ -3214,6 +3214,22 @@ if (seen[e.catId]) return; seen[e.catId] = 1;
 rows.push(icona(e) + (e.nome || e.sym));
 });
 box.innerHTML = rows.length ? rows.map(r => `<div class="leg-row">${r}</div>`).join('') : '<p class="leg-empty">—</p>';
+this._legendaApribile(rows.length);
+},
+_legendaApribile(n) {
+const t = el('legToggle'), box = el('legenda'); if (!t || !box) return;
+const nn = el('legN'); if (nn) nn.textContent = n ? '· ' + n + (n === 1 ? ' voce' : ' voci') : '';
+if (!t._legato) {
+t._legato = true;
+t.addEventListener('click', () => {
+const apri = box.hidden;
+try { localStorage.setItem('rilsin:legendaAperta', apri ? '1' : '0'); } catch (e) {}
+this._legendaApribile(this._legN || 0);
+});
+}
+this._legN = n;
+let aperta = false; try { aperta = localStorage.getItem('rilsin:legendaAperta') === '1'; } catch (e) {}
+box.hidden = !aperta; t.setAttribute('aria-expanded', aperta ? 'true' : 'false'); t.classList.toggle('aperta', aperta);
 },
 updateStatus() {
 const S = RS.scene, t = RS.tools.active;
@@ -3747,10 +3763,10 @@ h += `<div class="pbtns"><button class="pbtn" data-b="ortofoto">🛰 Riscarica d
 h += `<div class="muted" style="margin-top:6px">${escAttr(e.geo.fonte || 'Geoportale Nazionale')}: in scala (${String(round(e.w, 0))} × ${String(round(e.h, 0))} m) e Nord in alto, non va calibrata. Spostala sotto il disegno, poi blocca lo sfondo. Ortofoto del 2012: verifica lo stato dei luoghi.</div>`;
 } else if (e.raddDa) {
 const f = RS.scene.get(e.raddDa);
-h += `<div class="pbtns">${f ? '<button class="pbtn" data-b="raddsorg">📐 Torna al raddrizzamento</button>' : ''}<button class="pbtn" data-b="back">⬇ In fondo</button></div>`;
+h += `<div class="pbtns">${f ? '<button class="pbtn" data-b="raddsorg">🔲 Torna al raddrizzamento</button>' : ''}<button class="pbtn" data-b="back">⬇ In fondo</button></div>`;
 h += `<div class="muted aiuto" style="margin-top:6px">Vista raddrizzata${f && f.n ? ' dalla foto ' + f.n : ''}: è già in scala, non va calibrata. Vale solo per il piano stradale. Allineala al rilievo, poi blocca lo sfondo.</div>`;
 } else {
-h += `<div class="pbtns"><button class="pbtn" data-b="calibra">📐 Calibra scala</button><button class="pbtn" data-b="raddrizza">📐 Raddrizza</button><button class="pbtn" data-b="back">⬇ In fondo</button></div>`;
+h += `<div class="pbtns"><button class="pbtn" data-b="calibra">📐 Calibra scala</button><button class="pbtn" data-b="raddrizza">🔲 Raddrizza</button><button class="pbtn" data-b="back">⬇ In fondo</button></div>`;
 h += `<div class="muted aiuto" style="margin-top:6px">Calibra: clicca due punti a distanza nota e digita i metri reali. Poi blocca lo sfondo e disegnaci sopra. Se l'immagine è una foto in obliquo, «Raddrizza» la porta in vista dall'alto.</div>`;
 if (e.fonte === 'Google Maps') h += `<div class="muted aiuto" style="margin-top:6px">Da Google Maps: per la scala clicca i due estremi della barra della scala di Google e scrivi la sua lunghezza. Sulle stampe compare da sola la dicitura «Sfondo: immagini © Google».</div>`;
 }
@@ -3794,7 +3810,7 @@ h += numFld('Dimens. (m)', 'size', round(e.size||0.9), 0.1);
 if (e.href) h += `<div class="foto-thumb"><img src="${e.href}" alt=""></div>`;
 h += `<div class="pbtns"><button class="pbtn" data-b="fotoopen">🔍 Apri</button><button class="pbtn" data-b="fotorepl">🔄 Sostituisci</button></div>`;
 if (e.href) {
-h += `<div class="pbtns"><button class="pbtn" data-b="raddrizza">📐 Raddrizza foto</button></div>`;
+h += `<div class="pbtns"><button class="pbtn" data-b="raddrizza">🔲 Raddrizza foto</button></div>`;
 h += `<div class="muted" style="margin-top:4px">${e.radd ? `Raddrizzata: riferimento ${String(round(e.radd.L, 2)).replace('.', ',')} × ${String(round(e.radd.W, 2)).replace('.', ',')} m, ${(e.radd.misure || []).length} misure.`
 : 'Facoltativo: da una foto in obliquo ricava la vista dall\'alto in scala del piano stradale.'}</div>`;
 }
@@ -4229,7 +4245,7 @@ const c = center(el), p = { x: c.x, y: c.y };
 if (el && el.x != null) { p.aid = el.id; p.alx = 0; p.aly = 0; }
 return p;
 }
-const ICON_BG = `<rect x="0" y="0" width="46" height="34" rx="2" fill="#f4f1e8"/>`;
+const ICON_BG = '';
 const ASFALTO = new Set(['crosswalk', 'stopline', 'mark', 'parking']);
 const STATIC_ICONS = {
 text: `<svg viewBox="0 0 46 34">${ICON_BG}<text x="23" y="26" font-size="26" text-anchor="middle" font-weight="700" fill="#333">T</text></svg>`,
@@ -4297,9 +4313,8 @@ const m = Math.max(b.w, b.h) * 0.12 + 0.2;
 const vx = b.x - m, vy = b.y - m, vw = b.w + 2*m, vh = b.h + 2*m;
 const vb = `${vx.toFixed(2)} ${vy.toFixed(2)} ${vw.toFixed(2)} ${vh.toFixed(2)}`;
 const defs = `<defs>${RS.scene.defs.innerHTML}</defs>`;
-const bg = (ASFALTO.has(def.tool) || def.sym === 'freccia_terra') ? '#9aa0a6' : '#f4f1e8';
-const back = `<rect x="${vx.toFixed(2)}" y="${vy.toFixed(2)}" width="${vw.toFixed(2)}" height="${vh.toFixed(2)}" rx="${(vw*0.03).toFixed(2)}" fill="${bg}"/>`;
-return `<svg viewBox="${vb}">${defs}${back}${node.outerHTML}</svg>`;
+const asf = ASFALTO.has(def.tool) || def.sym === 'freccia_terra';
+return `<svg viewBox="${vb}"${asf ? ' class="pal-asf"' : ''}>${defs}${node.outerHTML}</svg>`;
 }
 function sw(c) { return `<span class="sw" style="background:${c||'#888'}"></span>`; }
 function icona(e) { const s = RS.elements.miniaturaSvg ? RS.elements.miniaturaSvg(e, 34, 16) : ''; return s ? `<span class="leg-ico">${s}</span>` : sw(e.color); }

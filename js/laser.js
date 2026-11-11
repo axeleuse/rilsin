@@ -51,22 +51,22 @@ a.dispatchEvent(new Event('input', { bubbles: true }));
 a.dispatchEvent(new Event('change', { bubbles: true }));
 if (RS.ui && RS.ui.vibra) RS.ui.vibra('35');
 setTimeout(() => { const d = caselle()[i + 1]; if (d) d.focus(); }, 60);
-if (RS.ui) RS.ui.toast('📏 ' + testo + ' m dal telemetro', 1500);
+if (RS.ui) RS.ui.toast('🔦 ' + testo + ' m dal telemetro', 1500);
 return;
 }
-if (RS.ui) RS.ui.toast('📏 Misura ricevuta: ' + testo + ' m. Per registrarla apri le misure guidate, oppure tocca la casella e rimisura', 4500);
+if (RS.ui) RS.ui.toast('🔦 Misura ricevuta: ' + testo + ' m. Per registrarla apri le misure guidate, oppure tocca la casella e rimisura', 4500);
 },
 _stato(s, nome, avviso) {
 this.stato = s; if (nome != null) this.nome = nome; this._avviso = avviso || '';
 const c = el('stLaser');
-if (c) { c.hidden = s !== 'collegato'; c.textContent = '📏 ' + (this.nome || 'Telemetro'); c.title = 'Telemetro collegato: premi il tasto di misura sul telemetro. Clic per i dettagli o per scollegarlo'; c.onclick = () => this.apri(); }
+if (c) { c.hidden = s !== 'collegato'; c.textContent = '🔦 ' + (this.nome || 'Telemetro'); c.title = 'Telemetro collegato: premi il tasto di misura sul telemetro. Clic per i dettagli o per scollegarlo'; c.onclick = () => this.apri(); }
 if (RS.ui && RS.ui._gm && RS.ui._gmMostra) RS.ui._gmMostra();
 this._ridisegna();
 },
 statoNativo(s, testo) {
 if (s === 'collegato') {
 this._stato('collegato', testo || this.nome);
-if (RS.ui) RS.ui.toast('📏 Telemetro collegato: premi il tasto di misura sul telemetro', 3500);
+if (RS.ui) RS.ui.toast('🔦 Telemetro collegato: premi il tasto di misura sul telemetro', 3500);
 if (RS.ui && RS.ui.vibra) RS.ui.vibra('25');
 setTimeout(() => { const m = el('laserModal'); if (m && this.stato === 'collegato') m.hidden = true; }, 1500);
 return;
@@ -76,7 +76,7 @@ if (s === 'fine-ricerca') { if (this.stato === 'cerca') this._stato('scollegato'
 if (s === 'collega') return this._stato('collega', null, testo);
 const era = this.stato === 'collegato';
 this._stato('scollegato', null, testo);
-if (era && RS.ui) RS.ui.toast('📏 Telemetro scollegato' + (testo ? ': ' + testo : ''), 4000);
+if (era && RS.ui) RS.ui.toast('🔦 Telemetro scollegato' + (testo ? ': ' + testo : ''), 4000);
 },
 trovato(id, nome, tipo) {
 if (this.trovati.some(d => d.id === id)) return;
@@ -109,14 +109,14 @@ if (no) corpo = `<p class="scelta-testo">${esc(no)}</p>`;
 else if (s === 'collegato') corpo = `<p class="scelta-testo">✓ <b>${esc(this.nome)}</b> collegato. Premi il tasto di misura sul telemetro: la misura entra nelle <b>misure guidate</b> (e si passa alla seguente) o nella casella selezionata.${this.ultimo ? ' Ultima misura: <b>' + this.ultimo.v.toFixed(3).replace('.', ',') + ' m</b>.' : ''}</p>
           <button class="scelta-opt pericolo" data-lz="scollega"><b>Scollega</b></button>`;
 else {
-const lista = this.trovati.map(d => `<button class="scelta-opt" data-lz="dev:${esc(d.id)}"><b>📏 ${esc(d.nome)}</b><small>${d.tipo === 'bosch' ? 'Bosch' : d.tipo === 'leica' ? 'Leica DISTO' : 'Bluetooth'} · tocca per collegare</small></button>`).join('');
+const lista = this.trovati.map(d => `<button class="scelta-opt" data-lz="dev:${esc(d.id)}"><b>🔦 ${esc(d.nome)}</b><small>${d.tipo === 'bosch' ? 'Bosch' : d.tipo === 'leica' ? 'Leica DISTO' : 'Bluetooth'} · tocca per collegare</small></button>`).join('');
 corpo = `<p class="scelta-testo">Per chi ha un telemetro laser con il Bluetooth: <b>Bosch GLM</b> «C» (GLM 50 C, 50-27 C, 100-25 C…) o <b>Leica DISTO</b>. Accendi il telemetro e il suo Bluetooth${ios() ? '' : ', tienilo vicino'}; sul Leica l'unità di misura deve essere il metro.</p>
           ${s === 'cerca' ? '<p class="scelta-testo"><b>Ricerca in corso…</b></p>' : ''}${s === 'collega' ? '<p class="scelta-testo"><b>Collegamento in corso…</b></p>' : ''}
           ${this._avviso ? `<p class="scelta-testo">⚠ ${esc(this._avviso)}</p>` : ''}
           ${lista}
           ${s === 'cerca' || s === 'collega' ? '' : `<button class="scelta-opt primario" data-lz="cerca"><b>${this.trovati.length ? 'Cerca di nuovo' : 'Cerca il telemetro'}</b></button>`}`;
 }
-m.innerHTML = `<div class="scelta-box" role="dialog" aria-modal="true"><div class="scelta-tit">📏 Telemetro laser Bluetooth</div>${corpo}
+m.innerHTML = `<div class="scelta-box" role="dialog" aria-modal="true"><div class="scelta-tit">🔦 Telemetro laser Bluetooth</div>${corpo}
         <button class="scelta-annulla" data-lz="chiudi">Chiudi</button></div>`;
 },
 cerca() {

@@ -1,10 +1,16 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 263;
+RS.BUILD = 264;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 264, data: '2026-11-11', voci: [
+'Aspetto: le icone di menu, pulsanti, finestre e avvisi sono ora disegni a linee nello stesso stile della barra in alto, al posto delle emoji (che cambiavano aspetto fra Android, iPhone e Windows e sui telefoni vecchi uscivano come quadratini). Il telemetro e il raddrizzamento hanno un\'icona loro.',
+'Tavolozza: ogni oggetto ha un\'anteprima a tutta larghezza in cima alla scheda, color carta come la tavola (asfalto per la segnaletica bianca), al posto dei riquadretti chiari; la ricerca ha la lente disegnata.',
+'Pannello di destra: la legenda è chiusa di partenza (sulla tavola c\'è già quella da stampare) e lascia più spazio alle proprietà; un clic su «Legenda · n voci» la apre o la chiude, e la scelta resta.',
+'Autodiagnosi: una prova nuova per le icone, 84 in tutto.'
+] },
 { build: 263, data: '2026-11-11', voci: [
 'Misure guidate, controllo col disegno: sotto il valore «sul disegno circa 5,2 m»; se il numero scritto è molto diverso l\'app chiede di controllarlo (cifre scambiate, virgola dimenticata). Se è giusto basta premere di nuovo Invio.',
 'Lettura a voce: l\'app dice la misura da prendere, quando cambiare caposaldo, la misura registrata («5 metri e 12») e se qualcosa non torna. Voce del telefono, senza internet; accesa su telefono e tablet, si spegne con l\'altoparlante in alto.',
