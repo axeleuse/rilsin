@@ -1,10 +1,18 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 254;
+RS.BUILD = 255;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 255, data: '2026-11-11', voci: [
+'Schizzo collaudato con 800 disegni simulati come fatti col dito (tratti tremolanti, inizi e fine imprecisi, a zoom diversi): croci, incroci a T, strade oblique dal centro o che attraversano l\'incrocio, prosecuzioni, rotatorie e strade aggiunte alla rotatoria. Corretti i casi in cui qualcosa spariva o si deformava:',
+'— con la vista lontana, due strade corte che si incrociano avevano le punte vicine e venivano unite in un angolo: ora, se si attraversano, restano un incrocio;',
+'— la «punta» che sborda oltre un incrocio e viene tagliata è al massimo di 12 m e di circa 1 cm sullo schermo (con la vista lontana poteva arrivare a 24 m e tagliare un braccio vero);',
+'— un cerchio disegnato con la vista ravvicinata poteva essere preso per strisce pedonali: ora è una rotatoria;',
+'— una strada che arriva a filo della rotatoria senza entrarci risultava «dentro la rotatoria» e non veniva aggiunta: ora si collega.',
+'Autodiagnosi: i casi trovati nel collaudo sono entrati nelle prove.'
+] },
 { build: 254, data: '2026-11-11', voci: [
 'Schizzo, incroci con strade corte: due strade che si incrociano a metà venivano prese per un pezzo che prosegue l\'altro e fuse in una curva sola, oppure mezza strada veniva tagliata come una «punta» che sborda; anche una strada obliqua aggiunta su un incrocio poteva far sparire un braccio. Ora l\'incrocio resta tale, e una strada che parte da un incrocio è un braccio nuovo (si unisce a un\'altra solo se la prosegue quasi dritta).',
 'Schizzo, rotatoria (cerchio sopra un incrocio): ogni strada che ci arriva si divide sul cerchio e diventa un braccio, anche obliqua o un po\' fuori centro; una strada curva resta curva oltre il braccio. Prima una strada poteva sparire o diventare un braccio dritto.',

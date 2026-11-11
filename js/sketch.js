@@ -213,7 +213,7 @@ const CAT = { veicolo: 'autovettura', moto: 'motociclo', bici: 'velocipede', aut
 const A_TOCCO = { punto: 1, urto: 1, pedone: 1, testo: 1 };
 const aSchermo = p => ({ x: p.x / K, y: p.y / K });
 const aMondo = p => ({ x: +(p.x * K).toFixed(2), y: +(p.y * K).toFixed(2) });
-const spuntone = () => Math.max(12 / K, 60), vicinanza = () => Math.max(5.5 / K, 44), finestra = () => Math.max(12 / K, 64);
+const spuntone = () => Math.max(25, Math.min(12 / K, 60)), vicinanza = () => Math.max(5.5 / K, 44), finestra = () => Math.max(12 / K, 64);
 function ricampiona(p, s) {
 const o = [p[0]]; let res = 0;
 for (let i = 1; i < p.length; i++) {
@@ -483,7 +483,14 @@ let sb = 0; if (ib) { for (let i = 1; i < A.length; i++) { if (A[i - 1] === ib.a
 const sulNodo = c => st.some(o => o !== item && (() => { const d = suStrada(c, [o]); return d && d.v < o.mezza * 1.2; })());
 const nodoB = sulNodo(b), dritta = co > Math.cos(25 * Math.PI / 180);
 const sopra = ib && !nodoB && ib.v < item.mezza * 1.1 && LA - sb > 2 && (LA - sb) * K < 30 && co > Math.cos(40 * Math.PI / 180) && !(suStrada(B[B.length - 1], [{ pts: A }]).v < item.mezza);
-const capiVicini = dist(e, b) < vic && (dritta || !(nodoB || sulNodo(e)));
+let capiVicini = dist(e, b) < vic && (dritta || !(nodoB || sulNodo(e)));
+if (capiVicini) {
+const xa = incontri(A, B), xb = incontri(B, A);
+if (xa.length && xb.length) {
+const puntaA = LA - Math.max(...xa.map(x => x.s)), puntaB = Math.min(...xb.map(x => x.s));
+if (puntaA > LA * .25 || puntaB > LR * .25) capiVicini = false;
+}
+}
 let accavallate = false;
 if (cc) {
 const oltreA = lung(coda) - cc.s, cB = incontri(testa, coda)[0], primaB = cB ? cB.s : 0;
@@ -575,7 +582,8 @@ function vicinoVeicolo(c, r) { let b = null, v = r; veicoliS().forEach(k => { co
 function capisci(p) {
 const fr = info(p).chiuso ? null : freccia(p); if (fr) return { t: 'freccia', fr };
 const st = strade();
-if (zigzag(p)) {
+const chiuso0 = info(p).chiuso && forma(p).pieno > .55;
+if (!chiuso0 && zigzag(p)) {
 const m0 = info(p), r0 = suStrada({ x: m0.cx, y: m0.cy }, st);
 if (r0 && r0.v < r0.r.mezza + 10) return { t: 'strisce' };
 return { t: 'libero', dubbio: ['libero', 'strada', 'tracce'] };
@@ -749,6 +757,11 @@ let i = 0; while (i < q.length && dd[i] > Rr) i++;
 if (i > 0 && i < q.length) pezzi.push(q.slice(0, i + 1).reverse());
 let j = q.length - 1; while (j >= 0 && dd[j] > Rr) j--;
 if (j >= 0 && j < q.length - 1 && j >= i) pezzi.push(q.slice(j));
+if (i === q.length) {
+const m = dd.indexOf(Math.min(...dd));
+if (m > 0) pezzi.push(q.slice(0, m + 1).reverse());
+if (m < q.length - 1) pezzi.push(q.slice(m));
+}
 if (!pezzi.length) return { dentro: true };
 ro.bracci = ro.bracci || [];
 const gradi = (a, b) => +((((Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI) % 360) + 360) % 360).toFixed(1);
@@ -1104,5 +1117,6 @@ else if (k === 'pc') { if (cond) RS.ui.condividiTavola(); else RS.ui.action('sal
 });
 }
 };
-RS.sketch = { semplifica, riconosci, converti, metriche, NOMI, auto, aiuti: { capisci, regolarizza, incroci, strade, applica, veicolo: creaVeicolo } };
+RS.sketch = { semplifica, riconosci, converti, metriche, NOMI, auto, aiuti: { capisci, regolarizza, incroci, strade, applica, veicolo: creaVeicolo,
+scala: k => { if (k > 0) K = k; return K; } } };
 })(window.RS = window.RS || {});
