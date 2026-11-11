@@ -180,6 +180,7 @@ if (e.type === 'incrocio' || (e.type === 'roundabout' && e.bracci)) propri.push(
 if (e.type === 'incrocio') propri.push({ ic: '✂', t: 'Sciogli in strade', fn: () => this.premi('[data-iact="sciogli"]') });
 if (e.letter) propri.push({ ic: '△', t: 'Triangola da questo caposaldo', fn: () => { ui.startTriangulate(); if (RS.tools.active.mode === 'triangulate') ui.triCanvasClick(e, null); } });
 if (e.type === 'image') propri.push({ ic: '📐', t: 'Calibra la scala', fn: () => RS.tools.startCalibrate(e.id) });
+if (e.type === 'panorama' && RS.panorama) propri.push({ ic: '🌐', t: 'Apri la panoramica', fn: () => RS.panorama.apri(e) });
 if (e.x != null && !fisso) propri.push({ ic: '📏', t: 'Quota da questo oggetto', fn: () => {
 const b = RS.elements.bounds(e), c = b ? { x: b.x + b.w / 2, y: b.y + b.h / 2 } : { x: e.x, y: e.y };
 this.quotaDa({ x: c.x, y: c.y, anchor: { id: e.id, lx: 0, ly: 0 } });

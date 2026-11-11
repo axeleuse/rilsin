@@ -1,10 +1,17 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 256;
+RS.BUILD = 257;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 257, data: '2026-11-11', voci: [
+'Panoramiche a 360° della scena (Altro, Rilievo, «🌐 Panoramica 360°»): si sceglie la foto a 360° (fotocamera a 360°, Photo Sphere o Panorama di Android, Pano di iPhone) e si tocca sulla tavola il punto da cui è stata fatta. Compare il segnaposto viola P1, P2… con lo spicchio che indica dove guarda il centro della foto.',
+'La panoramica si guarda a tutto schermo e si gira col dito (due dita per avvicinare), anche senza rete; in alto dice verso dove si guarda, se sulla tavola c\'è la freccia del Nord. Serve a tornare sul posto quando la scena non c\'è più: che cosa vedeva un conducente, se un segnale era visibile, dov\'era un ostacolo.',
+'«📷 Aggiungi questa vista al fascicolo»: l\'inquadratura del momento diventa una foto del fascicolo, con la didascalia già scritta (es. «Vista dalla panoramica P1, verso Nord-Est»). La panoramica intera non si stampa: resta nel dispositivo, nel file della tavola e nella copia di sicurezza, come le foto dei documenti.',
+'Le foto delle fotocamere a 360° che registrano l\'orientamento si girano da sole sulla tavola (con la freccia del Nord); per i panorami «a striscia» RILSIN chiede quanto giro si è fatto.',
+'Autodiagnosi: una prova nuova per le panoramiche, 78 in tutto.'
+] },
 { build: 256, data: '2026-11-11', voci: [
 'Schermata di apertura: il logo è animato. Le due strade si disegnano dal centro, il veicolo blu e quello verde arrivano all\'incrocio e compare il punto d\'urto rosso, con un\'onda che si allarga e poi pulsa piano. Sui telefoni impostati con «riduci animazioni» il logo resta fermo.'
 ] },

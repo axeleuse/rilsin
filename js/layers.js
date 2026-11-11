@@ -21,7 +21,7 @@ const t = e.type;
 if (t === 'image') return 'sfondo';
 if (t === 'vehicle') return 'veicoli';
 if (t === 'measure' || t === 'angle') return 'quote';
-if (t === 'foto') return 'foto';
+if (t === 'foto' || t === 'panorama') return 'foto';
 if (t === 'skid' || t === 'path') return 'sinistro';
 if (t === 'crosswalk' || t === 'stopline' || t === 'mark') return 'segnaletica';
 if (t === 'road' || t === 'roadway' || t === 'curva' || t === 'nucleo' || t === 'roundabout' || t === 'band' || t === 'raccordo' || t === 'svasatura' || t === 'incrocio' ||

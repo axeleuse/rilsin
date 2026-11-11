@@ -1480,6 +1480,23 @@ t.textContent = e.n != null ? e.n : '';
 g.appendChild(t);
 annotaNumero(t, e, h*1.05, -h*0.55, s*1.15, h);
 }
+function drawPanorama(g, e) {
+const s = e.size || 1.1, h = s / 2, col = '#7b3fb5', rot = e.rot || 0;
+const sp = mk('g', { transform: `rotate(${rot})` }, g);
+mk('path', { d: `M0 0L${h * 2.1} ${-h * 0.95}A${h * 2.3} ${h * 2.3} 0 0 1 ${h * 2.1} ${h * 0.95}Z`, fill: col, 'fill-opacity': .22, stroke: col, 'stroke-width': s * 0.04 }, sp);
+mk('circle', { cx: 0, cy: 0, r: h, fill: col, stroke: '#fff', 'stroke-width': s * 0.09 }, g);
+mk('circle', { cx: 0, cy: 0, r: h * 0.66, fill: 'none', stroke: '#fff', 'stroke-width': s * 0.05, 'stroke-dasharray': `${h * 0.5} ${h * 0.18}` }, g);
+const c = N('text');
+[['x', 0], ['y', 0], ['dy', '0.35em'], ['font-size', s * 0.36], ['fill', '#fff'], ['font-weight', '800'], ['text-anchor', 'middle']].forEach(([k, v]) => c.setAttribute(k, v));
+c.textContent = '360'; g.appendChild(c);
+const t = N('text');
+t.setAttribute('x', h * 1.05); t.setAttribute('y', -h * 0.55); t.setAttribute('font-size', s * 1.0);
+t.setAttribute('fill', col); t.setAttribute('font-weight', '700');
+t.setAttribute('paint-order', 'stroke'); t.setAttribute('stroke', '#f4f1e8'); t.setAttribute('stroke-width', 0.08);
+t.textContent = 'P' + (e.n != null ? e.n : '');
+g.appendChild(t);
+annotaNumero(t, e, h * 1.05, -h * 0.55, s * 1.0, h);
+}
 function drawImage(g, e) {
 const W = e.w, H = e.h;
 const im = N('image');
@@ -2241,6 +2258,8 @@ case 'surveypt':
 g.setAttribute('transform', `translate(${x} ${y})`); drawSurveyPt(g, e); break;
 case 'foto':
 g.setAttribute('transform', `translate(${x} ${y})`); drawFoto(g, e); break;
+case 'panorama':
+g.setAttribute('transform', `translate(${x} ${y})`); drawPanorama(g, e); break;
 case 'roadway': drawRoadway(g, e); break;
 case 'zebrapath': drawZebraPath(g, e); break;
 case 'ramp':

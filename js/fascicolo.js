@@ -81,7 +81,7 @@ c.continue();
 }
 const F = {
 aggiungiFoto(src, descr, guida) { this.model.photos.push({ id: nuovoId(), src, descr: descr || '', guida: guida || undefined }); this.save(); if (this.renderList && this.scr && !this.scr.hidden) this.renderList(); },
-aggiungiDocumento(src, descr, guida) { const m = this.model; (m.documenti = m.documenti || []).push({ id: nuovoId(), src, descr: descr || '', guida: guida || undefined, ora: new Date().toISOString() }); this.save(); },
+aggiungiDocumento(src, descr, guida) { const m = this.model, id = nuovoId(); (m.documenti = m.documenti || []).push({ id, src, descr: descr || '', guida: guida || undefined, ora: new Date().toISOString() }); this.save(); return id; },
 documenti(guida) { const l = this.model.documenti || []; return guida ? l.filter(p => p.guida === guida) : l; },
 togliDocumento(id) { const m = this.model; m.documenti = (m.documenti || []).filter(p => p.id !== id); this.save(); },
 tutteLeFoto,

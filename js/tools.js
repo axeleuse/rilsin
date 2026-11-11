@@ -702,6 +702,7 @@ placeToolAt(w) {
 const p = RS.scene.snap(w), t = this.active.tool, def = this.active.def || {};
 if (t === 'junction') { this.placeJunction(p, def); return; }
 if (t === 'curve') { this.placeCurve(p, def); return; }
+if (t === 'panorama') { if (RS.panorama) RS.panorama.piazza(p); this.toSelect(); return; }
 if (t === 'foto') {
 let mx = 0; RS.scene.elements.forEach(o => { if (o.type === 'foto' && o.n > mx) mx = o.n; });
 const a = RS.scene.add({ type: 'foto', x: p.x, y: p.y, n: mx + 1, descr: '', href: RS.ui._pendingFoto || '', size: 0.9 });

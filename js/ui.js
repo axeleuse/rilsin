@@ -474,6 +474,7 @@ case 'scambio': RS.coinvolti.scambioDati(); break;
 case 'atti': RS.procedura.atti(); break;
 case 'recon': RS.recon.open(); break;
 case 'foto': this._replaceFotoId = null; el('fotoOpen').click(); break;
+case 'panorama': if (RS.panorama) RS.panorama.comando(); break;
 case 'sfondo': {
 const img = RS.scene.elements.find(x => x.type === 'image');
 if (img) {
@@ -1615,6 +1616,8 @@ const sc = el('sceltaModal');
 if (sc && !sc.hidden) { const a = sc.querySelector('.scelta-annulla'); if (a) a.click(); else sc.hidden = true; return 'si'; }
 if (RS.menuContesto && RS.menuContesto._box) { RS.menuContesto.chiudi(); return 'si'; }
 if (vis('firstSetup')) { const s = el('fsSkip'); if (s) s.click(); return 'si'; }
+if (vis('panoViewer') && RS.panorama) { RS.panorama.chiudi(); return 'si'; }
+if (vis('ritaglioOv')) { const a = el('ritaglioOv').querySelector('[data-r="annulla"]'); if (a) a.click(); return 'si'; }
 if (vis('coach')) { this.coachEnd(); return 'si'; }
 const mod = Array.from(document.querySelectorAll('.modal')).filter(m => !m.hidden).pop();
 if (mod) { const x = mod.querySelector('.modal-x'); if (x) x.click(); if (!mod.hidden) mod.hidden = true; return 'si'; }
@@ -3679,6 +3682,12 @@ h += `<div class="muted" style="margin-top:4px">${e.radd ? `Raddrizzata: riferim
 : 'Facoltativo: da una foto in obliquo ricava la vista dall\'alto in scala del piano stradale.'}</div>`;
 }
 }
+if (e.type === 'panorama') {
+h += textFld('Descrizione', 'descr', e.descr || '');
+h += numFld('Dimens. (m)', 'size', round(e.size || 1.1), 0.1);
+h += `<div class="pbtns"><button class="pbtn pbtn-pano" data-b="panoapri">🌐 Apri la panoramica</button><button class="pbtn" data-b="panorepl">🔄 Sostituisci</button></div>`;
+h += `<div class="muted aiuto" style="margin-top:6px">Lo spicchio indica dove guarda il centro della foto: giralo (maniglia tonda o «Rotazione») verso quella direzione sulla tavola, così le viste estratte dicono da che parte guardano. Nella panoramica «Aggiungi questa vista al fascicolo» mette l'inquadratura fra le foto, con la didascalia.</div>`;
+}
 if (e.type === 'text') {
 h += textFld('Testo', 'text', e.text || '');
 h += `<div class="prow">${numFld('Dimens. (m)', 'size', round(e.size||0.8), 0.1)}${numFld('Rotazione °', 'rot', round(e.rot||0,1), 1)}</div>`;
@@ -3858,6 +3867,8 @@ S.render(); S.snapshot(); RS.ui.renderProps(); RS.ui.toast('Lettera riportata ne
 }
 if (b.dataset.b === 'calibra') { RS.tools.startCalibrate(S.selection[0]); return; }
 if (b.dataset.b === 'ritaglia') { RS.ui.ritagliaSfondo(S.get(S.selection[0])); return; }
+if (b.dataset.b === 'panoapri') { if (RS.panorama) RS.panorama.apri(S.get(S.selection[0])); return; }
+if (b.dataset.b === 'panorepl') { if (RS.panorama) RS.panorama.sostituisci(S.get(S.selection[0])); return; }
 if (b.dataset.b === 'sfondo-lock') {
 const s = S.get(S.selection[0]); if (!s) return;
 s.locked = !s.locked; S.render(); S.snapshot();
@@ -4178,6 +4189,7 @@ function nomeOggetto(e) {
 if (e.type === 'vehicle') return (e.label ? e.label + ' · ' : '') + catName(e) + (e.modello ? ' — ' + e.modello : '');
 if (e.type === 'symbol' && e.letter) return 'Caposaldo ' + e.letter;
 if (e.type === 'foto') return 'Foto ' + (e.n || '') + (e.descr ? ' — ' + e.descr : '');
+if (e.type === 'panorama') return 'Panoramica P' + (e.n || '') + (e.descr ? ' — ' + e.descr : '');
 if (e.type === 'road' && e.cA != null) return 'Tratto strada · ' + (e.cA + e.cB) + ' corsie, ' + String(Math.round(e.wid * 100) / 100).replace('.', ',') + ' m';
 return tipoLabel(e) + (e.label ? ' ' + e.label : '');
 }
@@ -4186,7 +4198,7 @@ const L = { vehicle:'Veicolo', symbol: e.nome || 'Simbolo', road:'Tratto strada'
 stopline:'Linea di arresto', building:'Edificio / muro', skid:'Traccia', path:'Percorso veicolo',
 measure:'Quota / misura', arrow:'Freccia', text:'Testo',
 north:'Freccia Nord', graphscale:'Scala grafica', roundabout: e.mini ? 'Mini-rotatoria' : 'Rotatoria', incrocio: e.pl ? 'Passaggio a livello' : e.accesso ? 'Passo carrabile' : 'Incrocio', curva:'Curva', band:'Banchina / fascia',
-river:'Canale / fiume', legend:'Legenda', title:'Cartiglio', foto:'Segnaposto foto', surveypt:'Punto di rilievo',
+river:'Canale / fiume', legend:'Legenda', title:'Cartiglio', foto:'Segnaposto foto', panorama:'Panoramica 360°', surveypt:'Punto di rilievo',
 roadway:'Carreggiata curva', zebrapath:'Zebrata curva', area:'Superficie',
 ramp: e.kind === 'out' ? 'Corsia di uscita' : 'Corsia di immissione' };
 return L[e.type] || e.type;
