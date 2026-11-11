@@ -1,10 +1,13 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 261;
+RS.BUILD = 262;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 262, data: '2026-11-11', voci: [
+'Misure guidate: la piantina del veicolo mostra sempre tutta la sagoma e tutti i punti numerati, anche sui telefoni e con i veicoli lunghi; i numeri stanno fuori dalla sagoma e il veicolo è più grande.'
+] },
 { build: 261, data: '2026-11-11', voci: [
 'Telemetro laser Bluetooth, per chi lo possiede: Bosch GLM della serie C (GLM 50 C, 50-27 C, 100-25 C…) o Leica DISTO con Bluetooth. Altro, Rilievo, «📏 Telemetro laser Bluetooth» (o il pulsante nelle misure guidate): «Cerca il telemetro», poi il suo nome.',
 'Con le misure guidate aperte ogni misura presa col telemetro entra da sola nella misura corrente (al centimetro) e si passa alla seguente, con il controllo immediato; altrimenti va nella casella selezionata e il cursore passa alla seguente. In basso il nome del telemetro collegato: toccandolo lo si scollega.',

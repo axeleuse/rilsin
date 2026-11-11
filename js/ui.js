@@ -4291,10 +4291,19 @@ if (!T) return '';
 const a = V ? (V.rot || 0) * Math.PI / 180 : 0;
 const loc = V ? q => { const dx = q.x - V.x, dy = q.y - V.y; return { x: dx * Math.cos(a) + dy * Math.sin(a), y: -dx * Math.sin(a) + dy * Math.cos(a) }; } : q => ({ x: q.x, y: q.y });
 const C = loc(cap), Tl = V ? (r => ({ x: r.lx, y: r.ly }))(V.rilpts.find(x => String(x.n) === n)) : loc(T);
-let x0, x1, y0, y1;
+let x0, x1, y0, y1, fsV = 0;
 if (V) {
-const W = Math.max(V.len * 1.7, 7.5), H = W / 2.4;
-x0 = -W / 2; x1 = W / 2; y0 = -H / 2; y1 = H / 2;
+const hx = Math.max(V.len / 2, ...V.rilpts.map(r => Math.abs(r.lx))), hy = Math.max(V.wid / 2, ...V.rilpts.map(r => Math.abs(r.ly)));
+fsV = Math.max(hx * 2, 4.5) / 9;
+x0 = -hx; x1 = hx; y0 = -hy; y1 = hy;
+V.rilpts.forEach(r => {
+const tg = String(r.n) === n, d = fsV * (tg ? 1.05 : 0.75), sz = fsV * (tg ? 1.1 : 0.72);
+const l = Math.hypot(r.lx, r.ly) || 1, ex = r.lx + r.lx / l * d, ey = r.ly + r.ly / l * d;
+const w = String(tg ? p.a : r.n).length * sz * 0.33 + sz * 0.1, h = sz * 0.6;
+x0 = Math.min(x0, ex - w, r.lx - fsV * 0.5); x1 = Math.max(x1, ex + w, r.lx + fsV * 0.5);
+y0 = Math.min(y0, ey - h, r.ly - fsV * 0.5); y1 = Math.max(y1, ey + h, r.ly + fsV * 0.5);
+});
+const pad = fsV * 0.25; x0 -= pad; x1 += pad; y0 -= pad; y1 += pad;
 } else {
 x0 = Math.min(C.x, Tl.x); x1 = Math.max(C.x, Tl.x); y0 = Math.min(C.y, Tl.y); y1 = Math.max(C.y, Tl.y);
 const lato = Math.max(x1 - x0, y1 - y0, 4), pad = lato * 0.16; x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
@@ -4302,23 +4311,26 @@ const cxm = (x0 + x1) / 2, cym = (y0 + y1) / 2, W = Math.max(x1 - x0, (y1 - y0) 
 x0 = cxm - W / 2; x1 = cxm + W / 2; y0 = cym - H / 2; y1 = cym + H / 2;
 }
 const dentro = q => q.x > x0 && q.x < x1 && q.y > y0 && q.y < y1;
-const fs = Math.max(x1 - x0, y1 - y0) / 13, f = v => +v.toFixed(2);
+const fs = fsV || Math.max(x1 - x0, y1 - y0) / 13, f = v => +v.toFixed(2);
+const fuori = (q, d) => { const l = Math.hypot(q.x, q.y) || 1; return { x: q.x + q.x / l * d, y: q.y + q.y / l * d }; };
 const svg = document.createElementNS(NS, 'svg');
 svg.setAttribute('viewBox', `${f(x0)} ${f(y0)} ${f(x1 - x0)} ${f(y1 - y0)}`); svg.setAttribute('class', 'gm-mini-svg');
-if (V && RS.elements.render) { try { const g = RS.elements.render(Object.assign({}, V, { x: 0, y: 0, rot: 0, spigoli: false })); if (g) svg.appendChild(g); } catch (e) {} }
+if (V && RS.elements.render) { try { const g = RS.elements.render(Object.assign({}, V, { x: 0, y: 0, rot: 0, spigoli: false, rilpts: null })); if (g) svg.appendChild(g); } catch (e) {} }
 const mk = (tag, at) => { const e = document.createElementNS(NS, tag); Object.keys(at).forEach(k => e.setAttribute(k, at[k])); svg.appendChild(e); return e; };
 const testo = (x, y, t, col, size) => { const e = mk('text', { x: f(x), y: f(y), 'font-size': f(size), 'font-weight': 700, fill: col, 'text-anchor': 'middle', dy: '0.35em', 'paint-order': 'stroke', stroke: '#fff', 'stroke-width': f(size * 0.18) }); e.textContent = t; };
 mk('line', { x1: f(C.x), y1: f(C.y), x2: f(Tl.x), y2: f(Tl.y), stroke: '#1d4f91', 'stroke-width': f(fs * 0.12), 'stroke-dasharray': f(fs * 0.5) + ' ' + f(fs * 0.3) });
 if (V) V.rilpts.forEach(r => {
 if (String(r.n) === n) return;
-mk('circle', { cx: f(r.lx), cy: f(r.ly), r: f(fs * 0.22), fill: '#fff', stroke: '#555', 'stroke-width': f(fs * 0.06) }); testo(r.lx, r.ly - fs * 0.62, String(r.n), '#444', fs * 0.72);
+mk('circle', { cx: f(r.lx), cy: f(r.ly), r: f(fs * 0.22), fill: '#fff', stroke: '#555', 'stroke-width': f(fs * 0.06) });
+const e = fuori({ x: r.lx, y: r.ly }, fs * 0.75); testo(e.x, e.y, String(r.n), '#444', fs * 0.72);
 });
 if (dentro(C)) {
 mk('path', { d: `M${f(C.x)} ${f(C.y - fs * 0.5)} L${f(C.x + fs * 0.5)} ${f(C.y)} L${f(C.x)} ${f(C.y + fs * 0.5)} L${f(C.x - fs * 0.5)} ${f(C.y)} Z`, fill: '#fff', stroke: '#b00', 'stroke-width': f(fs * 0.12) });
 testo(C.x, C.y - fs * 1.15, p.da, '#b00', fs * 1.05);
 }
 mk('circle', { cx: f(Tl.x), cy: f(Tl.y), r: f(fs * 0.42), fill: '#e01b24', stroke: '#fff', 'stroke-width': f(fs * 0.1) });
-testo(Tl.x, Tl.y - fs * 1.05, p.a, '#e01b24', fs * 1.15);
+if (V) { const e = fuori(Tl, fs * 1.05); testo(e.x, e.y, p.a, '#e01b24', fs * 1.1); }
+else testo(Tl.x, Tl.y - fs * 1.05, p.a, '#e01b24', fs * 1.15);
 let tit = '';
 if (V) {
 const sc = (RS.coinvolti && RS.coinvolti.datiVeicolo && RS.coinvolti.datiVeicolo(L)) || {};
