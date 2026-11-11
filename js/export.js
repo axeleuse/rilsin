@@ -13,7 +13,8 @@ opts = opts || {};
 const s = RS.scene;
 const b = s.contentBounds() || { x: 0, y: 0, w: s.world.w, h: s.world.h };
 const m = opts.margin != null ? opts.margin : 2;
-const bx = b.x - m, by = b.y - m, w = b.w + m * 2, h = b.h + m * 2;
+const R = opts.riquadro;
+const bx = R ? R.x : b.x - m, by = R ? R.y : b.y - m, w = R ? R.w : b.w + m * 2, h = R ? R.h : b.h + m * 2;
 const NS = 'http://www.w3.org/2000/svg';
 const parts = [];
 parts.push(`<svg xmlns="${NS}" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="${bx} ${by} ${w} ${h}" font-family="${FONT_DISEGNO}" ${opts.sizeAttr || ''}>`);
@@ -86,22 +87,25 @@ const T = this.pianoTavola();
 return { denom: T.denom, landscape: T.landscape, note: T.note };
 },
 pianoTavola(meno) {
-const s = RS.scene, b = s.contentBounds() || { x: 0, y: 0, w: s.world.w, h: s.world.h };
+const s = RS.scene, b = (s.boundsDisegno ? s.boundsDisegno() : s.contentBounds()) || { x: 0, y: 0, w: s.world.w, h: s.world.h };
 const cw = b.w + 4, ch = b.h + 4;
-const o = (s.printOptions && s.printOptions().orient) || 'auto', force = (o === 'portrait' || o === 'landscape') ? o : null;
+const po = s.printOptions ? s.printOptions() : {};
+const o = po.orient || 'auto', force = (o === 'portrait' || o === 'landscape') ? o : null;
 const geo = land => {
 const PW = land ? 271 : 184, PH = (land ? 184 : 271) - (meno || 0), testa = 9;
 const ax = 0, ay = testa, Aw = land ? PW - 74 : PW, Ah = land ? PH - testa : PH - testa - 72;
 return { landscape: land, PW, PH, testa, ax, ay, Aw, Ah, Dmin: Math.max(cw * 1000 / (Aw - 4), ch * 1000 / (Ah - 4)) };
 };
 const L = geo(true), P = geo(false), cand = force ? [force === 'landscape' ? L : P] : [L, P];
-let g, denom;
+let g, denom, tagliata = false;
 if (s.fuoriScala) { g = cand.reduce((a, c) => c.Dmin < a.Dmin ? c : a); denom = g.Dmin; }
 else {
 const sel = s.scaleDenom || 100;
 g = cand.find(c => sel >= c.Dmin);
 if (g) denom = sel;
-else {
+else if (po.scalaFissa) {
+g = cand.reduce((a, c) => c.Dmin < a.Dmin ? c : a); denom = sel; tagliata = true;
+} else {
 const NICE = [50, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 2500, 5000, 10000];
 let best = null;
 cand.forEach(c => { const d = NICE.find(n => n >= c.Dmin) || NICE[NICE.length - 1]; if (!best || d < best.d) best = { c, d }; });
@@ -109,8 +113,9 @@ g = best.c; denom = best.d;
 }
 }
 const note = s.fuoriScala ? 'A4 ' + (g.landscape ? 'orizzontale' : 'verticale') + ' — DISEGNO NON IN SCALA (schizzo).'
-: `A4 ${g.landscape ? 'orizzontale' : 'verticale'} — scala 1:${denom}` + (denom !== s.scaleDenom ? ` (adattata per stare in A4; scala scelta 1:${s.scaleDenom})` : '') + (force ? ' — orientamento forzato' : '') + '.';
-return Object.assign(g, { denom, note, adattata: denom !== s.scaleDenom });
+: `A4 ${g.landscape ? 'orizzontale' : 'verticale'} — scala 1:${denom}` + (denom !== s.scaleDenom ? ` (adattata per stare in A4; scala scelta 1:${s.scaleDenom}. Per tenerla: «Mantieni sempre la scala scelta»)` : '') +
+(tagliata ? ' — alla scala scelta il disegno è più grande del foglio: le parti fuori dalla cornice tratteggiata non si stampano' : '') + (force ? ' — orientamento forzato' : '') + '.';
+return Object.assign(g, { denom, note, adattata: denom !== s.scaleDenom, tagliata, centro: { x: b.x + b.w / 2, y: b.y + b.h / 2 } });
 },
 buildTavola(opz) {
 opz = opz || {};
@@ -119,7 +124,9 @@ const po = s.printOptions ? s.printOptions() : {}, meta = s.meta || {};
 const f = v => +(+v).toFixed(2);
 const old = s.scaleDenom; if (!s.fuoriScala) s.scaleDenom = D;
 let r;
-try { r = this.buildSvg({ footer: false, margin: 2, bn: !!opz.bn, senzaFiligrana: true, senzaCornice: true }); }
+const aw = T.Aw / k, ah = T.Ah / k, cc = T.centro || { x: 0, y: 0 };
+const riquadro = s.fuoriScala ? null : { x: cc.x - aw / 2, y: cc.y - ah / 2, w: aw, h: ah };
+try { r = this.buildSvg({ footer: false, margin: 2, bn: !!opz.bn, senzaFiligrana: true, senzaCornice: true, riquadro }); }
 finally { s.scaleDenom = old; ridisegnaSeScala(s); }
 const dw = r.w * k, dh = r.h * k, dx = T.ax + (T.Aw - dw) / 2, dy = T.ay + (T.Ah - dh) / 2;
 const { PW, PH, testa } = T;

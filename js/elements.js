@@ -1853,7 +1853,59 @@ return;
 mk('rect', { x: -hw, y: -hh, width: W, height: H, fill: e.color || '#9aa0a6', stroke: '#7d848b', 'stroke-width': 0.06 }, g);
 mk('rect', { x: -hw, y: -hh, width: W, height: H, fill: 'url(#patAsfalto)' }, g);
 }
+const CURVABILI = new Set(['guardrail', 'newjersey', 'antirumore', 'muro', 'siepe', 'recinzione', 'sidewalk', 'shoulder',
+'median', 'ciclabile', 'rails', 'canale', 'ditch']);
+const arcoDi = e => (e && e.type === 'band' && CURVABILI.has(e.sub) && Math.abs(+e.arco || 0) > 0.01) ? Math.max(-0.95, Math.min(0.95, +e.arco / (e.len / 2))) * (e.len / 2) : 0;
+function arcoBand(e) {
+const f = arcoDi(e), c = e.len / 2, s = Math.abs(f), sg = f < 0 ? -1 : 1;
+const R = (c * c + s * s) / (2 * s), cy = -f / 2 + sg * R, Th = Math.asin(Math.min(1, c / R)), S = 2 * R * Th;
+const at = d => { const t = -Th + d / R, sn = Math.sin(t), cs = Math.cos(t);
+return { x: R * sn, y: cy - sg * R * cs, nx: -sg * sn, ny: cs }; };
+return { S, at };
+}
+function drawBandArco(g, e) {
+const A = arcoBand(e), W = e.wid, hw = W / 2, sub = e.sub, S = A.S, n = Math.max(16, Math.ceil(S / 0.4));
+const linea = (d, a, b) => { let p = ''; const s0 = a == null ? 0 : a, s1 = b == null ? S : b, k = Math.max(2, Math.ceil((s1 - s0) / 0.4));
+for (let i = 0; i <= k; i++) { const q = A.at(s0 + (s1 - s0) * i / k); p += (i ? 'L' : 'M') + (q.x + q.nx * d).toFixed(3) + ' ' + (q.y + q.ny * d).toFixed(3); } return p; };
+const fascia = (d0, d1) => { let p = ''; for (let i = 0; i <= n; i++) { const q = A.at(S * i / n); p += (i ? 'L' : 'M') + (q.x + q.nx * d0).toFixed(3) + ' ' + (q.y + q.ny * d0).toFixed(3); }
+for (let i = n; i >= 0; i--) { const q = A.at(S * i / n); p += 'L' + (q.x + q.nx * d1).toFixed(3) + ' ' + (q.y + q.ny * d1).toFixed(3); } return p + 'Z'; };
+const traverso = (d, a, b, at) => { const q = A.at(d); return { x1: q.x + q.nx * a, y1: q.y + q.ny * a, x2: q.x + q.nx * b, y2: q.y + q.ny * b }; };
+const ogni = (passo, da, fn) => { for (let d = da; d <= S + 0.001; d += passo) fn(d); };
+if (sub === 'guardrail') {
+mk('path', { d: linea(0), fill: 'none', stroke: e.color || '#555', 'stroke-width': Math.min(0.18, W) }, g);
+ogni(1, 0, d => mk('line', Object.assign(traverso(d, -hw, hw), { stroke: e.color || '#555', 'stroke-width': 0.06 }), g));
+return;
+}
+if (sub === 'recinzione') {
+mk('path', { d: linea(0), fill: 'none', stroke: e.color || '#777', 'stroke-width': 0.06, 'stroke-dasharray': '0.5 0.25' }, g);
+ogni(1.2, 0, d => { const q = A.at(d); mk('circle', { cx: q.x, cy: q.y, r: 0.09, fill: e.color || '#777' }, g); });
+return;
+}
+const COL = { newjersey: ['#dcdcdc', '#8f8f8f'], antirumore: [e.color || '#4f7382', '#2f4650'], muro: [e.color || '#b9b3a8', '#6f6a60'],
+siepe: [e.color || '#3f8f4f', '#2c6b39'], ciclabile: [e.color || '#b5563a', '#ffffff'], rails: ['#cfc9bb', '#999'], canale: [e.color || '#8fc7e8', '#5b93b5'] };
+const [fill, bordo] = COL[sub] || [e.color || '#cfcabb', '#9a8f74'];
+mk('path', { d: fascia(-hw, hw), fill, stroke: bordo, 'stroke-width': sub === 'ciclabile' ? 0.09 : 0.05, 'stroke-linejoin': 'round' }, g);
+if (sub === 'newjersey') { mk('path', { d: linea(0), fill: 'none', stroke: '#b3b3b3', 'stroke-width': 0.06 }, g);
+ogni(1.2, 1.2, d => mk('line', Object.assign(traverso(d, -hw, hw), { stroke: '#9a9a9a', 'stroke-width': 0.05 }), g)); }
+else if (sub === 'antirumore') ogni(2, 0, d => mk('line', Object.assign(traverso(d, -hw - 0.04, hw + 0.04), { stroke: '#2f4650', 'stroke-width': 0.16 }), g));
+else if (sub === 'muro') ogni(0.5, 0.3, d => mk('line', Object.assign(traverso(d, -hw, hw), { stroke: '#8a857a', 'stroke-width': 0.04 }), g));
+else if (sub === 'siepe') ogni(0.5, 0.25, d => { const q = A.at(d); mk('circle', { cx: q.x, cy: q.y, r: hw * 0.78, fill: '#4da05e', opacity: 0.9 }, g); });
+else if (sub === 'rails') { ogni(0.6, 0.3, d => mk('line', Object.assign(traverso(d, -hw, hw), { stroke: '#8a7a5a', 'stroke-width': 0.12 }), g));
+[-hw + 0.25, hw - 0.25].forEach(o => mk('path', { d: linea(o), fill: 'none', stroke: '#666', 'stroke-width': 0.1 }, g)); }
+else if (sub === 'canale') { [-hw, hw].forEach(o => mk('path', { d: linea(o), fill: 'none', stroke: '#6f8f5a', 'stroke-width': 0.12 }, g));
+mk('path', { d: linea(0), fill: 'none', stroke: '#fff', 'stroke-width': 0.07, 'stroke-dasharray': '0.9 0.9', opacity: 0.75 }, g); }
+else if (sub === 'sidewalk') ogni(1, 1, d => mk('line', Object.assign(traverso(d, -hw, hw), { stroke: 'rgba(0,0,0,.12)', 'stroke-width': 0.03 }), g));
+else if (sub === 'ditch') mk('path', { d: linea(0), fill: 'none', stroke: '#7a6a40', 'stroke-width': 0.06, 'stroke-dasharray': '0.4 0.3' }, g);
+}
+function impostaArco(e, f) {
+const max = e.len / 2 * 0.95, nf = Math.abs(+f || 0) < 0.01 ? 0 : Math.max(-max, Math.min(max, +f));
+const prima = arcoDi(e), d = (prima - nf) / 2, r = (e.rot || 0) * Math.PI / 180;
+e.x += -Math.sin(r) * d;
+e.y += Math.cos(r) * d;
+if (nf) e.arco = Math.round(nf * 1000) / 1000; else delete e.arco;
+}
 function drawBand(g, e) {
+if (arcoDi(e)) return drawBandArco(g, e);
 const L = e.len, W = e.wid, hl = L/2, hw = W/2, sub = e.sub;
 if (sub === 'dosso') {
 mk('rect', { x: -hl, y: -hw, width: L, height: W, fill: '#b9b9b9', stroke: '#888', 'stroke-width': 0.05 }, g);
@@ -2459,7 +2511,7 @@ if (e.type === 'measuretable') { const mt = tableMetrics(e); return { x: e.x, y:
 if (e.type === 'graphscale') { const len = e.size||10, fs = Math.max(0.4,len*0.07); return { x: e.x, y: e.y - fs, w: len, h: Math.max(0.3,len*0.05) + fs*2.5 }; }
 let w, h;
 if (e.type === 'vehicle') { w = e.len; h = e.wid; }
-else if (e.type === 'road' || e.type === 'crosswalk' || e.type === 'band' || e.type === 'ramp') { w = e.len; h = e.wid; }
+else if (e.type === 'road' || e.type === 'crosswalk' || e.type === 'band' || e.type === 'ramp') { w = e.len; h = e.wid + Math.abs(arcoDi(e)); }
 else if (e.type === 'svasatura') { w = e.len; h = Math.max(e.w0 || 0, e.w1 || 0) + Math.abs(+e.off0 || 0) * 2; }
 else if (e.type === 'curva') { const d = RS.curve ? RS.curve.dim(e) : { w: 10, h: 10 }; w = d.w; h = d.h; }
 else if (e.type === 'stopline' || e.type === 'mark') { w = e.len; h = 0.5; }
@@ -2490,7 +2542,7 @@ return out;
 },
 localSize(e) {
 if (e.type === 'vehicle') return { w: e.len, h: e.wid };
-if (e.type === 'road' || e.type === 'crosswalk' || e.type === 'band' || e.type === 'ramp') return { w: e.len, h: e.wid };
+if (e.type === 'road' || e.type === 'crosswalk' || e.type === 'band' || e.type === 'ramp') return { w: e.len, h: e.wid + Math.abs(arcoDi(e)) };
 if (e.type === 'stopline' || e.type === 'mark') return { w: e.len, h: 0.5 };
 if (e.type === 'building' || e.type === 'island' || e.type === 'parking' || e.type === 'image' || e.type === 'area') return { w: e.w, h: e.h };
 if (e.type === 'roundabout' || e.type === 'north') return { w: e.size, h: e.size };
@@ -2504,6 +2556,7 @@ return { w: e.size || 0.6, h: e.size || 0.6 };
 };
 RS.elements.FASI = FASI; RS.elements.DANNI = DANNI;
 RS.elements.miniaturaSvg = miniaturaSvg;
+RS.elements.arcoDi = arcoDi; RS.elements.impostaArco = impostaArco; RS.elements.CURVABILI = CURVABILI;
 RS.elements.sezione = sezione; RS.elements.margini = margini; RS.elements.agganciaCorsia = agganciaCorsia; RS.elements.geoRampa = geoRampa; RS.elements.barrieraCentrale = barrieraCentrale; RS.elements.avviaSezione = avviaSezione; RS.elements.aggiornaSezione = aggiornaSezione;
 RS.elements.latiMarc = latiMarc; RS.elements.impostaMarc = impostaMarc; RS.elements.etichettaVia = etichettaVia;
 RS.elements.SEZIONE_K = SEZIONE_K; RS.elements.geometriaRaccordo = geometriaRaccordo; RS.elements.strisciaRaccordo = strisciaRaccordo; RS.elements.puntiRaccordo = puntiRaccordo;

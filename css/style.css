@@ -148,6 +148,9 @@ body.light .hint .hint-az{color:var(--accent)}
 .ov-rot{fill:transparent;stroke:none;cursor:grab}
 .ov-rotv{fill:#fff;stroke:#2563eb;stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:none}
 .ov-rot:hover+.ov-rotv{fill:#2563eb}
+.ov-arco{fill:transparent;stroke:none;cursor:grab}
+.ov-arcov{fill:#ff9d2e;stroke:#fff;stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:none}
+.ov-arco:hover+.ov-arcov{fill:#e07a00}
 .ov-line{stroke:#2563eb;stroke-width:1;vector-effect:non-scaling-stroke}
 .ov-vh{fill:#fff;stroke:#2563eb;stroke-width:1.4;vector-effect:non-scaling-stroke;cursor:move}
 .ov-lbl{fill:rgba(255,255,255,.55);stroke:#b00;stroke-width:1.4;vector-effect:non-scaling-stroke;cursor:move}
@@ -692,6 +695,8 @@ body.light .fsc-thumb{background:#eef1f5}
 .pal-item svg{width:100%;height:52px;flex:0 0 52px;box-sizing:border-box;padding:6px 10px;background:#ebe7dd;border-bottom:1px solid var(--line);
 border-radius:calc(var(--r) - 1px) calc(var(--r) - 1px) 0 0}
 .pal-item svg.pal-asf{background:#8f969e}
+.pal-items{grid-auto-rows:max-content}
+.pal-item svg{min-height:52px}
 .pal-item span{padding:0 6px}
 .ov-chip{fill:rgba(17,17,17,.88);stroke:none;pointer-events:none}
 .ov-guideline{stroke:var(--sel);stroke-width:1.2;vector-effect:non-scaling-stroke;

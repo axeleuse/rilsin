@@ -97,6 +97,11 @@ pl_barriere:   p => { pieno('M-0.5 0.04 L0.5 0.04 L0.5 0.4 L-0.5 0.4 Z', NERO, p
 tratto('M-0.42 0.4 L-0.42 0.62 M0.42 0.4 L0.42 0.62', 0.07, NERO, p); },
 banchina:      p => { pieno('M-0.5 0.6 L0.1 0.6 L0.1 -0.2 L-0.5 -0.2 Z', NERO, p); automobile(mk('g', { transform: 'rotate(25)' }, p), 0.18, 0.22, 0.42, NERO); }
 };
+const AGGIUSTA = {
+curva_dx: [0.87, 0.09], curva_sx: [0.87, 0.09], bambini: [1, -0.08], animali: [0.71, 0.19], selvatici: [0.7, 0.19],
+pl_barriere: [0.88, 0.08], banchina: [0.78, 0.18], doppio_senso: [0.98, 0.07], incrocio: [1, 0.05], sdrucciolevole: [0.98, 0.04],
+doppia_curva: [1, 0.02], incrocio_prec: [1, 0.02]
+};
 const DIVIETO = {
 transito:      () => {},
 sosta:         p => barra(p),
@@ -147,7 +152,8 @@ const p = mk('g', { transform: `${dritto ? `rotate(${-(e.rot || 0)}) ` : ''}scal
 if (k.f === 'p') {
 const giallo = e.provv ? GIALLO : BIANCO;
 triangolo(p, giallo);
-const q = mk('g', { transform: 'translate(0 0.05) scale(0.92)' }, p);
+const agg = AGGIUSTA[k.c], q0 = agg ? mk('g', { transform: `translate(0 ${agg[1]}) scale(${agg[0]})` }, p) : p;
+const q = mk('g', { transform: 'translate(0 0.05) scale(0.92)' }, q0);
 PERICOLO[k.c](q, e);
 } else if (k.f === 'd') {
 const blu = k.c === 'sosta' || k.c === 'fermata';

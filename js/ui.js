@@ -2165,6 +2165,8 @@ el('printBody').innerHTML =
              <select id="poOrient">${oopt('auto','Automatico (consigliato)')}${oopt('portrait','Verticale')}${oopt('landscape','Orizzontale')}</select></div>
            <div class="gfield"><label>Stile</label>
              <select id="poStile"><option value="col"${po.bn ? '' : ' selected'}>A colori</option><option value="bn"${po.bn ? ' selected' : ''}>Tecnica in bianco e nero (per fotocopie)</option></select></div>
+           <label class="pchk" style="grid-column:1/-1" title="Se il disegno non sta tutto nel foglio alla scala scelta: senza la spunta la scala si riduce (per esempio 1:200), con la spunta resta quella scelta e i bordi fuori dalla cornice tratteggiata non si stampano">
+             <input type="checkbox" id="poScalaFissa"${po.scalaFissa ? ' checked' : ''}> Mantieni sempre la scala scelta (1:${S.scaleDenom || 100}) <span class="pchk-hint">se il disegno non ci sta, i bordi si tagliano invece di ridurre la scala</span></label>
            <div class="gfield" style="grid-column:1/-1"><label>Titolo del cartiglio</label>
              <input id="poTitolo" value="${escAttr(po.titolo||'')}" placeholder="${escAttr(meta.localita || 'Planimetria del sinistro stradale')}"></div>
          </div>
@@ -2203,6 +2205,11 @@ el('poStile').addEventListener('change', () => {
 S.printOpts = S.printOpts || {}; S.printOpts.bn = el('poStile').value === 'bn';
 try { localStorage.setItem('rilsin:stampaBn', S.printOpts.bn ? '1' : '0'); } catch (e) {}
 this.renderPrintPreview();
+});
+el('poScalaFissa').addEventListener('change', () => {
+S.printOpts = S.printOpts || {}; S.printOpts.scalaFissa = el('poScalaFissa').checked;
+try { localStorage.setItem('rilsin:scalaFissa', S.printOpts.scalaFissa ? '1' : '0'); } catch (e) {}
+this.renderPrintPreview(); S._foglio = undefined; S.drawGrid(); S.drawFoglio();
 });
 el('poOrient').addEventListener('change', () => { S.printOpts = S.printOpts || {}; S.printOpts.orient = el('poOrient').value; this.renderPrintPreview(); S._foglio = undefined; S.drawGrid(); S.drawFoglio(); });
 el('printBody').querySelectorAll('[data-po]').forEach(inp => {
@@ -3744,6 +3751,10 @@ h += `<div class="pbtns"><button class="pbtn" data-b="rampaggancia">🧲 Agganci
 if (e.type === 'crosswalk') h += `<div class="prow">${numFld('Largh. (m)', 'len', round(e.len), 0.1)}${numFld('Prof. (m)', 'wid', round(e.wid), 0.1)}</div>`;
 if (e.type === 'stopline') h += numFld('Lungh. (m)', 'len', round(e.len), 0.1);
 if (e.type === 'band') h += `<div class="prow">${numFld('Lungh. (m)', 'len', round(e.len), 0.1)}${numFld('Largh. (m)', 'wid', round(e.wid), 0.1)}</div>`;
+if (e.type === 'band' && RS.elements.CURVABILI && RS.elements.CURVABILI.has(e.sub)) {
+h += numFld('Curvatura: freccia (m)', 'arco', round(RS.elements.arcoDi(e)), 0.1);
+h += `<div class="mis-hint">0 = dritta. La freccia è la distanza del centro dell'arco dalla linea fra le due estremità (positiva da un lato, negativa dall'altro); le estremità restano ferme. Si può anche trascinare il pallino arancio sulla tavola.</div>`;
+}
 if (e.type === 'mark') {
 h += numFld('Lungh. (m)', 'len', round(e.len), 0.1);
 h += selFld('Tipo', 'style', e.style, [['cont','Continua'],['disc','Tratteggiata'],['double','Doppia'],['edge','Margine'],['give','Dare preced.']]);
@@ -3943,6 +3954,11 @@ RS.scene.render(); RS.scene.snapshot(); setTimeout(() => RS.ui.renderProps(), 0)
 return;
 }
 if (k === 'rotpts') { rotatePts(e, v - (e.rot || 0)); e.rot = v; RS.scene.render(); if (commit) RS.scene.snapshot(); return; }
+if (k === 'arco' && e.type === 'band') {
+RS.elements.impostaArco(e, +v || 0); RS.scene.render();
+if (commit) { RS.scene.snapshot(); setTimeout(() => RS.ui.renderProps(), 0); }
+return;
+}
 const sezK = e.type === 'road' && (RS.elements.SEZIONE_K[k] || k === 'wid');
 if (sezK && RS.elements.SEZIONE_K[k]) RS.elements.avviaSezione(e);
 e[k] = v;

@@ -136,6 +136,17 @@ const target = { x: b.x - (w - b.w) / 2, y: b.y - (h - b.h) / 2, w, h };
 if (animate) this.animateView(target);
 else { this.view = target; this._applyView(); }
 },
+boundsDisegno() {
+const els = this.elements.filter(e => e.type !== 'image');
+if (!els.length) return this.contentBounds();
+let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
+els.forEach(e => {
+const bb = RS.elements.bounds(e); if (!bb) return;
+minX = Math.min(minX, bb.x); minY = Math.min(minY, bb.y);
+maxX = Math.max(maxX, bb.x + bb.w); maxY = Math.max(maxY, bb.y + bb.h);
+});
+return minX > maxX ? this.contentBounds() : { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+},
 contentBounds() {
 if (!this.elements.length) return null;
 let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
@@ -150,11 +161,11 @@ return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 },
 foglio() {
 if (this._foglio !== undefined) return this._foglio;
-const b = this.contentBounds();
+const b = this.boundsDisegno();
 if (!b || this.fuoriScala || !RS.exportUtil || !RS.exportUtil.pianoTavola) return (this._foglio = null);
 const T = RS.exportUtil.pianoTavola();
 const pw = T.Aw * T.denom / 1000, ph = T.Ah * T.denom / 1000, cx = b.x + b.w / 2, cy = b.y + b.h / 2;
-return (this._foglio = { x: cx - pw / 2, y: cy - ph / 2, w: pw, h: ph, denom: T.denom, landscape: T.landscape, adattata: T.adattata });
+return (this._foglio = { x: cx - pw / 2, y: cy - ph / 2, w: pw, h: ph, denom: T.denom, landscape: T.landscape, adattata: T.adattata, tagliata: T.tagliata });
 },
 drawGrid() {
 const g = this.gGrid; if (!g) return;
@@ -400,10 +411,11 @@ this._hpos++; this.elements = clona(this._hist[this._hpos]);
 this.selection = []; this.render(); this.emit('change'); this.emit('select');
 },
 printOptions() {
-let bn = false; try { bn = localStorage.getItem('rilsin:stampaBn') === '1'; } catch (e) {}
+let bn = false, scalaFissa = false;
+try { bn = localStorage.getItem('rilsin:stampaBn') === '1'; scalaFissa = localStorage.getItem('rilsin:scalaFissa') === '1'; } catch (e) {}
 return Object.assign({
 titolo: '', orient: 'auto', comando: true, stazione: true, numero: true, data: true,
-operatore: true, condizioni: false, coordinate: true, scala: true, nord: true, logo: true, bozza: false, bn, simboli: true
+operatore: true, condizioni: false, coordinate: true, scala: true, nord: true, logo: true, bozza: false, bn, simboli: true, scalaFissa
 }, this.printOpts || {});
 },
 applyMetaDefaults() {

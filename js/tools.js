@@ -460,6 +460,19 @@ op.deg = d; RS.scene.render();
 this.showRotBadge({ x: op.c.x, y: op.c.y }, (d > 0 ? '+' : '') + String(d).replace('.', ',') + '°');
 return;
 }
+if (op.kind === 'arco') {
+const el = RS.scene.get(op.id); if (!el) return;
+const loc = toLocal(w, op.cx, op.cy, op.rot), off = el.wid / 2 + (op.pad || 0);
+let f = op.f0 / 2 - loc.y - off;
+if (f < 0) f = Math.min(0, op.f0 / 2 - loc.y + off);
+if (Math.abs(f) < 0.15) f = 0;
+el.x = op.cx; el.y = op.cy; if (op.f0) el.arco = op.f0; else delete el.arco;
+RS.elements.impostaArco(el, f);
+RS.scene.render();
+const fa = RS.elements.arcoDi(el);
+this.showRotBadge({ x: el.x, y: el.y }, fa ? 'freccia ' + Math.abs(fa).toFixed(2).replace('.', ',') + ' m' : 'dritta');
+return;
+}
 if (op.kind === 'resize') {
 const el = RS.scene.get(op.id); if (!el) return;
 const loc = toLocal(w, op.cx, op.cy, op.rot != null ? op.rot : (el.rot || 0));
@@ -572,8 +585,8 @@ this.drawSelection();
 if (op.moved) RS.scene.snapshot();
 if (op.schizzo && !op.moved && RS.sketch && RS.sketch.auto) RS.sketch.auto.tratto([{ x: op.sx, y: op.sy }]);
 else if (op.schizzo && op.moved && RS.sketch && RS.sketch.auto && RS.sketch.auto.testo) RS.sketch.auto.testo('Spostato: trascina ancora o scegli una penna');
-} else if (op.kind === 'rotate' || op.kind === 'grot' || op.kind === 'resize' || op.kind === 'vertex' || op.kind === 'rilpt' || op.kind === 'lbl' || op.kind === 'braccio') {
-if (op.kind === 'rotate' || op.kind === 'grot') this.hideRotBadge();
+} else if (op.kind === 'rotate' || op.kind === 'grot' || op.kind === 'resize' || op.kind === 'vertex' || op.kind === 'rilpt' || op.kind === 'lbl' || op.kind === 'braccio' || op.kind === 'arco') {
+if (op.kind === 'rotate' || op.kind === 'grot' || op.kind === 'arco') this.hideRotBadge();
 RS.scene.snapshot();
 RS.scene.emit('select');
 } else if (op.kind === 'marquee') {
@@ -837,6 +850,8 @@ const alCentro = e.altKey || !ANCORATI.has(el.type);
 this._op = { kind: 'resize', id, cx: el.x, cy: el.y, rot: el.rot || 0, w0: ls.w, h0: ls.h,
 sx: +handle.dataset.sx || 0, sy: +handle.dataset.sy || 0, alCentro,
 lockAspect: e.shiftKey || el.type === 'symbol' || el.type === 'image', pad: this.hs() * 0.6 };
+} else if (type === 'arco') {
+this._op = { kind: 'arco', id, cx: el.x, cy: el.y, rot: el.rot || 0, f0: RS.elements.arcoDi(el), pad: this.hs() * 0.6 };
 } else if (type === 'vtx') {
 this._op = { kind: 'vertex', id, i: +handle.dataset.i };
 } else if (type === 'lbl') {
@@ -876,8 +891,16 @@ g.setAttribute('transform', `translate(${el.x} ${el.y}) rotate(${el.rot || 0})`)
 const pad = h * 0.6, hw = ls.w/2 + pad, hh = ls.h/2 + pad;
 rect(g, -hw, -hh, hw*2, hh*2, 'ov-box');
 if (!el.locked && !trascina && !multi) {
+const curvabile = el.type === 'band' && RS.elements.CURVABILI && RS.elements.CURVABILI.has(el.sub);
 const lati = ANCORATI.has(el.type) && el.type !== 'image'
-? (el.type === 'stopline' || el.type === 'mark' ? [[1, 0], [-1, 0]] : [[1, 0], [-1, 0], [0, 1], [0, -1]]) : [];
+? (el.type === 'stopline' || el.type === 'mark' || curvabile ? [[1, 0], [-1, 0]] : [[1, 0], [-1, 0], [0, 1], [0, -1]]) : [];
+if (curvabile) {
+const fa = RS.elements.arcoDi(el), sg = fa < 0 ? -1 : 1, cy = -fa / 2 - sg * (el.wid / 2 + pad);
+const r = N('circle'); attr(r, { cx: 0, cy, r: h * 1.15, class: 'ov-arco', 'data-handle': 'arco', 'data-id': id });
+const tt = N('title'); tt.textContent = 'Trascina per curvare (le estremità restano ferme); riportala in linea per raddrizzare'; r.appendChild(tt);
+g.appendChild(r);
+const v = N('circle'); attr(v, { cx: 0, cy, r: h * 0.5, class: 'ov-arcov' }); g.appendChild(v);
+}
 if (el.type !== 'incrocio' && el.type !== 'curva') [[-1,-1],[1,-1],[1,1],[-1,1]].concat(lati).forEach(([sx, sy]) => {
 const cx = sx * hw, cy = sy * hh, lato = !sx || !sy;
 const r = N('rect');
@@ -1020,6 +1043,7 @@ const ANCORATI = new Set(['road', 'crosswalk', 'band', 'ramp', 'building', 'isla
 function applySize(el, nw, nh, lock) {
 if (el.type === 'vehicle') { el.len = nw; el.wid = nh; }
 else if (el.type === 'image') { el.w = nw; el.h = nh; }
+else if (el.type === 'band' && RS.elements.arcoDi(el)) { el.len = nw; el.wid = Math.max(0.05, nh - Math.abs(RS.elements.arcoDi(el))); }
 else if (el.type === 'road' || el.type === 'crosswalk' || el.type === 'band' || el.type === 'ramp') { el.len = nw; el.wid = nh;
 if (el.type === 'road') RS.elements.aggiornaSezione(el, 'wid'); }
 else if (el.type === 'stopline' || el.type === 'mark') { el.len = nw; }

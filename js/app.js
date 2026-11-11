@@ -1,10 +1,17 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 267;
+RS.BUILD = 268;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 268, data: '2026-11-11', voci: [
+'Stampa in scala: la foto aerea di sfondo non fa più ridurre la scala (prima, essendo molto più grande del sinistro, portava per esempio da 1:100 a 1:750). Ora riempie l\'area del disegno e si ritaglia ai bordi. Se il disegno stesso non sta nel foglio la scala si riduce ancora, ma nelle opzioni di stampa c\'è «Mantieni sempre la scala scelta»: la scala resta quella e si taglia ciò che esce dalla cornice tratteggiata.',
+'Fasce curve: guard-rail, new jersey, barriera antirumore, marciapiede, banchina, spartitraffico, pista ciclabile, muro, siepe, recinzione, binari, canale e fosso si piegano ad arco trascinando il pallino arancio, oppure scrivendo la freccia in metri nelle proprietà. Le estremità restano ferme.',
+'Segnali di pericolo: le figure che uscivano dal triangolo (animali domestici e selvatici, banchina pericolosa, curve, bambini, passaggio a livello e altre) sono ridimensionate e stanno dentro, con un margine misurato.',
+'Telefono: nella tavolozza i nomi lunghi non escono più dalla scheda (la scheda si allunga quanto serve).',
+'Autodiagnosi: due prove nuove, 87 in tutto.'
+] },
 { build: 267, data: '2026-11-11', voci: [
 'Ridimensionamento corretto: aree (verde, piazzale, ghiaia, zebrata), edifici, isole, stalli, strade, fasce, strisce e immagini si allungano dal lato che si trascina e il lato opposto resta fermo, anche se l\'oggetto è ruotato. Prima crescevano da tutte e due le parti e andavano riposizionati a mano.',
 'Maniglie anche a metà dei lati, per allungare in una sola direzione. Con Alt premuto si ridimensiona attorno al centro. Simboli, testi, rotatorie e veicoli continuano a crescere attorno al loro centro.',
