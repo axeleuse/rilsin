@@ -1755,7 +1755,71 @@ const ang = Math.atan2(pc.u.y, pc.u.x) * 180 / Math.PI;
 etichettaVia(g, e.nomeVia, pc.p, ang, ang);
 }
 }
+function geoRampa(e) {
+const L = Math.max(3, +e.len || 30), W = Math.max(1, +e.wid || 3.5), hl = L / 2, hw = W / 2;
+const ram = Math.max(0, Math.min(30, +e.ram || 0)), t = Math.tan(ram * Math.PI / 180);
+const cus = ram > 0 ? Math.max(0, Math.min(+e.cus || 0, L * 0.6)) : 0;
+const rac = Math.max(0, Math.min(+e.rac || 0, L - cus));
+const uN = -hl + cus, uT = hl - rac;
+return { L, W, hl, hw, ram, t, cus, rac, uN, uT, sbalzo: cus * t };
+}
 function drawRamp(g, e) {
+if (e.ram == null) return drawRampVecchia(g, e);
+const G = geoRampa(e), { hl, hw, t, uN, uT } = G, col = e.color || '#9aa0a6';
+const out = e.kind === 'out', X = u => out ? -u : u;
+const P = pts => pts.map((p, i) => (i ? 'L' : 'M') + (+X(p[0]).toFixed(3)) + ' ' + (+p[1].toFixed(3))).join(' ');
+const yi = u => -hw + (uN - u) * t, yo = u => hw + (uN - u) * t;
+const ext = 0.08;
+const asf = P([[-hl, yi(-hl)], [uN, -hw], [uN, -hw - ext], [hl, -hw - ext], [uT, hw], [uN, hw], [-hl, yo(-hl)]]) + ' Z';
+mk('path', { d: asf, fill: col }, g);
+mk('path', { d: asf, fill: 'url(#patAsfalto)' }, g);
+const marks = N('g'); if (e.id) marks.setAttribute('mask', `url(#rm_${e.id})`);
+if (G.cus > 0.5 && G.sbalzo > 0.3) {
+const z = P([[-hl, -hw + 0.06], [uN, -hw + 0.06], [-hl, yi(-hl)]]) + ' Z';
+mk('path', { d: z, fill: col }, marks);
+mk('path', { d: z, fill: 'url(#patZebra)' }, marks);
+mk('path', { d: P([[-hl, yi(-hl)], [uN, -hw]]), fill: 'none', stroke: '#fff', 'stroke-width': 0.12 }, marks);
+}
+mk('path', { d: P([[uN, -hw], [hl, -hw]]), fill: 'none', stroke: '#fff', 'stroke-width': 0.16, 'stroke-dasharray': '2.2 1.4' }, marks);
+const m = 0.15;
+mk('path', { d: P([[-hl, yo(-hl) - m], [uN, hw - m], [uT, hw - m], [hl, -hw]]), fill: 'none', stroke: '#fff', 'stroke-width': 0.12, 'stroke-linejoin': 'round' }, marks);
+mk('path', { d: P([[-hl, yo(-hl)], [uN, hw], [uT, hw], [hl, -hw - ext]]), fill: 'none', stroke: '#6b7178', 'stroke-width': 0.05 }, marks);
+const par = uT - uN;
+if (par > 6) {
+const lu = Math.min(4.5, par / 3), a0 = out ? uT : uN, a1 = out ? uN : uT;
+const sg = out ? -1 : 1, ua = a0 + sg * (1 + lu / 2);
+frecciaCorsia(marks, X(ua), 0, lu, 1);
+const testo = out ? 'corsia di decelerazione' : 'corsia di accelerazione', fs = Math.min(0.7, G.W * 0.2);
+const da = ua + sg * (lu / 2 + 1), lib = Math.abs(a1 - da), lt = testo.length * fs * 0.52;
+if (e.scritta !== false && lib > lt + 1) scrittaCorsia(marks, testo, X((da + a1) / 2), 0, fs, e.rot || 0);
+}
+g.appendChild(marks);
+}
+function agganciaCorsia(e, strade) {
+const R = r => r * Math.PI / 180;
+let best = null;
+(strade || RS.scene.elements).forEach(s => {
+if (s.type !== 'road' || s === e) return;
+const a = R(s.rot || 0), c = Math.cos(a), n = Math.sin(a);
+const dx = e.x - s.x, dy = e.y - s.y, lx = dx * c + dy * n, ly = -dx * n + dy * c;
+if (Math.abs(lx) > s.len / 2 + e.len / 2) return;
+const sz = sezione(s), giu = sz ? s.wid / 2 - sz.giu : s.wid / 2 - 0.25, su = sz ? -s.wid / 2 + sz.su : -s.wid / 2 + 0.25;
+const lato = ly >= 0 ? 1 : -1, bordo = lato > 0 ? giu : su;
+const dist = Math.abs(ly - (bordo + lato * e.wid / 2));
+let dr = (((e.rot || 0) - (s.rot || 0)) % 180 + 180) % 180; dr = Math.min(dr, 180 - dr);
+if (dist > Math.max(6, e.wid * 2) || dr > 25) return;
+if (!best || dist < best.dist) best = { s, lx, lato, bordo, dist };
+});
+if (!best) return false;
+const { s, lx, lato, bordo } = best, a = R(s.rot || 0), c = Math.cos(a), n = Math.sin(a);
+const ly = bordo + lato * e.wid / 2;
+e.x = Math.round((s.x + lx * c - ly * n) * 1000) / 1000;
+e.y = Math.round((s.y + lx * n + ly * c) * 1000) / 1000;
+e.rot = ((s.rot || 0) + (lato > 0 ? 0 : 180)) % 360;
+if (!(e.z > s.z)) e.z = (s.z || 0) + 0.01;
+return true;
+}
+function drawRampVecchia(g, e) {
 const L = e.len || 30, W = e.wid || 3.5, hl = L/2, hw = W/2;
 const col = e.color || '#9aa0a6', inn = (e.kind || 'in') === 'in';
 const x0 = inn ? -hl : hl, x1 = inn ? hl : -hl;
@@ -2440,7 +2504,7 @@ return { w: e.size || 0.6, h: e.size || 0.6 };
 };
 RS.elements.FASI = FASI; RS.elements.DANNI = DANNI;
 RS.elements.miniaturaSvg = miniaturaSvg;
-RS.elements.sezione = sezione; RS.elements.margini = margini; RS.elements.barrieraCentrale = barrieraCentrale; RS.elements.avviaSezione = avviaSezione; RS.elements.aggiornaSezione = aggiornaSezione;
+RS.elements.sezione = sezione; RS.elements.margini = margini; RS.elements.agganciaCorsia = agganciaCorsia; RS.elements.geoRampa = geoRampa; RS.elements.barrieraCentrale = barrieraCentrale; RS.elements.avviaSezione = avviaSezione; RS.elements.aggiornaSezione = aggiornaSezione;
 RS.elements.latiMarc = latiMarc; RS.elements.impostaMarc = impostaMarc; RS.elements.etichettaVia = etichettaVia;
 RS.elements.SEZIONE_K = SEZIONE_K; RS.elements.geometriaRaccordo = geometriaRaccordo; RS.elements.strisciaRaccordo = strisciaRaccordo; RS.elements.puntiRaccordo = puntiRaccordo;
 RS.elements.locale = locale; RS.elements.snodoInfo = snodoInfo; RS.elements.DUE_RUOTE = DUE_RUOTE;

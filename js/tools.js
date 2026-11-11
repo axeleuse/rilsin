@@ -752,6 +752,7 @@ this._op = { kind: 'newdrag', tool: this.active.tool, def: this.active.def, a: p
 dragPreview(op, w) {
 op.b = this.snapPoint(w);
 const el = buildDragElement(op);
+if (el && el.type === 'ramp') RS.elements.agganciaCorsia(el);
 RS.scene.gOverlay.querySelectorAll('.preview').forEach(n => n.remove());
 const node = RS.elements.render(el);
 if (node) { node.classList.add('preview'); node.style.opacity = 0.6; RS.scene.gOverlay.appendChild(node); }
@@ -764,7 +765,9 @@ if (!el) return;
 const len = Math.hypot(op.b.x - op.a.x, op.b.y - op.a.y);
 const rectTool = op.tool === 'building' || op.tool === 'island' || op.tool === 'parking' || op.tool === 'area';
 if (len < 0.3 && !rectTool) return;
+const aggancio = el.type === 'ramp' && RS.elements.agganciaCorsia(el);
 const added = RS.scene.add(el);
+if (aggancio) RS.ui.toast('Corsia agganciata al bordo della strada, nel verso di marcia di quel lato', 3500);
 RS.scene.select(added.id);
 this.toSelect();
 },
@@ -928,8 +931,8 @@ return Object.assign({ type: 'road', x: cx, y: cy, rot, len: Math.max(len, 1), w
 case 'band':
 return { type: 'band', sub: def.sub, x: cx, y: cy, rot, len: Math.max(len, 1), wid: def.wid || 1.5, color: def.color };
 case 'ramp':
-return { type: 'ramp', x: cx, y: cy, rot, len: Math.max(len, 3), wid: def.wid || 3.5,
-kind: def.kind || 'in', color: def.color || '#9aa0a6' };
+return Object.assign({ type: 'ramp', x: cx, y: cy, rot, len: Math.max(len, 3), wid: def.wid || 3.5,
+kind: def.kind || 'in', color: def.color || '#9aa0a6' }, def.ram != null ? { ram: def.ram, cus: def.cus, rac: def.rac } : {});
 case 'mark':
 return { type: 'mark', x: cx, y: cy, rot, len: Math.max(len, 1), style: def.style, color: def.color || '#ffffff' };
 case 'crosswalk':

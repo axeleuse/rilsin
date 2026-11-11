@@ -3589,8 +3589,18 @@ h += selFld('Striscia di margine', 'edge', e.edge || 'cont',
 h += `<div class="mis-hint">Arrotonda l'angolo fra due strade. Se sposti le strade, rifai «⌒ Raccorda gli incroci» (dalle proprietà di una strada): i raccordi automatici si ricalcolano.</div>`;
 }
 if (e.type === 'ramp') {
-h += `<div class="prow">${numFld('Lungh. (m)', 'len', round(e.len), 0.5)}${numFld('Largh. (m)', 'wid', round(e.wid), 0.1)}</div>`;
 h += selFld('Tipo di corsia', 'kind', e.kind || 'in', [['in','Immissione (accelerazione)'],['out','Uscita (decelerazione)']]);
+h += `<div class="prow">${numFld('Lungh. totale (m)', 'len', round(e.len), 0.5)}${numFld('Largh. corsia (m)', 'wid', round(e.wid), 0.05)}</div>`;
+if (e.ram == null) {
+h += `<div class="mis-hint">Corsia disegnata con una versione precedente (solo il cuneo).</div><div class="pbtns"><button class="pbtn" data-b="rampnuova">↻ Rifalla completa (rampa, cuspide, raccordo)</button></div>`;
+} else {
+const out = e.kind === 'out';
+h += `<div class="prow">${numFld('Rampa: angolo (°)', 'ram', round(e.ram), 1, 0)}${numFld('Cuspide (m)', 'cus', round(e.cus || 0), 0.5, 0)}</div>`;
+h += numFld(out ? 'Raccordo d\'apertura (m)' : 'Raccordo di chiusura (m)', 'rac', round(e.rac || 0), 0.5, 0);
+h += chkFld('Scritta sulla tavola', 'scritta', e.scritta !== false);
+h += `<div class="mis-hint">${out ? 'Nel verso di marcia: il raccordo in cui la corsia si apre, il tratto parallelo, poi la cuspide zebrata e la rampa che esce.' : 'Nel verso di marcia: la rampa che arriva di sbieco con la cuspide zebrata, il tratto parallelo, poi il raccordo in cui la corsia si chiude.'} Angolo 0 = nessuna rampa (corsia che nasce dal bordo). Il tratto parallelo è quello che resta della lunghezza totale.</div>`;
+}
+h += `<div class="pbtns"><button class="pbtn" data-b="rampaggancia">🧲 Aggancia alla strada</button></div>`;
 }
 if (e.type === 'crosswalk') h += `<div class="prow">${numFld('Largh. (m)', 'len', round(e.len), 0.1)}${numFld('Prof. (m)', 'wid', round(e.wid), 0.1)}</div>`;
 if (e.type === 'stopline') h += numFld('Lungh. (m)', 'len', round(e.len), 0.1);
@@ -3882,6 +3892,14 @@ return;
 }
 if (b.dataset.b === 'ortofoto') { RS.ortofoto.apri(); return; }
 if (b.dataset.b === 'raccorda') { RS.raccordi.comando(); return; }
+if (b.dataset.b === 'rampaggancia' || b.dataset.b === 'rampnuova') {
+const e = S.get(S.selection[0]); if (!e || e.type !== 'ramp') return;
+if (b.dataset.b === 'rampnuova') { e.ram = 8; e.cus = Math.round(Math.min(18, e.len * 0.3)); e.rac = Math.round(Math.min(20, e.len * 0.3)); }
+const ok = b.dataset.b === 'rampnuova' || RS.elements.agganciaCorsia(e);
+S.render(); S.snapshot(); RS.ui.renderProps();
+if (b.dataset.b === 'rampaggancia') RS.ui.toast(ok ? 'Corsia agganciata al bordo della strada' : 'Nessuna strada vicina e quasi parallela: avvicina la corsia al bordo della strada e riprova', 4000);
+return;
+}
 if (b.dataset.b === 'raddrizza') { RS.raddrizza.apri(S.get(S.selection[0])); return; }
 if (b.dataset.b === 'raddsorg') { const im = S.get(S.selection[0]); if (im) RS.raddrizza.apri(S.get(im.raddDa)); return; }
 if (b.dataset.b === 'valauto') {
@@ -4147,7 +4165,7 @@ case 'road': e = def.sez
 : { type:'road', x:0,y:0,rot:0, len:9, wid:6, lanes:2, color:def.color }; break;
 case 'roadpath': e = { type:'roadway', pts:[{x:-4.5,y:1.6},{x:0,y:-1.8},{x:4.5,y:1.2}], width:5, color:def.color }; break;
 case 'zebrapath': e = { type:'zebrapath', pts:[{x:-4.5,y:1.4},{x:0,y:-1.6},{x:4.5,y:1.0}], width:3, color:def.color }; break;
-case 'ramp': e = { type:'ramp', x:0,y:0,rot:0, len:10, wid:3.4, kind:def.kind, color:def.color }; break;
+case 'ramp': e = { type:'ramp', x:0,y:0,rot:0, len:12, wid:3, kind:def.kind, ram:14, cus:4.5, rac:3.5, scritta:false, color:def.color }; break;
 case 'curve': e = def.tratti && RS.curve ? RS.curve.nuova({ x: 0, y: 0 }, def) : { type:'roadway', pts:def.pts, width:def.wid||7, color:def.color||'#9aa0a6' }; break;
 case 'roundabout': e = { type:'roundabout', x:0,y:0, size:9, ring:3, color:def.color }; break;
 case 'band': e = { type:'band', sub:def.sub, x:0,y:0,rot:0, len:Math.min(9, Math.max(2.6, (def.wid||1.5)*4)), wid:def.wid||1.5, color:def.color }; break;

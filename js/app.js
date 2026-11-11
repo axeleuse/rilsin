@@ -1,10 +1,16 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 259;
+RS.BUILD = 260;
 RS.DATA_BUILD = '2026-11-11';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 260, data: '2026-11-11', voci: [
+'Corsie di immissione e di uscita rifatte come nella realtà: la rampa che arriva (o se ne va) di sbieco, la cuspide zebrata fra rampa e carreggiata, il tratto parallelo con la freccia e la scritta «corsia di accelerazione» o «di decelerazione», il raccordo in cui la corsia si chiude (o si apre), con la striscia tratteggiata larga verso la carreggiata e quella di margine continua all\'esterno.',
+'Aggancio automatico: trascinando la corsia vicino al bordo di una strada, si mette da sola sulla striscia di margine del lato giusto e nel verso di marcia di quel lato (anche sopra la corsia di emergenza delle autostrade). Nelle proprietà: angolo della rampa, lunghezza della cuspide e del raccordo, scritta sì o no e il tasto «🧲 Aggancia alla strada».',
+'Le corsie delle tavole già fatte restano com\'erano; nelle proprietà «Rifalla completa» le trasforma nel disegno nuovo.',
+'Autodiagnosi: una prova nuova per le corsie, 81 in tutto.'
+] },
 { build: 259, data: '2026-11-11', voci: [
 'Autostrade: nella scheda Strade il gruppo «Autostrada», con carreggiata autostradale a 2 o a 3 corsie (corsia di emergenza a destra, banchina interna a sinistra), autostrada 2+2 con new jersey, 3+3 con doppio guard-rail, curva autostradale e piazzola di sosta. Misure di partenza: corsie 3,75 m, emergenza 3,00 m, banchina interna 0,70 m.',
 'Corsia di emergenza su ogni strada per corsie e sulle curve a raggio misurato: nelle proprietà, campo «Corsia emergenza» (0 = nessuna). Prende il posto della banchina alla destra di ogni senso di marcia, con la scritta sulla tavola. Lo spartitraffico può essere rialzato con aiuola, new jersey o doppio guard-rail.',
