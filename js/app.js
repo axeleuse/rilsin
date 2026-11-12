@@ -1,10 +1,16 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 274;
+RS.BUILD = 275;
 RS.DATA_BUILD = '2026-11-12';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 275, data: '2026-11-13', voci: [
+'Misure guidate: un caposaldo aggiunto si misura per primo da ogni caposaldo della base (A → C, poi i punti dei veicoli; B → C, poi i punti), invece che dopo tutti gli spigoli.',
+'Tema scuro: si vede di nuovo il tasto per spegnere o accendere la voce nelle misure guidate (e gli altri tasti con le icone, che non hanno più il nero di sistema).',
+'Telefono: toccando un oggetto la barra dei comandi (ruota, duplica, elimina, ⋯ per le proprietà) compare subito, non più solo al secondo tocco.',
+'iPhone e iPad: il pizzico per ingrandire e ridurre è più fluido e non manda più in tilt la schermata (lo zoom di tutta la pagina è bloccato; un dito «perso» da iOS non falsa il pizzico seguente).'
+] },
 { build: 274, data: '2026-11-12', voci: [
 'Protezione dei dati: i dati delle persone (conducenti, proprietari, passeggeri, pedoni, testimoni, patenti, assicurazione, firme e foto dei documenti) restano sul dispositivo per 30 giorni dall\'ultima modifica della tavola, poi si cancellano da soli da ogni copia: bozza, versioni di sicurezza, tavole salvate nell\'app, bozze messe da parte, versioni dei file e archivio delle foto; nell\'app Android anche le foto dei documenti nella galleria (RILSIN/Documenti). Restano disegno, misure, foto della scena e dati tecnici dei veicoli.',
 'Qualche giorno prima l\'app avvisa con l\'elenco delle tavole: «Tienili altri 30 giorni» oppure salvale come file. Dopo l\'aggiornamento ogni tavola ha comunque 30 giorni.',
@@ -359,6 +365,9 @@ e.preventDefault();
 RS.scene.select(RS.scene.elements.filter(x => !(x.locked && x.type === 'image') && !x.inc).map(x => x.id));
 }
 });
+const zoomLibero = ev => !!(ev.target && ev.target.closest && ev.target.closest('.pv-grande, .cv-foto'));
+['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, ev => { if (!zoomLibero(ev)) ev.preventDefault(); }, { passive: false }));
+document.addEventListener('touchmove', ev => { if (ev.touches && ev.touches.length > 1 && !zoomLibero(ev)) ev.preventDefault(); }, { passive: false });
 const salvaSubito = () => { try { if (RS.ui._ready) RS.storage.autosaveNow(); } catch (e) {} };
 document.addEventListener('visibilitychange', () => { if (document.hidden) salvaSubito(); });
 window.addEventListener('pagehide', salvaSubito);

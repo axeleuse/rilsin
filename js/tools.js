@@ -214,7 +214,7 @@ if (cap && cap.d < 40) quota({ x: cap.c.x, y: cap.c.y }, cap.p, m(cap.d) + ' dal
 },
 onDown(e) {
 if (e.pointerType === 'touch') {
-this._touches = this._touches || {};
+if (e.isPrimary || !this._touches) { this._touches = {}; this._pinch = null; }
 this._touches[e.pointerId] = { x: e.clientX, y: e.clientY };
 const ids = Object.keys(this._touches);
 if (ids.length === 2) {
@@ -351,28 +351,32 @@ return RS.incroci ? RS.incroci.regista(o) : o;
 }
 return null;
 },
+applicaPizzico() {
+const P = this._pinch, T = this._touches; if (!P || !T) return;
+const ids = Object.keys(T); if (ids.length !== 2) return;
+const a = T[ids[0]], b = T[ids[1]];
+const d = Math.hypot(b.x - a.x, b.y - a.y);
+if (!(d > 8 && P.dist > 8)) return;
+const S = RS.scene, v = S.view;
+const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+const prima = S.toWorld(P.cx, P.cy);
+let nw = P.w * (P.dist / d);
+nw = Math.max(1, Math.min(4000, nw));
+if (!isFinite(nw) || !isFinite(prima.x) || !isFinite(prima.y)) return;
+const k = nw / v.w;
+S.view = { x: v.x, y: v.y, w: nw, h: v.h * k };
+S._applyView();
+const dopo = S.toWorld(cx, cy);
+if (isFinite(dopo.x) && isFinite(dopo.y)) { S.view.x += prima.x - dopo.x; S.view.y += prima.y - dopo.y; }
+S._applyView();
+P.cx = cx; P.cy = cy;
+},
 onMove(e) {
 if (e.pointerType === 'touch' && this._touches && this._touches[e.pointerId]) {
 this._touches[e.pointerId] = { x: e.clientX, y: e.clientY };
 const ids = Object.keys(this._touches);
 if (this._pinch && ids.length === 2) {
-const a = this._touches[ids[0]], b = this._touches[ids[1]];
-const d = Math.hypot(b.x - a.x, b.y - a.y);
-if (d > 8 && this._pinch.dist > 8) {
-const S = RS.scene, v = S.view;
-const cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
-const prima = S.toWorld(this._pinch.cx, this._pinch.cy);
-let nw = this._pinch.w * (this._pinch.dist / d);
-nw = Math.max(1, Math.min(4000, nw));
-const k = nw / v.w;
-S.view = { x: v.x, y: v.y, w: nw, h: v.h * k };
-S._applyView();
-const dopo = S.toWorld(cx, cy);
-S.view.x += prima.x - dopo.x;
-S.view.y += prima.y - dopo.y;
-S._applyView();
-this._pinch.cx = cx; this._pinch.cy = cy;
-}
+if (!this._pinchRaf) this._pinchRaf = requestAnimationFrame(() => { this._pinchRaf = null; this.applicaPizzico(); });
 e.preventDefault();
 return;
 }
@@ -559,6 +563,7 @@ if (Object.keys(this._touches).length < 2) this._pinch = null;
 }
 const op = this._op; this._op = null;
 RS.scene.svg.classList.remove('panning');
+if (RS.ui && RS.ui.aggiornaTela) setTimeout(() => RS.ui.aggiornaTela(), 0);
 if (!op) return;
 if (op.kind === 'freehand') {
 if (op.node) op.node.remove();

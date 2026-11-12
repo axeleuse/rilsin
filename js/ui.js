@@ -2766,10 +2766,11 @@ return;
 }
 const mb = S.meta && S.meta.base || {}, lettera = id => { const c = S.get(id); return c ? String(c.letter).toUpperCase() : ''; };
 const diBase = [lettera(mb.aId), lettera(mb.bId)];
+const capisaldi = new Set(S.elements.filter(e => e.letter).map(e => String(e.letter).toUpperCase()));
 const chiave = x => { const p = gmParti(x.m.descr), ib = diBase.indexOf(p.da);
-return [p.base ? 0 : 1, ib >= 0 ? ib : 2, p.da, p.a]; };
+return [p.base ? 0 : 1, ib >= 0 ? ib : 2, p.da, capisaldi.has(p.a) ? 0 : 1, p.a]; };
 coda.sort((x, y) => { const a = chiave(x), b = chiave(y);
-return a[0] - b[0] || a[1] - b[1] || String(a[2]).localeCompare(b[2]) || String(a[3]).localeCompare(b[3], undefined, { numeric: true }); });
+return a[0] - b[0] || a[1] - b[1] || String(a[2]).localeCompare(b[2]) || a[3] - b[3] || String(a[4]).localeCompare(b[4], undefined, { numeric: true }); });
 this._gm = { coda, pos: 0, testo: '', fatte: 0, saltate: 0, esito: null };
 let v = el('gmVelo');
 if (!v) {
