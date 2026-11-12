@@ -1,10 +1,15 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 273;
+RS.BUILD = 274;
 RS.DATA_BUILD = '2026-11-12';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 274, data: '2026-11-12', voci: [
+'Protezione dei dati: i dati delle persone (conducenti, proprietari, passeggeri, pedoni, testimoni, patenti, assicurazione, firme e foto dei documenti) restano sul dispositivo per 30 giorni dall\'ultima modifica della tavola, poi si cancellano da soli da ogni copia: bozza, versioni di sicurezza, tavole salvate nell\'app, bozze messe da parte, versioni dei file e archivio delle foto; nell\'app Android anche le foto dei documenti nella galleria (RILSIN/Documenti). Restano disegno, misure, foto della scena e dati tecnici dei veicoli.',
+'Qualche giorno prima l\'app avvisa con l\'elenco delle tavole: «Tienili altri 30 giorni» oppure salvale come file. Dopo l\'aggiornamento ogni tavola ha comunque 30 giorni.',
+'Nuova voce «🧹 Dati personali sul dispositivo» (menu Applicazione): togli subito i dati personali dalla tavola aperta e dalle sue copie, oppure pulisci tutto il dispositivo. I file salvati fuori dall\'app e l\'archivio condiviso dell\'ufficio non si toccano.'
+] },
 { build: 273, data: '2026-11-12', voci: [
 'Controllo dei veicoli rubati sistemato: la risposta del Ministero si legge anche se scritta con parole diverse; dopo un codice di controllo sbagliato il nuovo tentativo funziona (prima il vecchio avviso nascondeva il risultato); se il sito non risponde lo si dice; ↻ chiede davvero un\'altra immagine. Una risposta che RILSIN non riconosce compare tra virgolette, da leggere.',
 'Nuova verifica dalla targa: classe ambientale (Euro) ed emissioni di CO2, dal Portale dell\'Automobilista, gratis. Entra in «Verifica tutto» e i dati vanno da soli nei nuovi campi della scheda del veicolo.',
@@ -362,8 +367,16 @@ window.addEventListener('beforeunload', ev => {
 if (RS.ui._dirty) { ev.preventDefault(); ev.returnValue = ''; return ''; }
 });
 RS.scene.fit();
+try { RS.storage.togliDati().catch(() => {}); } catch (e) {}
 RS.ui._ready = true; RS.ui.markClean();
 RS.home.start();
+setTimeout(() => { try { RS.ui.avvisoDatiPersonali(); } catch (e) {} }, 2500);
+const controlloDati = () => {
+let ult = 0; try { ult = new Date(localStorage.getItem('rilsin:privacyControllo') || 0).getTime() || 0; } catch (e) {}
+if (Date.now() - ult > 6 * 3600000) RS.storage.togliDati().then(() => { try { RS.ui.avvisoDatiPersonali(); } catch (e) {} }).catch(() => {});
+};
+setInterval(controlloDati, 3600000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) controlloDati(); });
 let at; RS.scene.on('change', () => {
 clearTimeout(at); at = setTimeout(() => { RS.storage.autosave(); RS.storage.pushVersion(); }, 1200);
 });

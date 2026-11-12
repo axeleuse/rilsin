@@ -257,6 +257,47 @@ S.load = function (doc) { cambia((doc && doc.bozzaId) || nuovaBozza(), doc); ret
 S.clear = function () { cambia(nuovaBozza()); return clear.apply(this, arguments); };
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', agganciaBozze); else setTimeout(agganciaBozze, 0);
+const GIORNI_DATI = 30, PREAVVISO = 5, GIORNO = 86400000;
+const PERSONE_VEICOLO = ['conducente', 'proprietario', 'propUguale', 'propDitta', 'patente', 'ass', 'passeggeri'];
+const conDati = v => v != null && v !== '' && v !== false && !(Array.isArray(v) && !v.length) &&
+!(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).some(k => k !== 'id' && conDati(v[k])));
+function haDatiPersonali(d) {
+if (!d) return false;
+const c = d.meta && d.meta.coinvolti, f = d.fascicolo;
+if (f && ((f.documenti || []).length || (f.photos || []).some(p => p && /^doc:/.test(p.guida || '')))) return true;
+if ((d.elements || []).some(e => e && e.type === 'vehicle' && e.conducente)) return true;
+if (!c) return false;
+if ((c.pedoni || []).length || (c.testimoni || []).length || (c.firme && Object.keys(c.firme).length)) return true;
+return (c.veicoli || []).some(v => v && PERSONE_VEICOLO.some(k => k !== 'propUguale' && conDati(v[k])));
+}
+function togliDatiPersonali(d, quando) {
+if (!haDatiPersonali(d)) return false;
+const c = d.meta && d.meta.coinvolti, f = d.fascicolo;
+if (c) {
+(c.veicoli || []).forEach(v => { if (v) PERSONE_VEICOLO.forEach(k => { delete v[k]; }); });
+c.pedoni = []; c.testimoni = []; delete c.firme;
+}
+if (f) { delete f.documenti; if (Array.isArray(f.photos)) f.photos = f.photos.filter(p => !(p && /^doc:/.test(p.guida || ''))); }
+(d.elements || []).forEach(e => { if (e && e.type === 'vehicle') delete e.conducente; });
+d.meta = d.meta || {};
+d.meta.datiPersonaliTolti = quando || new Date().toISOString();
+delete d.meta.conservaFino;
+return true;
+}
+function inizioPrivacy() {
+try {
+let s = localStorage.getItem('rilsin:privacyDal');
+if (!s) { s = new Date().toISOString(); localStorage.setItem('rilsin:privacyDal', s); }
+return new Date(s).getTime() || Date.now();
+} catch (e) { return Date.now(); }
+}
+function scadenzaDati(d, ultimaModifica) {
+const t = new Date(ultimaModifica || 0).getTime() || 0;
+const fino = new Date((d && d.meta && d.meta.conservaFino) || 0).getTime() || 0;
+return Math.max(t + GIORNI_DATI * GIORNO, fino, inizioPrivacy() + GIORNI_DATI * GIORNO);
+}
+const scaduta = (d, ultima, ora) => haDatiPersonali(d) && scadenzaDati(d, ultima) <= ora;
+const modificataIl = d => (d && (d.autoAt || d.salvataIl)) || 0;
 function avvisa(cosa, err) { if (RS.ui && RS.ui.avvisoSalvataggio) RS.ui.avvisoSalvataggio(cosa, err); }
 function tuttoBene(cosa) { if (RS.ui && RS.ui.salvataggioRiuscito) RS.ui.salvataggioRiuscito(cosa); }
 const storage = {
@@ -306,6 +347,106 @@ return true;
 async togliBozza(id) { try { await bozzeOp('readwrite', st => st.delete(id)); } catch (e) {} },
 metteDaParte: bozzaDaParte,
 nCoinvolti(d) { return nCoinvolti(d); },
+GIORNI_DATI, haDatiPersonali, togliDatiPersonali, scadenzaDati, inizioPrivacy,
+inScadenza(ora) {
+ora = ora || Date.now();
+const out = [], vedi = (d, chi) => {
+if (!haDatiPersonali(d)) return;
+const sc = scadenzaDati(d, modificataIl(d));
+if (sc > ora && sc - ora <= PREAVVISO * GIORNO) out.push({ chi, id: d.id || '', bozzaId: d.bozzaId || '', nome: d.autoNome || d.nome || 'Disegno senza nome', scade: sc });
+};
+try { const s = localStorage.getItem(AUTO); if (s) vedi(JSON.parse(s), 'bozza'); } catch (e) {}
+this.list().forEach(d => vedi(d, 'tavola'));
+return out;
+},
+contaConDati() {
+let n = 0;
+try { const s = localStorage.getItem(AUTO); if (s && haDatiPersonali(JSON.parse(s))) n++; } catch (e) {}
+return n + this.list().filter(haDatiPersonali).length;
+},
+prolungaDati(voci) {
+const fino = new Date(Date.now() + GIORNI_DATI * GIORNO).toISOString();
+const tocca = d => voci.some(v => (v.id && d.id === v.id) || (v.bozzaId && d.bozzaId === v.bozzaId));
+try {
+const s = localStorage.getItem(AUTO);
+if (s) { const d = JSON.parse(s); if (tocca(d)) { d.meta = d.meta || {}; d.meta.conservaFino = fino; scrivi(AUTO, JSON.stringify(d)); } }
+} catch (e) {}
+try { const l = this.list(); let si = false; l.forEach(d => { if (tocca(d)) { d.meta = d.meta || {}; d.meta.conservaFino = fino; si = true; } }); if (si) this._writeList(l); } catch (e) {}
+const S = RS.scene;
+if (S && S.meta && voci.some(v => (v.bozzaId && v.bozzaId === this._bozzaId) || (v.id && v.id === this.currentId))) S.meta.conservaFino = fino;
+},
+async togliDati(opz) {
+opz = opz || {};
+const ora = Date.now(), quando = new Date(ora).toISOString(), S = RS.scene;
+const idPersone = new Set();
+if (opz.tavola && S && S.meta && S.meta.coinvolti) {
+const c = S.meta.coinvolti;
+(c.veicoli || []).forEach(v => { if (v) { idPersone.add(v.id); if (v.conducente && v.conducente.id) idPersone.add(v.conducente.id); } });
+(c.pedoni || []).concat(c.testimoni || []).forEach(p => p && p.id && idPersone.add(p.id));
+}
+const rif = { id: this.currentId || '', bozzaId: this._bozzaId || '' };
+const stessa = d => !!d && ((rif.id && (d.id === rif.id || d.autoId === rif.id)) || (rif.bozzaId && d.bozzaId === rif.bozzaId) ||
+(idPersone.size && ((d.meta && d.meta.coinvolti && d.meta.coinvolti.veicoli) || []).concat((d.meta && d.meta.coinvolti && d.meta.coinvolti.pedoni) || []).some(x => x && idPersone.has(x.id))));
+const inizio = inizioPrivacy();
+const scegli = (d, ultima) => opz.tutto ? haDatiPersonali(d) : opz.tavola ? stessa(d) && haDatiPersonali(d) : scaduta(d, ultima, ora);
+let n = 0;
+if (S && S.meta && (opz.tutto || opz.tavola || (RS.ui && RS.ui._ready && scegli(S.toJSON(), (this.getAutosave() || {}).autoAt || quando)))) {
+const vivo = { meta: S.meta, fascicolo: S.fascicolo, elements: S.elements };
+if (togliDatiPersonali(vivo, quando)) {
+n++;
+if (RS.fascicolo && RS.fascicolo.model === S.fascicolo && RS.fascicolo.renderList && RS.fascicolo.scr && !RS.fascicolo.scr.hidden) RS.fascicolo.renderList();
+if (S.emit) S.emit('change');
+this.autosave();
+}
+}
+try {
+const s = localStorage.getItem(AUTO);
+if (s) { const d = JSON.parse(s); if (scegli(d, d.autoAt) && togliDatiPersonali(d, quando)) { scrivi(AUTO, JSON.stringify(d)); n++; } }
+} catch (e) {}
+try {
+const v = this.versions(); let si = false;
+v.forEach(x => { if (x && x.doc && scegli(x.doc, x.ts) && togliDatiPersonali(x.doc, quando)) { si = true; n++; } });
+if (si) localStorage.setItem(VERS, JSON.stringify(v));
+} catch (e) {}
+try {
+const l = this.list(); let si = false;
+l.forEach(d => { if (scegli(d, d.salvataIl || d.autoAt || inizio) && togliDatiPersonali(d, quando)) { si = true; n++; } });
+if (si) this._writeList(l);
+} catch (e) {}
+if (opz.tutto) {
+try {
+const s = localStorage.getItem('scenasinistro:fascicolo');
+if (s) { const f = JSON.parse(s); if (togliDatiPersonali({ fascicolo: f }, quando)) { localStorage.setItem('scenasinistro:fascicolo', JSON.stringify(f)); n++; } }
+} catch (e) {}
+}
+pulisciImmagini();
+try {
+const tutte = (await bozzeOp('readonly', st => st.getAll())) || [];
+const via = tutte.filter(b => b && b.doc && scegli(b.doc, b.autoAt) && togliDatiPersonali(b.doc, quando));
+if (via.length) { await bozzeOp('readwrite', st => via.forEach(b => st.put(b, b.id))); n += via.length; }
+} catch (e) {}
+try {
+const db = await dbRecenti();
+let chiavi = [];
+try { chiavi = await new Promise((ok, ko) => { const q = db.transaction('versioni').objectStore('versioni').getAllKeys(); q.onsuccess = () => ok(q.result || []); q.onerror = () => ko(q.error); }); }
+finally { db.close(); }
+for (const k of chiavi) {
+const elenco = (await dbLeggi('versioni', k)) || []; let si = false;
+elenco.forEach(v => {
+let d; try { d = JSON.parse(v.testo); } catch (e) { return; }
+if (scegli(d, v.quando) && togliDatiPersonali(d, quando)) { v.testo = JSON.stringify(d); si = true; n++; }
+});
+if (si) await dbScrivi('versioni', k, elenco);
+}
+} catch (e) {}
+if (RS.fascicolo && RS.fascicolo.pulisciArchivioFoto) { try { await RS.fascicolo.pulisciArchivioFoto(); } catch (e) {} }
+if (window.RilsinAndroid && RilsinAndroid.pulisciDocumentiGalleria && !opz.tavola) {
+const prima = opz.tutto ? ora + 60000 : (ora >= inizio + GIORNI_DATI * GIORNO ? ora - GIORNI_DATI * GIORNO : 0);
+if (prima > 0) { try { RilsinAndroid.pulisciDocumentiGalleria(String(Math.floor(prima))); } catch (e) {} }
+}
+try { localStorage.setItem('rilsin:privacyControllo', quando); } catch (e) {}
+return n;
+},
 getAutosave() { try { const s = localStorage.getItem(AUTO); return s ? completa(riparaTesti(JSON.parse(s))) : null; } catch (e) { return null; } },
 clearAutosave() { try { localStorage.removeItem(AUTO); localStorage.removeItem('rilsin:bozzaMini'); pulisciImmagini(); } catch (e) {} },
 versions() { try { return JSON.parse(localStorage.getItem(VERS) || '[]'); } catch (e) { return []; } },

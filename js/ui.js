@@ -544,6 +544,7 @@ try { localStorage.setItem('scenasinistro:testo', SIZES[next]); } catch (e) {}
 this.toast('Testo interfaccia: ' + NOMI[next]); break;
 }
 case 'info': this.openInfo(); break;
+case 'privacy': this.datiPersonali(); break;
 case 'segnala': if (RS.segnala) RS.segnala.apri(); break;
 case 'guida': this.openGuida(); break;
 case 'minimappa': this.toggleMinimap(btn); break;
@@ -1397,6 +1398,44 @@ this._lockId = null;
 return this._salvaServer(n, {});
 }
 if (k === 'forza') return this._salvaServer(nome, { forza: true });
+});
+},
+datiPersonali() {
+const St = RS.storage, gg = St.GIORNI_DATI, S = RS.scene;
+const aperta = !!(S && St.haDatiPersonali({ meta: S.meta, fascicolo: S.fascicolo, elements: S.elements }));
+const scad = St.contaConDati();
+const html = `<p class="scelta-testo">I dati delle persone (conducenti, proprietari, passeggeri, pedoni, testimoni, patenti, assicurazione, firme e foto dei documenti) restano su questo dispositivo per <b>${gg} giorni</b> dall'ultima modifica della tavola, poi si cancellano da soli. Qualche giorno prima l'app avvisa e si possono tenere più a lungo.</p>
+        <p class="scelta-testo">Restano sempre disegno, misure, foto della scena e dati tecnici dei veicoli (targa, marca, telaio, revisione). Non si toccano i file che hai salvato fuori dall'app né l'archivio condiviso dell'ufficio.</p>
+        <p class="scelta-testo">${aperta ? 'La tavola aperta contiene dati personali.' : 'La tavola aperta non contiene dati personali.'}${scad ? ' Tavole sul dispositivo con dati personali: ' + scad + '.' : ''}</p>`;
+const opzioni = [];
+if (aperta) opzioni.push({ k: 'tavola', t: 'Togli ora i dati personali da questa tavola', d: 'Anche dalle sue copie sul dispositivo (bozza, versioni, tavola salvata)', pericolo: true });
+opzioni.push({ k: 'tutto', t: 'Pulisci il dispositivo', d: 'Toglie i dati personali da tutte le tavole e dalle foto dei documenti' + (window.RilsinAndroid ? ' (anche quelle nella galleria, cartella RILSIN/Documenti)' : ''), pericolo: true });
+this.scelta({ titolo: '🧹 Dati personali sul dispositivo', html, opzioni }).then(k => {
+if (k !== 'tavola' && k !== 'tutto') return;
+const quale = k === 'tavola' ? 'da questa tavola e dalle sue copie' : 'da TUTTE le tavole su questo dispositivo';
+return this.scelta({ titolo: 'Confermi?', testo: 'I dati delle persone ' + quale + ' si cancellano e non si possono recuperare. Il disegno resta. Se servono ancora, salva prima la tavola come file.',
+opzioni: [{ k: 'si', t: 'Sì, cancella i dati personali', pericolo: true }] }).then(c => {
+if (c !== 'si') return;
+return St.togliDati(k === 'tavola' ? { tavola: true } : { tutto: true }).then(n => {
+this.toast(n ? '✓ Dati personali cancellati (' + n + (n === 1 ? ' copia)' : ' copie)') : 'Nessun dato personale da cancellare', 3500);
+if (RS.coinvolti && RS.coinvolti.aperto && RS.coinvolti.aperto()) RS.coinvolti.lista();
+});
+});
+});
+},
+avvisoDatiPersonali() {
+const St = RS.storage; if (!St || !St.inScadenza) return;
+const voci = St.inScadenza(); if (!voci.length) return;
+const oggi = new Date().toISOString().slice(0, 10);
+try { if (localStorage.getItem('rilsin:privacyAvviso') === oggi) return; localStorage.setItem('rilsin:privacyAvviso', oggi); } catch (e) {}
+const giorni = t => { const g = Math.max(1, Math.ceil((t - Date.now()) / 86400000)); return g === 1 ? 'domani' : 'fra ' + g + ' giorni'; };
+const html = '<p class="scelta-testo">Per la protezione dei dati, i dati delle persone (nomi, documenti, firme) di queste tavole si cancellano da questo dispositivo:</p>' +
+voci.map(v => `<div class="cv-ver"><small>${v.chi === 'bozza' ? 'disegno in corso' : 'tavola salvata nell\'app'} · ${escAttr(giorni(v.scade))}</small>${escAttr(v.nome)}</div>`).join('') +
+'<p class="scelta-testo">Il disegno resta. Se i dati servono ancora, salva la tavola come file oppure tienili altri ' + St.GIORNI_DATI + ' giorni.</p>';
+this.scelta({ titolo: '🧹 Dati personali in scadenza', html, opzioni: [
+{ k: 'tieni', t: 'Tienili altri ' + St.GIORNI_DATI + ' giorni', d: voci.length > 1 ? 'Per tutte le tavole dell\'elenco' : '' },
+{ k: 'ok', t: 'Va bene', primario: true }] }).then(k => {
+if (k === 'tieni') { St.prolungaDati(voci); this.toast('Dati conservati altri ' + St.GIORNI_DATI + ' giorni', 3000); }
 });
 },
 scelta(opz) {

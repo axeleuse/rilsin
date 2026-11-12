@@ -84,6 +84,11 @@ aggiungiFoto(src, descr, guida) { this.model.photos.push({ id: nuovoId(), src, d
 aggiungiDocumento(src, descr, guida) { const m = this.model, id = nuovoId(); (m.documenti = m.documenti || []).push({ id, src, descr: descr || '', guida: guida || undefined, ora: new Date().toISOString() }); this.save(); return id; },
 documenti(guida) { const l = this.model.documenti || []; return guida ? l.filter(p => p.guida === guida) : l; },
 togliDocumento(id) { const m = this.model; m.documenti = (m.documenti || []).filter(p => p.id !== id); this.save(); },
+pulisciArchivioFoto() {
+const presenti = new Set(tutteLeFoto(this.model).map(p => p.id));
+this._inArchivio.forEach(id => { if (!presenti.has(id)) this._inArchivio.delete(id); });
+return fotoPulisci(() => (RS.storage && RS.storage.idFotoUsate) ? RS.storage.idFotoUsate() : presenti);
+},
 tutteLeFoto,
 riduci(file, maxPx, quality, cb) { downscale(file, maxPx, quality, cb); },
 get model() { return RS.scene.fascicolo || (RS.scene.fascicolo = blank()); },
