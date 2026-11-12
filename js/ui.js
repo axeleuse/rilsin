@@ -3891,8 +3891,8 @@ h += `<div class="mis-hint">Lunghezza = altezza della persona; la testa è verso
 if (e.sym === 'cartello') {
 const tutti = RS.catalog.SEGNALETICA.filter(d => d.sym === 'cartello');
 h += selFld('Cartello', 'cod', e.cod, tutti.map(d => [d.cod, d.sec + ' — ' + d.nome]));
-if (RS.cartelli.conTesto(e.cod)) h += textFld('Località', 'text', e.text || '');
-if (String(e.cod).indexOf('p:') === 0) h += chkFld('Provvisorio (fondo giallo)', 'provv', !!e.provv);
+if (RS.cartelli.conTesto(e.cod)) h += textFld(RS.cartelli.etichettaTesto(e.cod), 'text', e.text || '');
+if (String(e.cod).indexOf('p:') === 0 || e.cod === 'a:coda') h += chkFld('Provvisorio (fondo giallo)', 'provv', !!e.provv);
 }
 if (e.sym === 'semaforo') h += selFld('Stato al sinistro', 'stato', e.stato || '',
 [['','Non indicato'],['rosso','Rosso'],['giallo','Giallo'],['verde','Verde'],['lampeggiante','Giallo lampeggiante'],['spento','Spento / guasto']]);

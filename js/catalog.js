@@ -176,6 +176,9 @@ const SEGNALETICA = [
 { id: 'segprec',    nome: 'Dare precedenza',   sec: 'Verticale', tool: 'symbol', sym:'precedenza',size: 0.9, color: '#c00' },
 { id: 'segdiv',     nome: 'Senso vietato',     sec: 'Verticale', tool: 'symbol', sym:'divieto',   size: 0.9, color: '#c00' },
 { id: 'seglim',     nome: 'Limite di velocità', sec: 'Verticale', tool: 'symbol', sym:'limite',    size: 0.9, color: '#c00', text:'50' },
+{ id: 'seglim130',  nome: 'Limite 130 km/h',   sec: 'Autostrada', tool: 'symbol', sym:'limite',  size: 0.9, color: '#c00', text:'130' },
+{ id: 'seglim110',  nome: 'Limite 110 km/h',   sec: 'Autostrada', tool: 'symbol', sym:'limite',  size: 0.9, color: '#c00', text:'110' },
+{ id: 'seglim90',   nome: 'Limite 90 km/h',    sec: 'Autostrada', tool: 'symbol', sym:'limite',  size: 0.9, color: '#c00', text:'90' },
 { id: 'zona30',     nome: 'Zona 30',           sec: 'Verticale', tool: 'symbol', sym:'zona30',    size: 1.0, color: '#c00', text:'30' },
 { id: 'passliv',    nome: 'Passaggio a livello',sec: 'Verticale',tool: 'symbol', sym:'passlivello',size: 1.0, color: '#c00' },
 { id: 'seglavori',  nome: 'Lavori in corso',   sec: 'Verticale', tool: 'symbol', sym:'lavori',    size: 0.9, color: '#c00' },
@@ -191,13 +194,15 @@ const SEGNALETICA = [
 ['p:strettoia', 'Strettoia'], ['p:dosso', 'Dosso'], ['p:sdrucciolevole', 'Strada sdrucciolevole'],
 ['p:pedoni', 'Attraversamento pedonale (pericolo)'], ['p:bambini', 'Bambini'], ['p:ciclisti', 'Attraversamento ciclabile (pericolo)'],
 ['p:animali', 'Animali domestici vaganti'], ['p:selvatici', 'Animali selvatici vaganti'], ['p:semaforo', 'Semaforo'],
-['p:doppio_senso', 'Doppio senso di circolazione'], ['p:pl_barriere', 'Passaggio a livello con barriere'], ['p:banchina', 'Banchina pericolosa']
+['p:doppio_senso', 'Doppio senso di circolazione'], ['p:pl_barriere', 'Passaggio a livello con barriere'], ['p:banchina', 'Banchina pericolosa'],
+['p:vento', 'Forte vento laterale'], ['p:massi', 'Caduta massi'],
+['p:strettoia_dx', 'Strettoia asimmetrica a destra'], ['p:strettoia_sx', 'Strettoia asimmetrica a sinistra']
 ].map(([cod, nome]) => ({ id: 'c_' + cod.replace(':', '_'), nome, sec: 'Pericolo', tool: 'symbol', sym: 'cartello', cod, size: 0.9, color: '#c8102e' })),
 [
 ['d:transito', 'Divieto di transito'], ['d:sosta', 'Divieto di sosta'], ['d:fermata', 'Divieto di fermata'],
 ['d:svolta_dx', 'Divieto di svolta a destra'], ['d:svolta_sx', 'Divieto di svolta a sinistra'], ['d:inversione', 'Divieto di inversione a U'],
 ['d:autocarri', 'Transito vietato agli autocarri'], ['d:pedoni', 'Transito vietato ai pedoni'], ['d:biciclette', 'Transito vietato alle biciclette'],
-['d:veicoli', 'Transito vietato ai veicoli a motore']
+['d:veicoli', 'Transito vietato ai veicoli a motore'], ['d:sorpasso_pesanti', 'Divieto di sorpasso per mezzi pesanti (oltre 3,5 t)']
 ].map(([cod, nome]) => ({ id: 'c_' + cod.replace(':', '_'), nome, sec: 'Divieto', tool: 'symbol', sym: 'cartello', cod, size: 0.9, color: '#c8102e' })),
 [
 ['o:passaggio_dx', 'Passaggio obbligatorio a destra'], ['o:passaggio_sx', 'Passaggio obbligatorio a sinistra'],
@@ -208,7 +213,20 @@ const SEGNALETICA = [
 ['i:senso_unico', 'Senso unico parallelo', 1.2], ['i:senso_unico_f', 'Senso unico frontale'], ['i:parcheggio', 'Parcheggio'],
 ['i:senza_uscita', 'Strada senza uscita'], ['i:ospedale', 'Ospedale'], ['i:centro', 'Inizio centro abitato', 1.4],
 ['i:fine_centro', 'Fine centro abitato', 1.4], ['i:fine_dirprec', 'Fine diritto di precedenza']
-].map(([cod, nome, size]) => ({ id: 'c_' + cod.replace(':', '_'), nome, sec: 'Indicazione', tool: 'symbol', sym: 'cartello', cod, size: size || 0.9, color: '#1d5fbf' })));
+].map(([cod, nome, size]) => ({ id: 'c_' + cod.replace(':', '_'), nome, sec: 'Indicazione', tool: 'symbol', sym: 'cartello', cod, size: size || 0.9, color: '#1d5fbf' })),
+[
+['a:inizio_autostrada', 'Inizio autostrada', 1.2], ['a:fine_autostrada', 'Fine autostrada', 1.2],
+['a:uscita', 'Preavviso di uscita', 1.6], ['a:distanza', 'Pannello di distanza', 1.0],
+['a:galleria', 'Galleria', 1.0], ['a:piazzola', 'Piazzola di sosta', 1.0], ['a:piazzola_sos', 'Piazzola con SOS', 1.0],
+['a:sos', 'Colonnina SOS', 0.9], ['a:telefono', 'Telefono', 0.9],
+['a:ghiaccio', 'Pannello integrativo: per ghiaccio', 1.0], ['a:pioggia', 'Pannello integrativo: per pioggia', 1.0]
+].map(([cod, nome, size]) => ({ id: 'c_' + cod.replace(':', '_'), nome, sec: 'Autostrada', tool: 'symbol', sym: 'cartello', cod, size, color: '#1f7a3a' })),
+[
+['a:corsia_chiusa_dx', 'Corsia di destra chiusa'], ['a:corsia_chiusa_sx', 'Corsia di sinistra chiusa'],
+['a:corsie_disponibili', 'Corsie disponibili'], ['a:carreggiata_chiusa', 'Carreggiata chiusa (passaggio sull\'altra)'],
+['a:rientro', 'Rientro in carreggiata'], ['a:variazione_corsie', 'Variazione corsie disponibili', 1.0],
+['a:uscita_obbligatoria', 'Uscita obbligatoria'], ['a:coda', 'Coda']
+].map(([cod, nome, size]) => ({ id: 'c_' + cod.replace(':', '_'), nome, sec: 'Cantiere', tool: 'symbol', sym: 'cartello', cod, size: size || 1.2, color: '#f6c400' })));
 const TRACCE = [
 { id: 'schizzo',    nome: 'Schizzo a mano',    tool: 'freehand', color: '#3a3a3a', width: 0.12 },
 { id: 'frenata',    nome: 'Traccia di frenata', tool: 'skid',     color: '#202020', width: 0.18, dashed:false },
@@ -327,6 +345,7 @@ const PALETTE = [
 { id: 'segnal', nome: 'Segnaletica', type: 'tool', items: scheda([
 ['Cartelli più usati', ['semaforo', 'segstop', 'segprec', 'dirprec', 'seglim', 'segdiv', 'sorpasso', 'obbligo', 'attravseg', 'rotatseg', 'zona30', 'passliv', 'seglavori', 'disabile']],
 ['A terra', ['attraversam', 'attrbike', 'arresto', 'precterra', 'mezzcont', 'mezzdisc', 'doppia', 'margine', 'freccterra']],
+['Autostrada', segn('Autostrada')], ['Cantieri e corsie', segn('Cantiere')],
 ['Pericolo', segn('Pericolo')], ['Divieto', segn('Divieto')], ['Obbligo', segn('Obbligo')], ['Indicazione', segn('Indicazione')]]) },
 { id: 'simboli', nome: 'Sinistro', type: 'tool', items: scheda([
 ['Punti del sinistro', ['urto', 'investim', 'quiete']],
