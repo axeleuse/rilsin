@@ -2767,7 +2767,9 @@ this.righeAltraBase();
 const sch = RS.verifica.schedaRilievo();
 let added = 0;
 const mb = S.meta.base || {}, A = S.get(mb.aId), B = S.get(mb.bId);
-if (A && B && A !== B && !S.misure.some((m, i) => sch.usate.righe.has(i) && /\(base\)/i.test(m.descr || ''))) {
+const coppiaBase = [String(A && A.letter).toUpperCase(), String(B && B.letter).toUpperCase()].sort().join();
+const rigaBaseAttuale = m => { const k = /^\s*([A-Za-z]{1,3})\s*(?:→|->)\s*([A-Za-z]{1,3})\s*\(base\)/i.exec(m.descr || ''); return !!k && [k[1].toUpperCase(), k[2].toUpperCase()].sort().join() === coppiaBase; };
+if (A && B && A !== B && !S.misure.some(rigaBaseAttuale)) {
 S.misure.push({ descr: A.letter + '→' + B.letter + ' (base)', val: '' }); added++;
 }
 sch.daPrendere.filter(x => x.riga == null).forEach(x => { S.misure.push({ descr: x.da + '→' + x.T, val: '' }); added++; });
@@ -2787,7 +2789,16 @@ S.render(); S.snapshot(); S.emit('change');
 this.toast('Punti numerati aggiunti ' + (senza.length === 1 ? 'al veicolo ' : 'ai veicoli ') + senza.map(e => e.label).join(', '), 3500);
 }
 const pronte = this.prepareMeasures(true);
-const coda = S.misure.map((m, i) => ({ i, m })).filter(x => vuota(x.m) && gmParti(x.m.descr));
+const capL = new Set(S.elements.filter(e => e.letter).map(e => String(e.letter).toUpperCase()));
+const coppia = d => { const k = /^\s*([A-Za-z]{1,3})\s*(?:→|->)\s*([A-Za-z]{1,3})(?!\d)/.exec(d || ''); if (!k) return '';
+const a = k[1].toUpperCase(), b = k[2].toUpperCase(); return capL.has(a) && capL.has(b) ? [a, b].sort().join('-') : ''; };
+const giaPrese = new Set(S.misure.filter(m => !vuota(m)).map(m => coppia(m.descr)).filter(Boolean));
+const eBase = x => /\(base\)/i.test(x.m.descr || '') ? 0 : 1;
+const coda = S.misure.map((m, i) => ({ i, m })).filter(x => vuota(x.m) && gmParti(x.m.descr)).sort((x, y) => eBase(x) - eBase(y) || x.i - y.i).filter(x => {
+const c = coppia(x.m.descr); if (!c) return true;
+if (giaPrese.has(c)) return false;
+giaPrese.add(c); return true;
+});
 if (!coda.length) {
 if (pronte >= 0) this.toast(RS.verifica.schedaRilievo().gruppi.length ? 'Nessuna misura da prendere: hanno già tutte un valore' : 'Prima numera gli spigoli dei veicoli o piazza un punto P: poi le misure si prendono qui');
 return;
@@ -2816,6 +2827,18 @@ v.hidden = false;
 this._gmMostra();
 },
 _gmMostra() {
+try { this._gmSchermata(); }
+catch (e) {
+const v = el('gmVelo'); if (!v) return;
+const g = this._gm || {};
+v.innerHTML = `<div class="gm-box"><div class="gm-top"><span>Misure guidate</span><span></span><button class="gm-x" data-gm="chiudi" title="Chiudi">✕</button></div>
+            <div class="gm-cosa"><div class="gm-ora">Misure registrate</div><div class="gm-nome" style="font-size:24px">${g.fatte || 0}</div>
+              <div class="gm-descr">Le misure prese sono salvate nel registro. Chiudi e controllale nel Rilievo dei punti.</div></div>
+            <button class="gm-invio" data-gm="verifica">Vai al rilievo dei punti</button>
+            <div class="gm-riga"><button class="gm-k gm-pic" data-gm="chiudi">Chiudi</button></div></div>`;
+}
+},
+_gmSchermata() {
 const g = this._gm, v = el('gmVelo'); if (!g || !v) return;
 const fine = g.pos >= g.coda.length;
 const voceOn = gmVoceAttiva();
@@ -2828,7 +2851,7 @@ if (fine) {
 const c = RS.verifica ? RS.verifica.controllaMisure() : { esiti: [] }, errori = c.esiti.filter(x => x.livello === 'errore'), err = errori.length;
 g.fineRipeti = errori.filter(x => x.ripeti).slice(0, 3).map(x => x.ripeti);
 v.innerHTML = `<div class="gm-box">
-            <div class="gm-top"><span>Misure guidate</span><span>finito</span>${tastoVoce}</div>
+            <div class="gm-top"><span>Misure guidate</span><span>finito</span>${tastoVoce}<button class="gm-x" data-gm="chiudi" title="Chiudi (Esc)">✕</button></div>
             <div class="gm-cosa"><div class="gm-ora">Giro completato</div><div class="gm-nome" style="font-size:26px">${g.fatte} ${g.fatte === 1 ? 'misura registrata' : 'misure registrate'}</div>
               <div class="gm-descr">${g.saltate ? g.saltate + (g.saltate === 1 ? ' saltata: resta vuota nel registro' : ' saltate: restano vuote nel registro') : 'nessuna saltata'}</div></div>
             ${prop || esito}
@@ -2841,7 +2864,7 @@ this._gmVoce(fine, null, err);
 return;
 }
 const x = g.coda[g.pos], p = gmParti(x.m.descr);
-const dopo = g.coda.slice(g.pos + 1, g.pos + 4).map(y => gmParti(y.m.descr).nome).join(' · ');
+const dopo = g.coda.slice(g.pos + 1, g.pos + 4).map(y => (gmParti(y.m.descr) || {}).nome).filter(Boolean).join(' · ');
 const prima = g.pos ? gmParti(g.coda[g.pos - 1].m.descr) : null;
 let daQui = 0;
 if (!p.base && (!prima || prima.base || prima.da !== p.da))

@@ -123,18 +123,23 @@ return best;
 }
 const RXORD = /^\s*([A-Za-z]{1,3}\d*)\s*\(ordinata\)/i;
 const valoreQuota = q => (q.valore != null && q.valore !== '') ? Number(q.valore) : (() => { const P = RS.elements.resolvePts(q); return Math.hypot(P[1].x - P[0].x, P[1].y - P[0].y); })();
+function versoCapisaldi(cap, base, da, a) {
+if (cap[da] && cap[a] && base.indexOf(a) >= 0 && base.indexOf(da) < 0) return [a, da];
+return [da, a];
+}
 function puntiRilevati() {
 const S = RS.scene, cap = {}, out = {};
 S.elements.forEach(e => { if (e.letter) cap[String(e.letter).toUpperCase()] = e; });
 const mb = S.meta && S.meta.base, bA = mb && S.get(mb.aId), bB = mb && S.get(mb.bId);
 const base = (bA && bB) ? [String(bA.letter).toUpperCase(), String(bB.letter).toUpperCase()] : [];
 const prendi = T => out[T] || (out[T] = { T, dist: [], asc: null, ord: null });
+const verso = (da, a) => versoCapisaldi(cap, base, da, a);
 S.elements.filter(e => e.type === 'measure').forEach(q => {
 const n = q.note || '';
 let k = RXORD.exec(n);
 if (k) { prendi(k[1].toUpperCase()).ord = { q, v: valoreQuota(q) }; return; }
 k = RX.exec(n); if (!k) return;
-const da = k[1].toUpperCase(), a = k[2].toUpperCase();
+const [da, a] = verso(k[1].toUpperCase(), k[2].toUpperCase());
 if (!cap[da] || (base.indexOf(da) >= 0 && base.indexOf(a) >= 0)) return;
 if (/ascissa/i.test(n)) { prendi(a).asc = { q, da, v: q.ril && q.ril.asc != null ? Number(q.ril.asc) : valoreQuota(q) }; return; }
 const p = prendi(a);
@@ -142,8 +147,8 @@ if (!p.dist.some(x => x.da === da)) p.dist.push({ da, q, v: valoreQuota(q) });
 });
 (S.misure || []).forEach((m, i) => {
 const k = RX.exec(m.descr || '');
-if (!k || m.val === '' || m.val == null || /\(base\)|ascissa|ordinata/i.test(m.descr)) return;
-const da = k[1].toUpperCase(), a = k[2].toUpperCase();
+if (!k || m.val === '' || m.val == null || /ascissa|ordinata/i.test(m.descr)) return;
+const [da, a] = verso(k[1].toUpperCase(), k[2].toUpperCase());
 if (!cap[da] || (base.indexOf(da) >= 0 && base.indexOf(a) >= 0)) return;
 const p = prendi(a), x = p.dist.find(d => d.da === da), r = { da, riga: i, v: Number(m.val) };
 if (x) Object.assign(x, r, { q: x.q }); else p.dist.push(r);
@@ -253,9 +258,9 @@ if (k && [k[1].toUpperCase(), k[2].toUpperCase()].sort().join() === base.slice()
 const vuote = {};
 mis.forEach((m, i) => {
 const k = RX.exec(m.descr || '');
-if (!k || !(m.val === '' || m.val == null) || /\(base\)|ascissa|ordinata/i.test(m.descr)) return;
-const da = k[1].toUpperCase(), a = k[2].toUpperCase();
-if (!cap[da]) return;
+if (!k || !(m.val === '' || m.val == null) || /ascissa|ordinata/i.test(m.descr)) return;
+const [da, a] = versoCapisaldi(cap, base, k[1].toUpperCase(), k[2].toUpperCase());
+if (!cap[da] || (base.indexOf(da) >= 0 && base.indexOf(a) >= 0)) return;
 (vuote[a] = vuote[a] || []).push({ da, riga: i });
 });
 const voce = (T, extra) => {

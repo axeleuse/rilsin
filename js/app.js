@@ -7,6 +7,8 @@ RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DA
 RS.NOVITA = [
 { build: 276, data: '2026-11-13', voci: [
 'Cambiando la base, le misure guidate partono dai capisaldi scelti: le misure ancora da prendere preparate per la base di prima si tolgono e si rifanno (restano quelle già misurate e le distanze di controllo aggiunte con «＋ da…»). Il caposaldo che esce dalla base diventa un caposaldo aggiunto e si misura per primo.',
+'Misure guidate: una distanza fra due capisaldi non si chiede più due volte (prima «X→Y» e poi «Y→X»). Vale nei due versi, e conta anche la base di prima: cambiando la base, il caposaldo che ne esce non si rimisura dall\'altro caposaldo della vecchia base.',
+'Misure guidate: la schermata finale ha la ✕ in alto e su iPhone si ferma sopra le barre di Safari, così i pulsanti «Chiudi» e «Torna al rilievo dei punti» si raggiungono sempre; se un dato inatteso impedisce di mostrarla, compare comunque come uscire (le misure prese restano salvate).',
 'Telefono, «Altre misure»: niente più campi fuori dallo schermo. La riga per aggiungere va su due righe e ogni misura è una scheda con il valore in alto e «Che cosa» sotto, a tutta larghezza.',
 '«⇄ Cambia base» si trova subito: nel Rilievo dei punti è un pulsante sotto la riga della base (prima una scritta grigia), e nelle misure guidate, quando si misura la base, il pulsante «⇄ Cambia base: scegli altri capisaldi» porta diritto alla scelta dei due capisaldi.'
 ] },
