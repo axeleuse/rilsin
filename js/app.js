@@ -9,7 +9,8 @@ RS.NOVITA = [
 'Controllo dei veicoli rubati sistemato: la risposta del Ministero si legge anche se scritta con parole diverse; dopo un codice di controllo sbagliato il nuovo tentativo funziona (prima il vecchio avviso nascondeva il risultato); se il sito non risponde lo si dice; ↻ chiede davvero un\'altra immagine. Una risposta che RILSIN non riconosce compare tra virgolette, da leggere.',
 'Nuova verifica dalla targa: classe ambientale (Euro) ed emissioni di CO2, dal Portale dell\'Automobilista, gratis. Entra in «Verifica tutto» e i dati vanno da soli nei nuovi campi della scheda del veicolo.',
 'Numero di polizza: nessuna banca dati pubblica e gratuita lo dà; resta la foto del documento assicurativo (anche il certificato digitale sul telefono della parte) o la richiesta con i canali di servizio.',
-'Segnali di pericolo «passaggio a livello con barriere» e «banchina pericolosa» ridisegnati come quelli veri: la staccionata e l\'auto che scivola dal bordo con i sassi.',
+'Cartelli ridisegnati come quelli veri, ricalcando le figure ufficiali del Regolamento: passaggio a livello con barriere (staccionata), banchina pericolosa (auto che scivola dal bordo), incrocio con precedenza a destra (croce a X), intersezione con diritto di precedenza, curve, doppia curva, strettoia, bambini, attraversamento ciclabile (ciclista in sella), doppio senso di circolazione (freccia a sinistra verso il basso, come in Italia), transito vietato ai pedoni (senza barra), transito vietato agli autoveicoli (auto vista di fronte), percorso pedonale (una sola persona), percorso pedonale e ciclabile (pedone sopra la bicicletta), ospedale (letto con croce rossa).',
+'Limite di velocità e divieto di sorpasso: il bordo rosso non esce più dal cartello (sembrava ottagonale); «zona» del cartello Zona 30 in minuscolo, come quello vero.',
 'Legenda laterale più pulita: tolta la spiegazione in alto, restano solo le voci.',
 ] },
 { build: 272, data: '2026-11-11', voci: [

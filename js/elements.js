@@ -863,7 +863,7 @@ case 'dirprec':
 mk('path', { d: `M0 ${-h} L${h} 0 L0 ${h} L${-h} 0 Z`, fill: '#fff', stroke: '#222', 'stroke-width': 0.04 }, g);
 mk('path', { d: `M0 ${-h*0.62} L${h*0.62} 0 L0 ${h*0.62} L${-h*0.62} 0 Z`, fill: '#f6c400' }, g); break;
 case 'sorpasso': {
-mk('circle', { cx: 0, cy: 0, r: h, fill: '#fff', stroke: '#c00', 'stroke-width': h*0.2 }, g);
+mk('circle', { cx: 0, cy: 0, r: h*0.9, fill: '#fff', stroke: '#c00', 'stroke-width': h*0.2 }, g);
 const fr = mk('g', { transform: `rotate(${-(e.rot || 0)})` }, g);
 const auto = (cx, c) => {
 const q = mk('g', { transform: `translate(${cx} ${h*0.04}) scale(1.3)` }, fr), w = h*0.21;
@@ -911,7 +911,7 @@ const pn = mk('g', { transform: `rotate(${-(e.rot || 0)})` }, g);
 mk('rect', { x: -h*0.78, y: -h, width: h*1.56, height: s, rx: h*0.1, fill: '#fff', stroke: '#111', 'stroke-width': h*0.06 }, pn);
 const t = N('text'); t.setAttribute('x', 0); t.setAttribute('y', -h*0.62); t.setAttribute('font-size', h*0.34);
 t.setAttribute('text-anchor', 'middle'); t.setAttribute('dy', '0.35em'); t.setAttribute('font-weight', '700');
-t.setAttribute('font-family', 'Arial,Helvetica,sans-serif'); t.setAttribute('fill', '#111'); t.textContent = 'ZONA'; pn.appendChild(t);
+t.setAttribute('font-family', 'Arial,Helvetica,sans-serif'); t.setAttribute('fill', '#111'); t.textContent = 'zona'; pn.appendChild(t);
 mk('circle', { cx: 0, cy: h*0.22, r: h*0.6, fill: '#fff', stroke: '#c00', 'stroke-width': h*0.13 }, pn);
 const n = N('text'); n.setAttribute('x', 0); n.setAttribute('y', h*0.24); n.setAttribute('font-size', h*0.56);
 n.setAttribute('text-anchor', 'middle'); n.setAttribute('dy', '0.35em'); n.setAttribute('font-weight', '700');
@@ -996,7 +996,7 @@ case 'divieto':
 mk('circle', { cx: 0, cy: 0, r: h, fill: '#c00', stroke: '#fff', 'stroke-width': h*0.07 }, g);
 mk('rect', { x: -h*0.66, y: -h*0.17, width: h*1.32, height: h*0.34, fill: '#fff', transform: `rotate(${-(e.rot || 0)})` }, g); break;
 case 'limite':
-mk('circle', { cx: 0, cy: 0, r: h, fill: '#fff', stroke: '#c00', 'stroke-width': 0.14 }, g);
+mk('circle', { cx: 0, cy: 0, r: h*0.9, fill: '#fff', stroke: '#c00', 'stroke-width': h*0.2 }, g);
 symText(g, e.text || '50', h*0.9, '#111', e.rot); break;
 case 'sos':
 mk('rect', { x: -h * 0.62, y: -h, width: h * 1.24, height: s, rx: h * 0.22, fill: col, stroke: '#7a4a00', 'stroke-width': 0.04 }, g);
