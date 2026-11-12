@@ -10,8 +10,10 @@ const URL_PORTALE = 'https://www.ilportaledellautomobilista.it/web/portale-autom
 const VERIFICHE = {
 rca: { t: 'Copertura RCA', ic: '🛡', ente: 'Portale dell\'Automobilista (Ministero dei Trasporti)', url: URL_PORTALE },
 revisione: { t: 'Revisione', ic: '🔧', ente: 'Portale dell\'Automobilista (Ministero dei Trasporti)', url: 'https://www.ilportaledellautomobilista.it/interrogazionistoricorevisioni/spa/' },
-rubato: { t: 'Rubato o smarrito', ic: '🚨', ente: 'Ministero dell\'Interno (Polizia Criminale)', url: 'https://www.crimnet.dcpc.interno.gov.it/crimnet/ricerca-targhe-telai-rubati-smarriti' }
+rubato: { t: 'Rubato o smarrito', ic: '🚨', ente: 'Ministero dell\'Interno (Polizia Criminale)', url: 'https://www.crimnet.dcpc.interno.gov.it/crimnet/ricerca-targhe-telai-rubati-smarriti' },
+classe: { t: 'Classe ambientale e CO2', ic: '🌿', ente: 'Portale dell\'Automobilista (Ministero dei Trasporti)', url: 'https://www.ilportaledellautomobilista.it/web/portale-automobilista/ext/verifica-classe-ambientale-veicolo' }
 };
+const TUTTE = Object.keys(VERIFICHE);
 const TITOLI = {};
 const titoloVer = k => (VERIFICHE[k] || { t: TITOLI[k] || k }).t;
 const NOMI_DOC = { libretto: 'Carta di circolazione', patente: 'Patente', documento: 'Documento d\'identità', docprop: 'Documento del proprietario', assicurazione: 'Documento assicurativo' };
@@ -80,7 +82,7 @@ return Array.from(per.values());
 function veicoloVuoto(v) {
 const pieno = o => o && Object.keys(o).some(k => k !== 'id' && o[k] !== '' && o[k] != null && !(typeof o[k] === 'object' && !Object.keys(o[k]).length));
 const F = RS.fascicolo, doc = F && F.documenti ? F.documenti().some(p => String(p.guida || '').indexOf('doc:' + v.lettera) === 0) : false;
-return !v.targa && !v.marca && !v.telaio && !v.immatricolazione && !pieno(v.revisione) && (!v.tipo || v.tipo === 'auto') && !pieno(v.conducente) && !pieno(v.proprietario) && !pieno(v.patente) && !pieno(v.ass) &&
+return !v.targa && !v.marca && !v.telaio && !v.immatricolazione && !v.euro && !v.co2 &&!pieno(v.revisione) && (!v.tipo || v.tipo === 'auto') && !pieno(v.conducente) && !pieno(v.proprietario) && !pieno(v.patente) && !pieno(v.ass) &&
 !(v.passeggeri || []).length && !(v.verifiche && Object.keys(v.verifiche).length) && !doc;
 }
 function tipoDaKind(k) {
@@ -475,7 +477,7 @@ return P;
 const pulisci = s => String(s || '').replace(/\s+/g, ' ').trim();
 function valorePortale(x, re, ok) {
 ok = ok || (() => true);
-const eti = c => c && c.length < 45 && !/\d/.test(c);
+const eti = c => c && c.length < 45 && !/\d/.test(c.replace(/co\s*2/ig, ''));
 for (const t of x.tabelle || []) for (let i = 0; i < t.length; i++) {
 const r = (t[i] || []).map(pulisci), giu = (t[i + 1] || []).map(pulisci);
 const k = r.findIndex(c => re.test(c) && eti(c)); if (k < 0) continue;
@@ -497,8 +499,15 @@ const inData = s => { const m = /(\d{2})\/(\d{2})\/(\d{4})/.exec(s || ''); retur
 const CAPTCHA_KO = /(captcha|codice di (controllo|sicurezza)|caratteri)[^\n]{0,80}(errat|non (è |e' )?(valid|corrett))|(errat|non valid|non corrett)[^\n]{0,60}(captcha|codice|caratteri)/i;
 function esitoPortale(servizio, x, targa) {
 if (!x) return null;
-const T = String(x.testo || '') + '\n' + String(x.avviso || '');
-if (CAPTCHA_KO.test(T)) return { stato: 'captcha' };
+if (CAPTCHA_KO.test(String(x.testo || '')) || CAPTCHA_KO.test(String(x.risultato || ''))) return { stato: 'captcha' };
+const r = risultatoPortale(servizio, x, targa);
+if (r) return r;
+if (CAPTCHA_KO.test(String(x.avviso || ''))) return { stato: 'captcha' };
+return null;
+}
+function risultatoPortale(servizio, x, targa) {
+const T = String(x.testo || '') + '\n' + String(x.risultato || '') + '\n' + (CAPTCHA_KO.test(String(x.avviso || '')) ? '' : String(x.avviso || ''));
+if (/chiamata\s+fallita|si\s+prega\s+di\s+riprovare/i.test(T)) return { stato: 'riprova' };
 const esito = (riga, dati, prop) => ({ stato: 'esito', riga, dati: dati || {}, prop: prop || [] });
 if (servizio === 'rca') {
 if (/non\s+(risulta|è|e')\s+(coperto|assicurat)|nessuna\s+copertura|non\s+coperto|non\s+risulta(no)?\s+(copertur|polizz|dati|assicura)|targa\s+(non\s+(trovata|presente|valida)|inesistente)|nessun\s+(dato|risultato)/i.test(T))
@@ -553,12 +562,31 @@ if (migliore.km) prop.push({ p: 'revisione.km', lab: 'Km alla revisione', v: mig
 return esito(riga, { data: migliore.data, esito: migliore.esito, km: migliore.km }, prop);
 }
 if (servizio === 'rubato') {
-if (/non\s+(risulta|è|e')\s+(presente|rubat|smarrit|tra|nell|in\s+archivio|oggetto)|nessun\s+(risultato|veicolo|dato|riscontro)|non\s+(sono\s+)?stat[ioe]\s+trovat|non\s+presente|esito\s+negativo/i.test(T))
+const R = String(x.risultato || '') || T;
+if (/non\s+(risulta|è|e')\s+(presente|rubat|smarrit|tra|nell|in\s+archivio|oggetto|segnalat|censit|registrat)|non\s+risulta(?!\s+(ancora\s+)?ritrovat)|non\s+ha\s+(trovato|prodotto)|nessun[ao]?\s+(risultat|veicol|dat[oi]|riscontr|corrispondenz|informazion|segnalazion|esito)|non\s+(sono\s+)?(stat[ioe]\s+)?(trovat|rilevat|reperit)|non\s+(è\s+)?present|dati\s+non\s+(trovat|present|disponibil)|esito\s+negativo|non\s+rubat/i.test(R))
 return esito('✓ Non risulta rubato né smarrito', { rubato: false });
 const t = String(targa || '').toUpperCase(), inTab = (x.tabelle || []).some(tb => tb.some(r => r.some(c => t && pulisci(c).toUpperCase().replace(/\s/g, '') === t)));
-if (inTab || /(risulta|segnalat[oa]|denunciat[oa])[^\n]{0,40}(rubat|furto|smarrit)|data\s+(del\s+|della\s+)?(furto|denuncia|smarrimento)|esito\s+positivo/i.test(T))
+if (inTab || /(risulta|segnalat[oa]|denunciat[oa])[^\n]{0,40}(rubat|furto|smarrit)|data\s+(del\s+|della\s+)?(furto|denuncia|smarrimento)|esito\s+positivo/i.test(R))
 return esito('⚠ RISULTA nella banca dati dei veicoli rubati o smarriti: approfondisci subito con la Centrale', { rubato: true });
+const testo = pulisci(x.risultato);
+if (testo.length > 3) return esito('⚠ Risposta del sito da leggere: «' + (testo.length > 220 ? testo.slice(0, 220) + '…' : testo) + '»', { rubato: null, risposta: testo.slice(0, 600) });
 return null;
+}
+if (servizio === 'classe') {
+if (/non\s+(è\s+stat[oa]\s+)?(trovat|present|risulta)|nessun[ao]?\s+(risultat|veicol|dat[oi])|targa\s+(non\s+valida|inesistente|errata)|dati\s+non\s+disponibil/i.test(T))
+return esito('Classe ambientale non trovata per questa targa', { euro: '', co2: '' });
+const reEuro = /\beuro\s*([0-6])(\s*[A-Z](?:[\s-]*(?:TEMP|ISC(?:-FCM)?|FCM))?)?\b/i;
+const cel = valorePortale(x, /classe\s+ambientale|categoria\s+euro|classe\s+euro|direttiva/i, v => reEuro.test(v) || /^[0-6][A-Z]?$/i.test(v));
+const me = reEuro.exec(cel) || reEuro.exec(T.split('\n').filter(r => !/verifica\s+la\s+classe|categoria\s+euro\)/i.test(r)).join('\n'));
+const euro = me ? 'Euro ' + me[1] + (me[2] ? me[2].replace(/\s+/g, '').toUpperCase() : '') : (/^[0-6][A-Z]?$/i.test(cel) ? 'Euro ' + cel.toUpperCase() : '');
+const c2 = valorePortale(x, /emissioni(\s+di)?\s+co\s*2|co\s*2|emission[ie]/i, v => /\d/.test(v.replace(/co\s*2/ig, '')) && !/euro/i.test(v));
+const mc = /(\d{1,3}(?:[.,]\d+)?)/.exec(String(c2 || '').replace(/co\s*2/ig, ''));
+const co2 = mc ? mc[1].replace('.', ',') : '';
+if (!euro && !co2) return null;
+const prop = [];
+if (euro) prop.push({ p: 'euro', lab: 'Classe ambientale', v: euro, conf: 1 });
+if (co2) prop.push({ p: 'co2', lab: 'CO2 (g/km)', v: co2, conf: 1 });
+return esito('✓ ' + [euro ? 'Classe ambientale ' + euro : '', co2 ? 'CO2 ' + co2 + ' g/km' : ''].filter(Boolean).join(' · '), { euro, co2 }, prop);
 }
 return null;
 }
@@ -747,8 +775,8 @@ verificheHtml(v) {
 const vv = v.verifiche || {}, tg = leggiTarga(v.targa);
 const quando = o => { const d = new Date(o.ora); return isNaN(d) ? '' : d.toLocaleDateString('it-IT') + ' ' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }); };
 return '<div class="cv-sez">Verifiche sulle banche dati</div>' +
-'<button class="cv-b forte cv-vertutto" data-cv="vertutto">🔎 Verifica tutto sui siti pubblici: copertura RCA, revisione, rubato</button>' +
-'<p class="cv-nota">Si aprono i siti ufficiali uno dopo l\'altro con la targa già scritta: scrivi solo il codice di controllo di ciascuno. Compagnia, scadenza e revisione vanno da sole nella scheda.</p>' +
+'<button class="cv-b forte cv-vertutto" data-cv="vertutto">🔎 Verifica tutto sui siti pubblici: copertura RCA, revisione, rubato, classe ambientale</button>' +
+'<p class="cv-nota">Si aprono i siti ufficiali uno dopo l\'altro con la targa già scritta: scrivi solo il codice di controllo di ciascuno. Compagnia, scadenza, revisione e classe ambientale vanno da sole nella scheda.</p>' +
 '<div class="cv-bott">' + Object.keys(VERIFICHE).map(k => `<button class="cv-b${vv[k] ? ' fatto' : ''}" data-cv="ver:${k}">${VERIFICHE[k].ic} ${esc(VERIFICHE[k].t)}</button>`).join('') + '</div>' +
 Object.keys(VERIFICHE).concat(Object.keys(TITOLI)).filter(k => vv[k]).map(k => {
 const o = vv[k], altra = o.targa && tg && tg.t !== o.targa;
@@ -787,6 +815,7 @@ el('cvBody').innerHTML = this.passi() +
         <div class="cv-due">${this.f('Lettera (come sul disegno)', 'lettera', { sel: this.lettereLibere(v) })}${this.f('Tipo', 'tipo', { sel: TIPI })}</div>
         ${this.f('Targa', 'targa', { maiusc: true, esito: true, ph: 'AB123CD' })}${this.f('Marca e modello', 'marca', { ph: 'Fiat Panda' })}
         <div class="cv-due">${this.f('Telaio', 'telaio', { maiusc: true, max: 17 })}${this.f('Prima immatricolazione', 'immatricolazione', { ph: 'gg/mm/aaaa' })}</div>
+        ${np ? '' : `<div class="cv-due">${this.f('Classe ambientale', 'euro', { ph: 'Euro 6' })}${this.f('CO2 (g/km)', 'co2', { tel: true })}</div>`}
         <div class="cv-sez">Conducente</div>
         <div class="cv-bott">${np ? '' : this.fotoDoc('patente', 'Patente')}${this.fotoDoc('documento', 'Documento d\'identità')}</div>
         ${this.persona('conducente.', 'conducente', { esito: true })}
@@ -1032,9 +1061,9 @@ RS.ui.toast(scelti.length + (scelti.length === 1 ? ' dato inserito' : ' dati ins
 },
 verificaTutto() {
 const v = this.obj; if (!v) return;
-if (window.RilsinAndroid && RilsinAndroid.verificaInApp) return this.verificaInApp(v, ['rca', 'revisione', 'rubato']);
+if (window.RilsinAndroid && RilsinAndroid.verificaInApp) return this.verificaInApp(v, TUTTE);
 if (!(window.RilsinAndroid && RilsinAndroid.verificaVeicolo)) return this.verifica('rca');
-this._giro = { obj: v, esiti: [], coda: ['revisione', 'rubato'] };
+this._giro = { obj: v, esiti: [], coda: TUTTE.slice(1) };
 this.verifica('rca', true);
 },
 verifica(servizio, inGiro, obj) {
@@ -1063,6 +1092,7 @@ if (!x || typeof x !== 'object') return '';
 const r = this._esitoPagina(V, x, avviso);
 if (!r) return '';
 if (r.stato === 'captcha') return '⚠ Codice di controllo sbagliato: riscrivilo';
+if (r.stato === 'riprova') return '⚠ Codice da riscrivere: il sito non ha risposto, riprova';
 V.esito = r;
 return r.riga;
 },
@@ -1119,6 +1149,8 @@ c.V.esito = r; c.stato = 'fatto'; c.msg = '';
 if (RS.ui.vibra) RS.ui.vibra(/^[⚠✗]/.test(r.riga) ? '60,80,60,80,60' : '50');
 } else if (r && r.stato === 'captcha' && (!c.inviato || dopo > 2500)) {
 c.stato = 'codice'; c.inviato = 0; c.msg = '⚠ Il sito dice che il codice è sbagliato: scrivi quello della nuova immagine.';
+} else if (r && r.stato === 'riprova' && c.stato === 'attesa') {
+c.stato = 'codice'; c.inviato = 0; c.msg = '⚠ Il sito non ha risposto: chiedi un\'altra immagine (↻) e riscrivi il codice.';
 } else if (c.stato === 'attesa' && img && c.imgInviata && img !== c.imgInviata && dopo > 8000) {
 c.stato = 'codice'; c.inviato = 0; c.msg = '⚠ Il sito ha dato un\'immagine nuova: forse il codice non era giusto. Scrivi il nuovo.';
 }
@@ -1201,7 +1233,7 @@ if (!x.inviato) {
 righe.forEach(r => base.add(r)); (x.tabelle || []).forEach(t => t.forEach(r => base.add(chiaveRiga(r))));
 return null;
 }
-const y = { testo: righe.filter(r => !base.has(r)).join('\n'), avviso: avviso || '',
+const y = { testo: righe.filter(r => !base.has(r)).join('\n'), avviso: avviso || '', risultato: x.risultato || '',
 tabelle: (x.tabelle || []).map(t => t.filter(r => !base.has(chiaveRiga(r)))).filter(t => t.length) };
 return esitoPortale(V.servizio, y, V.targa);
 },

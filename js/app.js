@@ -6,6 +6,10 @@ RS.DATA_BUILD = '2026-11-12';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
 { build: 273, data: '2026-11-12', voci: [
+'Controllo dei veicoli rubati sistemato: la risposta del Ministero si legge anche se scritta con parole diverse; dopo un codice di controllo sbagliato il nuovo tentativo funziona (prima il vecchio avviso nascondeva il risultato); se il sito non risponde lo si dice; ↻ chiede davvero un\'altra immagine. Una risposta che RILSIN non riconosce compare tra virgolette, da leggere.',
+'Nuova verifica dalla targa: classe ambientale (Euro) ed emissioni di CO2, dal Portale dell\'Automobilista, gratis. Entra in «Verifica tutto» e i dati vanno da soli nei nuovi campi della scheda del veicolo.',
+'Numero di polizza: nessuna banca dati pubblica e gratuita lo dà; resta la foto del documento assicurativo (anche il certificato digitale sul telefono della parte) o la richiesta con i canali di servizio.',
+'Segnali di pericolo «passaggio a livello con barriere» e «banchina pericolosa» ridisegnati come quelli veri: la staccionata e l\'auto che scivola dal bordo con i sassi.',
 'Legenda laterale più pulita: tolta la spiegazione in alto, restano solo le voci.',
 ] },
 { build: 272, data: '2026-11-11', voci: [
