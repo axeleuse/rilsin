@@ -7,6 +7,9 @@ RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DA
 RS.NOVITA = [
 { build: 275, data: '2026-11-13', voci: [
 'Misure guidate: un caposaldo aggiunto si misura per primo da ogni caposaldo della base (A → C, poi i punti dei veicoli; B → C, poi i punti), invece che dopo tutti gli spigoli.',
+'Misure guidate: il terzo, quarto… caposaldo compare sempre, anche se la base non era mai stata scelta nel pannello Misure (capitava sul telefono): la base sono i primi due capisaldi.',
+'Fascicolo fotografico: spunta «Inserisci il comandante» nella copertina; tolta, qualifica e nome del comandante non compaiono né nel PDF né in Word.',
+'Fascicolo fotografico sul telefono: la didascalia sta sotto la foto a tutta larghezza (prima era una colonnina stretta); su iPhone la data non esce più dal riquadro; menu a tendina con lo stesso aspetto degli altri campi; scrivendo, iPhone non ingrandisce più la pagina.',
 'Tema scuro: si vede di nuovo il tasto per spegnere o accendere la voce nelle misure guidate (e gli altri tasti con le icone, che non hanno più il nero di sistema).',
 'Telefono: toccando un oggetto la barra dei comandi (ruota, duplica, elimina, ⋯ per le proprietà) compare subito, non più solo al secondo tocco.',
 'iPhone e iPad: il pizzico per ingrandire e ridurre è più fluido e non manda più in tilt la schermata (lo zoom di tutta la pagina è bloccato; un dito «perso» da iOS non falsa il pizzico seguente).'

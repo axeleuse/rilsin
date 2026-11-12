@@ -2736,6 +2736,11 @@ prepareMeasures(silenzioso) {
 const S = RS.scene;
 if (!S.elements.some(e => e.letter)) { this.toast('Aggiungi prima almeno un caposaldo'); return -1; }
 S.misure = S.misure || [];
+const mb0 = S.meta.base || (S.meta.base = {}), caps = S.elements.filter(e => e.letter).sort((a, b) => String(a.letter).localeCompare(String(b.letter)));
+if (caps.length >= 2) {
+if (!S.get(mb0.aId)) mb0.aId = caps[0].id;
+if (!S.get(mb0.bId) || mb0.bId === mb0.aId) mb0.bId = caps.find(c => c.id !== mb0.aId).id;
+}
 const sch = RS.verifica.schedaRilievo();
 let added = 0;
 const mb = S.meta.base || {}, A = S.get(mb.aId), B = S.get(mb.bId);

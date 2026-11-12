@@ -251,7 +251,8 @@ this.scr.innerHTML =
                <label class="fsc-f sm"><span>Data</span>
                  <input type="date" data-k="data" value="${esc(m.data)}"></label>
              </div>
-             <div class="fsc-row">
+             <label class="fsc-chk"><input type="checkbox" data-kchk="senzaComandante"${m.senzaComandante ? '' : ' checked'}> Inserisci il comandante (qualifica e nome) in fondo alla copertina</label>
+             <div class="fsc-row" id="fscComandante"${m.senzaComandante ? ' hidden' : ''}>
                <label class="fsc-f"><span>Qualifica</span>
                  <select data-k="qualifica">
                    ${QUALIFICHE.map(q => `<option${m.qualifica === q ? ' selected' : ''}>${q}</option>`).join('')}
@@ -277,6 +278,10 @@ this.scr.innerHTML =
           </div>
          </div>`;
 this.scr.querySelectorAll('[data-fsc]').forEach(b => b.onclick = () => this.act(b.dataset.fsc));
+this.scr.querySelectorAll('[data-kchk]').forEach(c => c.addEventListener('change', () => {
+this.model.senzaComandante = !c.checked; this._autosave();
+const r = el('fscComandante'); if (r) r.hidden = !c.checked;
+}));
 this.scr.querySelectorAll('[data-k]').forEach(inp => {
 const upd = () => { this.model[inp.dataset.k] = inp.value; this._autosave(); };
 inp.addEventListener('input', upd); inp.addEventListener('change', upd);
@@ -410,10 +415,10 @@ const cover =
              <tr><td class="lab">Luogo di compilazione:</td><td class="val">${esc(m.luogo)}</td></tr>
              <tr><td class="lab">Data:</td><td class="val">${esc(dataFmt)}</td></tr>
            </table>
-           <div class="chiusura">
+           ${m.senzaComandante ? '' : `<div class="chiusura">
              <p class="ruolo">${esc(m.qualifica || 'IL COMANDANTE')}</p>
              ${m.firmatario ? `<p class="nome">${esc(m.firmatario)}</p>` : ''}
-           </div>
+           </div>`}
          </section>`;
 const pages = groups.map((grp, gi) => {
 const items = grp.map((p, k) => {
@@ -485,10 +490,10 @@ const cover = `
         </div>
         <h1 style="text-align:center;font-size:19px;font-weight:bold;letter-spacing:1px;margin:22mm 0 16mm 0">FASCICOLO FOTOGRAFICO</h1>
         <table style="width:155mm;margin:0 auto;border-collapse:collapse">${vociRows}</table>
-        <div style="text-align:center;margin-top:24mm;font-size:13px">
+        ${m.senzaComandante ? '' : `<div style="text-align:center;margin-top:24mm;font-size:13px">
           <div style="font-weight:bold">${esc(m.qualifica || 'IL COMANDANTE')}</div>
           ${m.firmatario ? `<div style="margin-top:2mm">${esc(m.firmatario)}</div>` : ''}
-        </div>`;
+        </div>`}`;
 const imgW = per === 1 ? 640 : 560;
 const pagesHtml = groups.map((grp, gi) => {
 const items = grp.map((p, k) => {
