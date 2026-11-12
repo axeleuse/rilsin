@@ -2555,7 +2555,7 @@ body.innerHTML =
          <section class="dtab" data-tab="triang">
            <div class="rp-base">
              <div id="baseInfo" class="tri-baseinfo"></div>
-             <details class="rp-cambia" id="rpCambia"><summary>Cambia base</summary>
+             <details class="rp-cambia" id="rpCambia"><summary title="Scegli quali due capisaldi fanno da base, o aggiungine uno">⇄ Cambia base</summary>
                <div class="grid2">
                  <div class="gfield"><label>1° caposaldo (origine)</label><select id="baseA" data-baseid="aId"></select></div>
                  <div class="gfield"><label>2° caposaldo (direzione)</label><select id="baseB" data-baseid="bId"></select></div>
@@ -2832,6 +2832,7 @@ v.innerHTML = `<div class="gm-box gm-misura">
           ${prop}
           ${cambio}
           <div class="gm-cosa"><div class="gm-ora">Ora misura</div><div class="gm-nome">${escAttr(p.nome)}</div><div class="gm-descr">${escAttr(p.descr)}</div>${rip}</div>
+          ${p.base ? `<button class="gm-cambiabase" data-gm="cambiabase" title="Scegli altri due capisaldi come base">⇄ Cambia base: scegli altri capisaldi</button>` : ''}
           ${(() => { const m = gmMini(p); return m ? `<div class="gm-mini">${m}</div>` : ''; })()}
           <div class="gm-val"><span>${g.testo ? escAttr(g.testo) : '<em>0,00</em>'}</span><small>m</small></div>
           ${st ? `<div class="gm-stima">sul disegno circa ${escAttr(st.testo)} m</div>` : ''}
@@ -2886,6 +2887,11 @@ if (RS.procedura) RS.procedura.finito('misure');
 return;
 }
 if (t === 'verifica') { el('gmVelo').hidden = true; this._gm = null; this.parla(''); this._dataTab = 'triang'; this.openData(); return; }
+if (t === 'cambiabase') {
+el('gmVelo').hidden = true; this._gm = null; this.parla(''); this._dataTab = 'triang'; this.openData();
+const d = el('rpCambia'); if (d) { d.open = true; d.scrollIntoView({ block: 'center' }); }
+return;
+}
 if (t === 'laser') { if (RS.laser) RS.laser.apri(); return; }
 if (t === 'voce') {
 const on = !gmVoceAttiva();

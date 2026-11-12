@@ -1,10 +1,13 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 275;
+RS.BUILD = 276;
 RS.DATA_BUILD = '2026-11-12';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 276, data: '2026-11-13', voci: [
+'«⇄ Cambia base» si trova subito: nel Rilievo dei punti è un pulsante sotto la riga della base (prima una scritta grigia), e nelle misure guidate, quando si misura la base, il pulsante «⇄ Cambia base: scegli altri capisaldi» porta diritto alla scelta dei due capisaldi.'
+] },
 { build: 275, data: '2026-11-13', voci: [
 'Misure guidate: un caposaldo aggiunto si misura per primo da ogni caposaldo della base (A → C, poi i punti dei veicoli; B → C, poi i punti), invece che dopo tutti gli spigoli.',
 'Misure guidate: il terzo, quarto… caposaldo compare sempre, anche se la base non era mai stata scelta nel pannello Misure (capitava sul telefono): la base sono i primi due capisaldi.',
