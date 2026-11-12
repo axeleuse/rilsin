@@ -2577,7 +2577,12 @@ body.querySelectorAll('[data-meta]').forEach(inp => {
 inp.addEventListener('input', () => { meta[inp.dataset.meta] = inp.value; });
 });
 body.querySelectorAll('[data-baseid]').forEach(sel => {
-sel.addEventListener('change', () => { meta.base[sel.dataset.baseid] = sel.value; this.updateBaseInfo(); });
+sel.addEventListener('change', () => {
+meta.base[sel.dataset.baseid] = sel.value; this.updateBaseInfo();
+const tolte = this.righeAltraBase();
+if (tolte) { RS.scene.snapshot(); this.toast(tolte + (tolte === 1 ? ' misura da prendere rifatta' : ' misure da prendere rifatte') + ' dalla nuova base', 3000); }
+if (this._dataTab === 'triang') this.renderPunti();
+});
 });
 body.querySelectorAll('[data-d]').forEach(btn => btn.onclick = () => {
 const S = RS.scene, act = btn.dataset.d;
@@ -2690,7 +2695,7 @@ this.refreshMeasures(); this._rpRidisegna();
 wrap.querySelectorAll('[data-piu]').forEach(sel => sel.onchange = () => {
 if (!sel.value) return;
 S.misure = S.misure || [];
-S.misure.push({ descr: sel.value + '→' + sel.dataset.piu, val: '' });
+S.misure.push({ descr: sel.value + '→' + sel.dataset.piu, val: '', manuale: true });
 this._rpFocus = sel.dataset.piu + '|' + sel.value;
 S.render(); S.snapshot(); this._rpRidisegna();
 });
@@ -2732,6 +2737,23 @@ this.toast('Disegno allineato alle misure: ' + piano.cambi.length + (piano.cambi
 this.renderPunti();
 };
 },
+righeAltraBase() {
+const S = RS.scene, mis = S.misure || [], mb = S.meta.base || {}, A = S.get(mb.aId), B = S.get(mb.bId);
+if (!A || !B || A === B) return 0;
+const base = [String(A.letter).toUpperCase(), String(B.letter).toUpperCase()];
+const caps = new Set(S.elements.filter(e => e.letter).map(e => String(e.letter).toUpperCase()));
+const via = [];
+mis.forEach((m, i) => {
+if (!(m.val === '' || m.val == null) || m.manuale) return;
+const k = /^\s*([A-Za-z]{1,3})\s*(?:→|->)\s*([A-Za-z]{1,3}\d*)\s*(\(base\))?/i.exec(m.descr || ''); if (!k) return;
+const da = k[1].toUpperCase(), a = k[2].toUpperCase();
+if (!caps.has(da)) return;
+if (k[3]) { if ([da, a].sort().join() !== base.slice().sort().join()) via.push(i); return; }
+if (base.indexOf(da) < 0 || base.indexOf(a) >= 0) via.push(i);
+});
+via.sort((x, y) => y - x).forEach(i => mis.splice(i, 1));
+return via.length;
+},
 prepareMeasures(silenzioso) {
 const S = RS.scene;
 if (!S.elements.some(e => e.letter)) { this.toast('Aggiungi prima almeno un caposaldo'); return -1; }
@@ -2741,6 +2763,7 @@ if (caps.length >= 2) {
 if (!S.get(mb0.aId)) mb0.aId = caps[0].id;
 if (!S.get(mb0.bId) || mb0.bId === mb0.aId) mb0.bId = caps.find(c => c.id !== mb0.aId).id;
 }
+this.righeAltraBase();
 const sch = RS.verifica.schedaRilievo();
 let added = 0;
 const mb = S.meta.base || {}, A = S.get(mb.aId), B = S.get(mb.bId);

@@ -6,6 +6,8 @@ RS.DATA_BUILD = '2026-11-12';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
 { build: 276, data: '2026-11-13', voci: [
+'Cambiando la base, le misure guidate partono dai capisaldi scelti: le misure ancora da prendere preparate per la base di prima si tolgono e si rifanno (restano quelle già misurate e le distanze di controllo aggiunte con «＋ da…»). Il caposaldo che esce dalla base diventa un caposaldo aggiunto e si misura per primo.',
+'Telefono, «Altre misure»: niente più campi fuori dallo schermo. La riga per aggiungere va su due righe e ogni misura è una scheda con il valore in alto e «Che cosa» sotto, a tutta larghezza.',
 '«⇄ Cambia base» si trova subito: nel Rilievo dei punti è un pulsante sotto la riga della base (prima una scritta grigia), e nelle misure guidate, quando si misura la base, il pulsante «⇄ Cambia base: scegli altri capisaldi» porta diritto alla scelta dei due capisaldi.'
 ] },
 { build: 275, data: '2026-11-13', voci: [

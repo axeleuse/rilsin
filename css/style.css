@@ -387,6 +387,26 @@ text-transform:uppercase;letter-spacing:.5px;padding:6px 9px;border-bottom:1px s
 .mgroup-n{color:var(--muted2);font-weight:600}
 .mtipo{color:var(--muted2);font-size:11px;margin-left:4px}
 .macts{white-space:nowrap;text-align:right;width:1%}
+@media (max-width:640px){
+.mis-add-row{flex-wrap:wrap}
+.mis-add-row #mmDesc{flex:1 1 100%;min-width:0;font-size:16px}
+.mis-add-row .mis-val{flex:1 1 0;min-width:0}
+.mis-add-row .mis-val input{font-size:16px}
+.mis-add-row .btn-primary{flex:0 0 auto}
+table.measure:not(.punti),table.measure:not(.punti) tbody{display:block;width:100%}
+table.measure:not(.punti) thead{display:none}
+table.measure:not(.punti) tr{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"tag val act" "desc desc desc";gap:6px 10px;align-items:center;padding:8px 6px;border-bottom:1px solid var(--line)}
+table.measure:not(.punti) tr.mgroup{display:block;padding:0;border:none}
+table.measure:not(.punti) td{display:block;padding:0;border:none;min-width:0}
+table.measure:not(.punti) tr.mgroup td{padding:6px 9px}
+table.measure:not(.punti) td.mtag{grid-area:tag}
+table.measure:not(.punti) td:nth-child(2){grid-area:val}
+table.measure:not(.punti) td.macts{grid-area:act;width:auto}
+table.measure:not(.punti) td:nth-child(3){grid-area:desc}
+table.measure:not(.punti) input{font-size:16px}
+table.measure:not(.punti) .mis-val.sm{width:100%;max-width:170px}
+table.measure:not(.punti) tr:hover td{background:none}
+}
 .iconbtn{background:none;border:1px solid transparent;border-radius:var(--r-sm);cursor:pointer;
 font-size:14px;line-height:1;padding:4px 6px;opacity:.75}
 .iconbtn:hover{opacity:1;background:var(--panel3)}
