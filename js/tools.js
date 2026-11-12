@@ -137,6 +137,42 @@ l.setAttribute('class', 'ov-snap'); ov.appendChild(l);
 });
 if (best.nome) chipOv(ov, best.x + 14 / px, best.y - 14 / px, best.nome, '#16a34a', 'ov-snap-chip');
 },
+bordoAuto(e) {
+const K = /^(move|resize|vertex|newdrag|rilpt|lbl|arco)$/, op = this._op;
+this._ultimoPtr = { clientX: e.clientX, clientY: e.clientY, pointerType: e.pointerType, pointerId: e.pointerId };
+if (!op || !K.test(op.kind) || this._pinch) { this._fermaBordo(); return; }
+const dir = this._dirBordo(e.clientX, e.clientY);
+if (!dir.x && !dir.y) { this._fermaBordo(); return; }
+if (this._rafBordo) return;
+const passo = () => {
+this._rafBordo = 0;
+const o = this._op, p = this._ultimoPtr; if (!o || !K.test(o.kind) || !p || this._pinch) return;
+const d = this._dirBordo(p.clientX, p.clientY); if (!d.x && !d.y) return;
+const S = RS.scene, ppm = S.pxPerMeter() || 20;
+S.panBy(-d.x / ppm, -d.y / ppm);
+this._inBordo = true;
+try { this.onMove({ clientX: p.clientX, clientY: p.clientY, pointerType: p.pointerType, pointerId: p.pointerId, target: S.svg, preventDefault() {} }); }
+finally { this._inBordo = false; }
+this._rafBordo = setTimeout(passo, 16);
+};
+this._rafBordo = setTimeout(passo, 16);
+},
+_dirBordo(x, y) {
+const r = RS.scene.svg.getBoundingClientRect(), M = 44, V = 11;
+const k = dentro => dentro <= 0 ? 0 : Math.pow(Math.min(1, dentro / M), 2);
+return { x: x < r.left + M ? -V * k(r.left + M - x) : x > r.right - M ? V * k(x - (r.right - M)) : 0,
+y: y < r.top + M ? -V * k(r.top + M - y) : y > r.bottom - M ? V * k(y - (r.bottom - M)) : 0 };
+},
+_fermaBordo() { if (this._rafBordo) { clearTimeout(this._rafBordo); this._rafBordo = 0; } },
+calamita(op) {
+const S = RS.scene, ppm = S.pxPerMeter() || 20, ids = new Set(op.orig.map(o => o.id)), soglia = 24 / ppm;
+let best = null;
+ids.forEach(id => {
+const e = S.get(id);
+estremi(e).forEach(p => { const v = estremoVicino(e, p, ids, soglia); if (v && (!best || v.d < best.d)) best = { d: v.d, dx: v.q.x - p.x, dy: v.q.y - p.y, c: { x: v.q.x, y: v.q.y, nome: nomeTipo(v.o) + ' (calamita)' } }; });
+});
+return best;
+},
 agganciaSpostamento(op) {
 const S = RS.scene, ppm = S.pxPerMeter(), ids = new Set(op.orig.map(o => o.id));
 const miei = [];
@@ -442,6 +478,7 @@ ln.setAttribute('stroke-dasharray', '5 4');
 ov.appendChild(ln);
 }
 const op = this._op;
+if (!this._inBordo) this.bordoAuto(e);
 if (this._poly) { this.polyPreview(w); }
 if (this._dueClic) this.dragPreview(this._dueClic, w);
 if (!op) return;
@@ -476,7 +513,7 @@ if (o.pts) { el.pts = o.pts.map(p => { const q = { x: p.x + dx, y: p.y + dy }; i
 else { el.x = o.x + dx; el.y = o.y + dy; }
 });
 sposta();
-const ag = this.snapOn ? this.agganciaSpostamento(op) : null;
+const ag = this.calamita(op) || (this.snapOn ? this.agganciaSpostamento(op) : null);
 const al = ag ? null : this.allineaSpostamento(op);
 if (ag) { dx += ag.dx; dy += ag.dy; sposta(); }
 else if (al) { dx += al.dx; dy += al.dy; sposta(); }
@@ -542,7 +579,23 @@ const clx = sx ? sx * (a.w - op.w0) / 2 : 0, cly = sy ? sy * (a.h - op.h0) / 2 :
 const r = op.rot * Math.PI / 180;
 el.x = op.cx + clx * Math.cos(r) - cly * Math.sin(r);
 el.y = op.cy + clx * Math.sin(r) + cly * Math.cos(r);
-RS.scene.render(); return;
+let cal = null;
+if (sx && !sy && estremi(el).length) {
+const [p0, p1] = estremi(el), mobile = sx > 0 ? p1 : p0, fermo = sx > 0 ? p0 : p1;
+const v = estremoVicino(el, mobile, new Set([el.id]), 24 / (RS.scene.pxPerMeter() || 20));
+if (v) {
+const T = v.q, L = Math.hypot(T.x - fermo.x, T.y - fermo.y);
+if (L > 0.2) {
+const a = sx > 0 ? Math.atan2(T.y - fermo.y, T.x - fermo.x) : Math.atan2(fermo.y - T.y, fermo.x - T.x);
+el.len = Math.round(L * 100) / 100; el.rot = Math.round(((a * 180 / Math.PI) % 360 + 360) % 360 * 10) / 10;
+el.x = (fermo.x + T.x) / 2; el.y = (fermo.y + T.y) / 2;
+cal = { d: v.d, dx: 0, dy: 0, c: { x: T.x, y: T.y, nome: nomeTipo(v.o) + ' (calamita)' } };
+}
+}
+}
+RS.scene.render();
+this.guideSpostamento({ orig: [] }, cal, null);
+return;
 }
 if (op.kind === 'vertex') {
 const el = RS.scene.get(op.id); if (!el) return;
@@ -603,6 +656,7 @@ return;
 this.onUp(e);
 },
 onUp(e) {
+this._fermaBordo();
 if (this._touches && this._touches[e.pointerId]) {
 delete this._touches[e.pointerId];
 if (Object.keys(this._touches).length < 2) this._pinch = null;
@@ -638,6 +692,7 @@ if (op.schizzo && !op.moved && RS.sketch && RS.sketch.auto) RS.sketch.auto.tratt
 else if (op.schizzo && op.moved && RS.sketch && RS.sketch.auto && RS.sketch.auto.testo) RS.sketch.auto.testo('Spostato: trascina ancora o scegli una penna');
 } else if (op.kind === 'rotate' || op.kind === 'grot' || op.kind === 'resize' || op.kind === 'vertex' || op.kind === 'rilpt' || op.kind === 'lbl' || op.kind === 'braccio' || op.kind === 'arco') {
 if (op.kind === 'rotate' || op.kind === 'grot' || op.kind === 'arco') this.hideRotBadge();
+RS.scene.gOverlay.querySelectorAll('.guida').forEach(n => n.remove());
 RS.scene.snapshot();
 RS.scene.emit('select');
 } else if (op.kind === 'marquee') {
@@ -823,11 +878,17 @@ RS.scene.select(el.id);
 this.toSelect();
 },
 startDrag(w, e) {
-const p = this.snapPoint(w);
+const p = this.calamitaNuovo(this.snapPoint(w), this.active.def);
 this._op = { kind: 'newdrag', tool: this.active.tool, def: this.active.def, a: p, b: p, preview: null };
 },
+calamitaNuovo(p, def) {
+if (!def || !(def.tool === 'band' || def.tool === 'mark')) return p;
+const finto = { id: '__nuovo', type: def.tool, sub: def.sub, style: def.style };
+const v = estremoVicino(finto, p, new Set(), 24 / (RS.scene.pxPerMeter() || 20));
+return v ? { x: v.q.x, y: v.q.y } : p;
+},
 dragPreview(op, w) {
-op.b = this.snapPoint(w);
+op.b = this.calamitaNuovo(this.snapPoint(w), op.def);
 const el = buildDragElement(op);
 if (el && el.type === 'ramp') RS.elements.agganciaCorsia(el);
 RS.scene.gOverlay.querySelectorAll('.preview').forEach(n => n.remove());
@@ -835,7 +896,7 @@ const node = RS.elements.render(el);
 if (node) { node.classList.add('preview'); node.style.opacity = 0.6; RS.scene.gOverlay.appendChild(node); }
 },
 commitDrag(op, w) {
-op.b = this.snapPoint(w);
+op.b = this.calamitaNuovo(this.snapPoint(w), op.def);
 RS.scene.gOverlay.querySelectorAll('.preview').forEach(n => n.remove());
 const el = buildDragElement(op);
 if (!el) return;
@@ -1073,6 +1134,21 @@ if (def.stile) { sk.stile = def.stile; sk.note = def.nota || ''; }
 return sk;
 }
 function snapshotEl(el) { return JSON.parse(JSON.stringify(el)); }
+function estremi(e) {
+if (!e || e.len == null || e.x == null || !/^(band|mark|stopline)$/.test(e.type)) return [];
+const r = (e.rot || 0) * Math.PI / 180, ux = Math.cos(r) * e.len / 2, uy = Math.sin(r) * e.len / 2;
+return [{ x: e.x - ux, y: e.y - uy }, { x: e.x + ux, y: e.y + uy }];
+}
+const stessoTipo = (a, b) => a.type === b.type && (a.sub || '') === (b.sub || '') && (a.type !== 'mark' || (a.style || '') === (b.style || ''));
+const nomeTipo = e => { const d = RS.catalog && RS.catalog.byId && e.catId ? RS.catalog.byId(e.catId) : null; return (d && d.nome) || e.sub || e.type; };
+function estremoVicino(e, p, esclusi, soglia) {
+let best = null;
+RS.scene.elements.forEach(o => {
+if (o === e || esclusi.has(o.id) || !stessoTipo(e, o)) return;
+estremi(o).forEach(q => { const d = Math.hypot(q.x - p.x, q.y - p.y); if (d < soglia && (!best || d < best.d)) best = { d, q, o }; });
+});
+return best;
+}
 function seguaci(orig) {
 const S = RS.scene, ids = new Set(orig.map(o => o.id)), out = [];
 orig.forEach(o => {
