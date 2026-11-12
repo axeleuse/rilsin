@@ -6,6 +6,9 @@ RS.DATA_BUILD = '2026-11-12';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
 { build: 277, data: '2026-11-13', voci: [
+'Col dito si prendono gli oggetti sottili: una recinzione, un guard-rail, un muro, una linea a terra, una quota o un simbolo piccolo sopra un\'area verde, un edificio o una strada si selezionano toccandoli vicino (circa mezzo centimetro), anche se curvati, senza dover ingrandire. Toccando in mezzo all\'area si prende l\'area.',
+'Pizzico per ingrandire e rimpicciolire: l\'oggetto selezionato resta selezionato (prima il primo dito «toccava» l\'area sotto e la selezione si perdeva).',
+'Aspetto chiaro: la barra del fascicolo fotografico è chiara e «‹ Torna al disegno» e il titolo si vedono (prima erano scuri su fondo scuro). Controllate anche le altre schermate.',
 'Telefono: quando si apre la tastiera (la lettera di un punto fisso, un nome, una misura) la barra in basso (Oggetti, Proprietà, Annulla…) e la riga di stato si tolgono, e in alto restano solo le icone, intere: prima con lo schermo accorciato i tasti si stringevano e i nomi si tagliavano. Chiusa la tastiera torna tutto com\'era.'
 ] },
 { build: 276, data: '2026-11-13', voci: [

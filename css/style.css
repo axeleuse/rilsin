@@ -734,6 +734,7 @@ background:radial-gradient(120% 90% at 50% 0%,#ffffff 0%,#eef1f5 62%,#e3e8ef 100
 body.light .wel-title,body.light .home-name,body.light .hc-t,body.light .fsc-title{color:#101821}
 body.light .hc-ic svg{stroke:var(--accent)}
 body.light .fsc-thumb{background:#eef1f5}
+body.light .fsc-bar{background:linear-gradient(180deg,#ffffff,#eef2f7);border-bottom-color:#d6dce4}
 .wel-cred{margin-top:14px;font-size:11.5px;color:var(--muted2);letter-spacing:.3px;line-height:1.6}
 .wel-cred .riga,.home-ver .riga{display:block;white-space:nowrap}
 .home-ver{display:block;margin-top:6px;font-style:normal;font-size:11px;letter-spacing:.3px;color:var(--muted2)}

@@ -214,7 +214,7 @@ if (cap && cap.d < 40) quota({ x: cap.c.x, y: cap.c.y }, cap.p, m(cap.d) + ' dal
 },
 onDown(e) {
 if (e.pointerType === 'touch') {
-if (e.isPrimary || !this._touches) { this._touches = {}; this._pinch = null; }
+if (e.isPrimary || !this._touches) { this._touches = {}; this._pinch = null; this._selPrima = RS.scene.selection.slice(); }
 this._touches[e.pointerId] = { x: e.clientX, y: e.clientY };
 const ids = Object.keys(this._touches);
 if (ids.length === 2) {
@@ -224,6 +224,13 @@ dist: Math.hypot(b.x - a.x, b.y - a.y),
 w: RS.scene.view.w,
 cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2
 };
+const S = RS.scene, op = this._op;
+if (op && op.node && op.kind !== 'freehand') op.node.remove();
+if (op && op.kind === 'move' && op.moved && op.orig) {
+op.orig.forEach(o => { const x = S.get(o.id); if (x) { Object.keys(x).forEach(k => delete x[k]); Object.assign(x, JSON.parse(JSON.stringify(o))); } });
+S.render();
+}
+if (this._selPrima && op && op.kind !== 'freehand') S.select(this._selPrima.filter(id => S.get(id)));
 this._op = null;
 RS.scene.gOverlay.querySelectorAll('.preview').forEach(n => n.remove());
 e.preventDefault();
@@ -310,6 +317,7 @@ const cel0 = (node && node.dataset.id) ? RS.scene.get(node.dataset.id) : null;
 let cel = RS.incroci ? RS.incroci.regista(cel0) : cel0;
 if (cel && cel.type === 'image') { const vic = this.oggettoVicino(e); if (vic) cel = vic; }
 const tocco = e.pointerType && e.pointerType !== 'mouse';
+if (tocco && (!cel || !this.sottile(cel, node))) { const f = this.sottileVicino(e, cel); if (f) cel = f; }
 if (cel && !(cel.locked && cel.type === 'image')) {
 if (tocco && cel.type === 'image' && !RS.scene.isSelected(cel.id)) {
 RS.scene.select([cel.id]);
@@ -350,6 +358,44 @@ return RS.incroci ? RS.incroci.regista(o) : o;
 }
 }
 return null;
+},
+sottile(o, nodo) {
+if (!o) return false;
+if (/^(mark|measure|skid|path|arrow|sketch|stopline|text)$/.test(o.type)) return true;
+if (o.type === 'band' && (+o.wid || 1) <= 0.8) return true;
+const n = nodo && nodo.closest ? nodo.closest('.el') : null;
+if (o.type === 'symbol' && n) { const r = n.getBoundingClientRect(); return Math.min(r.width, r.height) < 30; }
+return false;
+},
+sottileVicino(e, sotto) {
+const S = RS.scene, w = this.worldFromEvent(e), ppm = S.pxPerMeter() || 20, soglia = 18 / ppm;
+const seg = (p, a, b) => { const dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy;
+const t = l2 ? Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2)) : 0;
+return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy)); };
+const distanza = o => {
+if (Array.isArray(o.pts) && o.pts.length > 1) { let d = Infinity; for (let i = 1; i < o.pts.length; i++) d = Math.min(d, seg(w, o.pts[i - 1], o.pts[i])); return d; }
+const E = RS.elements;
+if (o.type === 'band' && E.arcoDi && E.arcoBand && E.arcoDi(o)) {
+const A = E.arcoBand(o), r = (o.rot || 0) * Math.PI / 180, c = Math.cos(r), s = Math.sin(r), n = Math.max(8, Math.ceil(A.S / 0.3));
+let d = Infinity, prima = null;
+for (let i = 0; i <= n; i++) { const q = A.at(A.S * i / n), p = { x: o.x + q.x * c - q.y * s, y: o.y + q.x * s + q.y * c }; if (prima) d = Math.min(d, seg(w, prima, p)); prima = p; }
+return d;
+}
+if (o.len != null && o.x != null) {
+const r = (o.rot || 0) * Math.PI / 180, ux = Math.cos(r) * o.len / 2, uy = Math.sin(r) * o.len / 2;
+return seg(w, { x: o.x - ux, y: o.y - uy }, { x: o.x + ux, y: o.y + uy });
+}
+return o.x != null ? Math.hypot(w.x - o.x, w.y - o.y) : Infinity;
+};
+let migliore = null, dm = Infinity;
+S.elements.forEach(o => {
+if (!o || o === sotto || o.type === 'image' || o.locked) return;
+const n = S.svg.querySelector('.el[data-id="' + o.id + '"]');
+if (!n || !n.getBoundingClientRect().width || !this.sottile(o, n)) return;
+const d = distanza(o);
+if (d < soglia && d < dm) { dm = d; migliore = o; }
+});
+return migliore ? (RS.incroci ? RS.incroci.regista(migliore) : migliore) : null;
 },
 applicaPizzico() {
 const P = this._pinch, T = this._touches; if (!P || !T) return;

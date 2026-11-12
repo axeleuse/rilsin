@@ -2613,7 +2613,7 @@ return { w: e.size || 0.6, h: e.size || 0.6 };
 };
 RS.elements.FASI = FASI; RS.elements.DANNI = DANNI;
 RS.elements.miniaturaSvg = miniaturaSvg;
-RS.elements.arcoDi = arcoDi; RS.elements.impostaArco = impostaArco; RS.elements.CURVABILI = CURVABILI;
+RS.elements.arcoDi = arcoDi; RS.elements.arcoBand = arcoBand; RS.elements.impostaArco = impostaArco; RS.elements.CURVABILI = CURVABILI;
 RS.elements.sezione = sezione; RS.elements.margini = margini; RS.elements.agganciaCorsia = agganciaCorsia; RS.elements.geoRampa = geoRampa; RS.elements.barrieraCentrale = barrieraCentrale; RS.elements.avviaSezione = avviaSezione; RS.elements.aggiornaSezione = aggiornaSezione;
 RS.elements.latiMarc = latiMarc; RS.elements.impostaMarc = impostaMarc; RS.elements.etichettaVia = etichettaVia;
 RS.elements.SEZIONE_K = SEZIONE_K; RS.elements.geometriaRaccordo = geometriaRaccordo; RS.elements.strisciaRaccordo = strisciaRaccordo; RS.elements.puntiRaccordo = puntiRaccordo;
