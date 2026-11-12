@@ -1152,6 +1152,11 @@ return best;
 function seguaci(orig) {
 const S = RS.scene, ids = new Set(orig.map(o => o.id)), out = [];
 orig.forEach(o => {
+const legato = o.type === 'symbol' ? S.elements.find(e => e.type === 'surveypt' && e.diSimbolo === o.id)
+: o.type === 'surveypt' && o.diSimbolo ? S.get(o.diSimbolo) : null;
+if (legato && !ids.has(legato.id) && !legato.locked) { ids.add(legato.id); out.push(snapshotEl(legato)); }
+});
+orig.forEach(o => {
 if (o.type !== 'vehicle') return;
 S.elements.forEach(e => {
 if (ids.has(e.id) || e.locked) return;

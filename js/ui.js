@@ -2633,6 +2633,7 @@ this.renderPunti();
 },
 renderPunti() {
 const wrap = el('puntiWrap'); if (!wrap || !RS.verifica) return;
+numeraPuntiUtili();
 const att = document.activeElement;
 const fk = this._rpFocus || (att && wrap.contains(att) && att.dataset ? att.dataset.fk : null);
 this._rpFocus = null;
@@ -2757,6 +2758,7 @@ return via.length;
 prepareMeasures(silenzioso) {
 const S = RS.scene;
 if (!S.elements.some(e => e.letter)) { this.toast('Aggiungi prima almeno un caposaldo'); return -1; }
+numeraPuntiUtili();
 S.misure = S.misure || [];
 const mb0 = S.meta.base || (S.meta.base = {}), caps = S.elements.filter(e => e.letter).sort((a, b) => String(a.letter).localeCompare(String(b.letter)));
 if (caps.length >= 2) {
@@ -4580,6 +4582,28 @@ function polyLen(e) { let d = 0; for (let i=1;i<e.pts.length;i++) d += Math.hypo
 function dist(a, b) { return Math.hypot(b.x-a.x, b.y-a.y); }
 function round2(v) { return Math.round(v*100)/100; }
 function nextSurveyN() { let m = 0; RS.scene.elements.forEach(e => { if (e.type === 'surveypt' && e.n > m) m = e.n; }); return m + 1; }
+const PUNTI_UTILI = new Set(['impact', 'investimento', 'quiete', 'blob', 'macchia_c', 'macchia_r', 'terriccio', 'debris', 'object',
+'casco', 'targa', 'biciterra', 'cadavere', 'persona', 'pedone', 'animale', 'hole']);
+function numeraPuntiUtili() {
+const S = RS.scene, els = S.elements;
+let cambi = 0;
+const verso = T => new RegExp('(?:→|->)\\s*' + T + '\\b');
+const conMisure = T => (S.misure || []).some(m => verso(T).test(m.descr || '') && m.val !== '' && m.val != null) ||
+els.some(q => q.type === 'measure' && new RegExp('(?:→|->)\\s*' + T + '\\b|^' + T + '\\s*\\(ordinata').test(q.note || ''));
+els.filter(e => e.type === 'surveypt' && e.diSimbolo && !S.get(e.diSimbolo) && !conMisure('P' + e.n)).forEach(e => {
+const T = 'P' + e.n;
+if (S.misure) S.misure = S.misure.filter(m => !(verso(T).test(m.descr || '') && (m.val === '' || m.val == null)));
+S.remove([e.id]); cambi++;
+});
+const legati = new Set(S.elements.filter(e => e.type === 'surveypt' && e.diSimbolo).map(e => e.diSimbolo));
+S.elements.filter(e => e.type === 'symbol' && PUNTI_UTILI.has(e.sym) && !e.inc && e.x != null && !legati.has(e.id)).forEach(e => {
+const d = String(e.nome || ((RS.catalog.byId && RS.catalog.byId(e.catId)) || {}).nome || 'punto').toLowerCase();
+S.add({ type: 'surveypt', x: round2(e.x), y: round2(e.y), n: nextSurveyN(), descr: d, size: 0.7, diSimbolo: e.id }, false);
+cambi++;
+});
+if (cambi) { S.render(); S.snapshot(); }
+return cambi;
+}
 function triangulate(A, B, dA, dB, sideRight) {
 const dx = B.x-A.x, dy = B.y-A.y, d = Math.hypot(dx, dy);
 if (d === 0 || d > dA+dB || d < Math.abs(dA-dB)) return null;
@@ -4611,7 +4635,10 @@ const base = /\(base\)/i.test(k[4]) || (!n && caps.indexOf(L) >= 0 && coppiaBase
 let descrizione;
 if (base) descrizione = 'base: distanza fra i capisaldi ' + da + ' e ' + a;
 else if (!n && caps.indexOf(L) >= 0) descrizione = 'dal caposaldo ' + da + ' al caposaldo aggiunto ' + a;
-else if (L === 'P' && n && els.some(e => e.type === 'surveypt' && String(e.n) === n)) descrizione = 'dal caposaldo ' + da + ' al punto di rilievo ' + a;
+else if (L === 'P' && n && els.some(e => e.type === 'surveypt' && String(e.n) === n)) {
+const sp = els.find(e => e.type === 'surveypt' && String(e.n) === n);
+descrizione = 'dal caposaldo ' + da + ' al punto di rilievo ' + a + (sp && sp.descr ? ' (' + sp.descr + ')' : '');
+}
 else if (n && els.some(e => e.type === 'vehicle' && String(e.label || '').toUpperCase() === L)) descrizione = 'dal caposaldo ' + da + ' al punto ' + n + ' del veicolo ' + L;
 else descrizione = 'dal caposaldo ' + da + ' a ' + a;
 return { da, a, base, nome: da + ' → ' + a, descr: descrizione };

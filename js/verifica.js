@@ -213,7 +213,11 @@ function ricalcolaPunto(T) {
 const S = RS.scene, p = puntiRilevati().find(x => x.T === T); if (!p) return false;
 const pos = posizioneDa(p); if (!pos) return false;
 const P = pos.P, r2 = v => Math.round(v * 100) / 100;
-if (p.el) { p.el.x = r2(P.x); p.el.y = r2(P.y); }
+if (p.el) {
+p.el.x = r2(P.x); p.el.y = r2(P.y);
+const sim = p.el.type === 'surveypt' && p.el.diSimbolo ? S.get(p.el.diSimbolo) : null;
+if (sim && !sim.locked) { sim.x = p.el.x; sim.y = p.el.y; }
+}
 p.dist.forEach(d => { if (d.q && d.q.pts && d.q.pts[1] && d.q.pts[1].aid == null) d.q.pts[1] = { x: P.x, y: P.y }; });
 if (pos.F) {
 if (p.asc.q.pts) p.asc.q.pts = [{ x: pos.A.x, y: pos.A.y }, { x: pos.F.x, y: pos.F.y }];
