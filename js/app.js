@@ -1,10 +1,13 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 276;
+RS.BUILD = 277;
 RS.DATA_BUILD = '2026-11-12';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 277, data: '2026-11-13', voci: [
+'Telefono: quando si apre la tastiera (la lettera di un punto fisso, un nome, una misura) la barra in basso (Oggetti, Proprietà, Annulla…) e la riga di stato si tolgono, e in alto restano solo le icone, intere: prima con lo schermo accorciato i tasti si stringevano e i nomi si tagliavano. Chiusa la tastiera torna tutto com\'era.'
+] },
 { build: 276, data: '2026-11-13', voci: [
 'Cambiando la base, le misure guidate partono dai capisaldi scelti: le misure ancora da prendere preparate per la base di prima si tolgono e si rifanno (restano quelle già misurate e le distanze di controllo aggiunte con «＋ da…»). Il caposaldo che esce dalla base diventa un caposaldo aggiunto e si misura per primo.',
 'Misure guidate: una distanza fra due capisaldi non si chiede più due volte (prima «X→Y» e poi «Y→X»). Vale nei due versi, e conta anche la base di prima: cambiando la base, il caposaldo che ne esce non si rimisura dall\'altro caposaldo della vecchia base.',
@@ -378,6 +381,19 @@ RS.scene.select(RS.scene.elements.filter(x => !(x.locked && x.type === 'image') 
 const zoomLibero = ev => !!(ev.target && ev.target.closest && ev.target.closest('.pv-grande, .cv-foto'));
 ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, ev => { if (!zoomLibero(ev)) ev.preventDefault(); }, { passive: false }));
 document.addEventListener('touchmove', ev => { if (ev.touches && ev.touches.length > 1 && !zoomLibero(ev)) ev.preventDefault(); }, { passive: false });
+const scrive = n => !!n && (n.tagName === 'TEXTAREA' || n.isContentEditable ||
+(n.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|reset|range|color|file|image)$/i.test(n.type || '')));
+const tocco = () => window.matchMedia && matchMedia('(pointer: coarse)').matches;
+document.addEventListener('focusin', ev => { if (scrive(ev.target) && tocco()) document.body.classList.add('tastiera'); });
+document.addEventListener('focusout', () => setTimeout(() => { if (!scrive(document.activeElement)) document.body.classList.remove('tastiera'); }, 80));
+let altezzaPiena = window.innerHeight;
+window.addEventListener('orientationchange', () => { altezzaPiena = 0; });
+window.addEventListener('resize', () => {
+const h = window.innerHeight;
+if (!scrive(document.activeElement)) { altezzaPiena = Math.max(altezzaPiena, h); return; }
+if (h > altezzaPiena * 0.85) { document.body.classList.remove('tastiera'); altezzaPiena = Math.max(altezzaPiena, h); }
+else if (tocco() && h < altezzaPiena * 0.75) document.body.classList.add('tastiera');
+});
 const salvaSubito = () => { try { if (RS.ui._ready) RS.storage.autosaveNow(); } catch (e) {} };
 document.addEventListener('visibilitychange', () => { if (document.hidden) salvaSubito(); });
 window.addEventListener('pagehide', salvaSubito);
