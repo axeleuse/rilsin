@@ -3823,6 +3823,11 @@ c += chkFld('Frecce di corsia', 'frecce', !!e.frecce);
 c += `<div class="mis-hint">${FRC.avanti} verso la fine del tratto, ${FRC.indietro} verso l'inizio (si guida a destra). La carreggiata si ricalcola dalle corsie; il marciapiede sta fuori. La corsia di emergenza (autostrade, di solito 3 m) prende il posto della banchina a destra di ogni senso di marcia: 0 = nessuna.</div>`;
 h += section('Corsie e sezione', c, true, { riass: s.cA + ' + ' + s.cB + ' corsie' });
 h += section('Marciapiedi', marciapiediHtml(e), true, { riass: riassMarc(e) });
+const LATI_GR = [['', 'Nessuno'], ['dx', 'A destra'], ['sx', 'A sinistra'], ['both', 'Su entrambi i lati']];
+let gr = selFld('Guard-rail', 'guard', e.guard || '', LATI_GR);
+if (e.guard) gr += `<div class="prow">${numFld('Da (m)', 'guardDa', round(+e.guardDa || 0), 0.5, 0)}${numFld('A (m)', 'guardA', round(e.guardA != null && e.guardA !== '' ? Math.min(+e.guardA, e.len) : e.len), 0.5, 0)}</div>` +
+`<div class="mis-hint">Destra e sinistra guardando verso la fine del tratto (${FRC.avanti}). «Da» e «A» sono le distanze dall'inizio del tratto: per un guard-rail lungo tutta la strada lascia 0 e la lunghezza. Sta fuori dalla banchina e dal marciapiede.</div>`;
+h += section('Guard-rail', gr, !!e.guard, { riass: (LATI_GR.find(x => x[0] === (e.guard || '')) || LATI_GR[0])[1].toLowerCase() });
 h += selFld('Striscia centrale', 'line', e.line || 'disc',
 [['disc','Tratteggiata'],['cont','Continua'],['double','Doppia continua'],['ddisc','Doppia tratteggiata'],['mixed','Continua + tratteg.'],['none','Nessuna']]);
 h += selFld('Strisce di margine', 'edge', e.edge || 'cont',
@@ -4078,6 +4083,7 @@ RS.scene.elements.forEach(x => { if (x !== e && x.type === 'vehicle' && x.label 
 RS.scene.render();
 if (commit) { RS.scene.snapshot(); RS.ui.renderLegend(); }
 if (commit && k === 'fase') RS.ui.renderProps();
+if (commit && k === 'guard') RS.ui.renderProps();
 };
 if (inp.type === 'number') {
 inp.addEventListener('change', () => handler(true));
@@ -4407,13 +4413,38 @@ s += `<line x1="${cx}" y1="${cy}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" st
 });
 return `<svg viewBox="0 0 46 34">${ICON_BG}${s}</svg>`;
 }
+let svgMisura = null;
+function riquadroVero(node) {
+try {
+const NSV = 'http://www.w3.org/2000/svg';
+if (!svgMisura) {
+svgMisura = document.createElementNS(NSV, 'svg'); svgMisura.setAttribute('width', '10'); svgMisura.setAttribute('height', '10');
+svgMisura.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;pointer-events:none';
+document.body.appendChild(svgMisura);
+}
+const w = document.createElementNS(NSV, 'g'); w.appendChild(node); svgMisura.appendChild(w);
+const base = w.getCTM().inverse();
+let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+w.querySelectorAll('path,rect,circle,ellipse,line,polygon,polyline').forEach(el => {
+if (el.closest('defs,mask,clipPath,pattern,marker')) return;
+const b = el.getBBox(); if (!(b.width > 1e-6 || b.height > 1e-6)) return;
+const m = base.multiply(el.getCTM());
+[[b.x, b.y], [b.x + b.width, b.y], [b.x, b.y + b.height], [b.x + b.width, b.y + b.height]].forEach(([x, y]) => {
+const px = m.a * x + m.c * y + m.e, py = m.b * x + m.d * y + m.f;
+x0 = Math.min(x0, px); y0 = Math.min(y0, py); x1 = Math.max(x1, px); y1 = Math.max(y1, py);
+});
+});
+svgMisura.removeChild(w);
+return x1 > x0 && y1 > y0 ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null;
+} catch (e) { return null; }
+}
 function makeIcon(type, def) {
 if (type !== 'vehicle' && def.icona) return `<svg viewBox="0 0 46 34">${ICON_BG}${def.icona}</svg>`;
 if (type !== 'vehicle' && def.tool === 'junction') return junctionIcon(def.kind);
 if (type !== 'vehicle' && STATIC_ICONS[def.tool]) return STATIC_ICONS[def.tool];
 let e;
 if (type === 'vehicle') e = { type:'vehicle', kind:def.kind, catId:def.id, x:0,y:0,rot:0, len:def.len, wid:def.wid, color:def.color, evidenzia:false };
-else if (def.tool === 'symbol') e = { type:'symbol', sym:def.sym, x:0,y:0,rot:0, size:def.size||0.8, color:def.color, letter:def.letter, text:def.text, dir:def.dir, cod:def.cod, posa:def.posa };
+else if (def.tool === 'symbol') e = { type:'symbol', sym:def.sym, catId:def.id, x:0,y:0,rot:0, size:def.size||0.8, color:def.color, letter:def.letter, text:def.text, dir:def.dir, cod:def.cod, posa:def.posa };
 else {
 switch (def.tool) {
 case 'road': e = def.sez
@@ -4442,16 +4473,18 @@ case 'north': e = { type:'north', x:0,y:0,rot:0, size:6 }; break;
 default: e = { type:'symbol', sym:'object', x:0,y:0,rot:0,size:1,color:def.color };
 }
 }
+if (e.type === 'symbol' && (e.sym === 'persona' || e.sym === 'cadavere')) e.rot = 90;
 const node = RS.elements.render(e);
 if (!node) return '';
-const b = Object.assign({}, RS.elements.bounds(e) || { x:-2,y:-2,w:4,h:4 });
+let b = Object.assign({}, RS.elements.bounds(e) || { x:-2,y:-2,w:4,h:4 });
 if (e.type === 'road' && e.marc) { b.y -= e.marc; b.h += e.marc * 2; }
 if (e.type === 'symbol' && e.letter) {
 const sz = e.size || 0.5, fs = sz * 1.3, x1 = sz * 0.9 + String(e.letter).length * fs * 0.7, y0 = -sz * 0.7 - fs * 0.85;
 const nx1 = Math.max(b.x + b.w, x1), ny0 = Math.min(b.y, y0);
 b.w = nx1 - b.x; b.h = b.y + b.h - ny0; b.y = ny0;
 }
-const m = Math.max(b.w, b.h) * 0.12 + 0.2;
+let m = Math.max(b.w, b.h) * 0.12 + 0.2;
+if (e.type === 'symbol' && !e.letter) { const v = riquadroVero(node); if (v) { b = v; m = Math.max(b.w, b.h) * 0.1; } }
 const vx = b.x - m, vy = b.y - m, vw = b.w + 2*m, vh = b.h + 2*m;
 const vb = `${vx.toFixed(2)} ${vy.toFixed(2)} ${vw.toFixed(2)} ${vh.toFixed(2)}`;
 const defs = `<defs>${RS.scene.defs.innerHTML}</defs>`;

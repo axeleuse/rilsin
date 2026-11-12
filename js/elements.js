@@ -819,23 +819,39 @@ break;
 }
 case 'cadavere': {
 const H = e.size || 1.6;
-mk('circle', { cx: 0, cy: -H*0.40, r: H*0.12, fill: col }, g);
-mk('rect', { x: -H*0.13, y: -H*0.28, width: H*0.26, height: H*0.42, rx: H*0.10, fill: col }, g);
-mk('path', { d: `M${-H*0.10} ${-H*0.16} L${-H*0.36} ${H*0.04}`, stroke: col, 'stroke-width': H*0.09, 'stroke-linecap': 'round' }, g);
-mk('path', { d: `M${H*0.10} ${-H*0.16} L${H*0.36} ${H*0.04}`, stroke: col, 'stroke-width': H*0.09, 'stroke-linecap': 'round' }, g);
-mk('path', { d: `M${-H*0.07} ${H*0.14} L${-H*0.13} ${H*0.46}`, stroke: col, 'stroke-width': H*0.10, 'stroke-linecap': 'round' }, g);
-mk('path', { d: `M${H*0.07} ${H*0.14} L${H*0.13} ${H*0.46}`, stroke: col, 'stroke-width': H*0.10, 'stroke-linecap': 'round' }, g);
+const parti = (c, extra) => {
+mk('circle', { cx: 0, cy: -H*0.40, r: H*0.12 + extra/2, fill: c }, g);
+mk('rect', { x: -H*0.13 - extra/2, y: -H*0.28 - extra/2, width: H*0.26 + extra, height: H*0.42 + extra, rx: H*0.10, fill: c }, g);
+[[-0.10, -0.16, -0.36, 0.04, 0.09], [0.10, -0.16, 0.36, 0.04, 0.09], [-0.07, 0.14, -0.13, 0.46, 0.10], [0.07, 0.14, 0.13, 0.46, 0.10]].forEach(([x1, y1, x2, y2, w]) =>
+mk('path', { d: `M${H*x1} ${H*y1} L${H*x2} ${H*y2}`, stroke: c, 'stroke-width': H*w + extra, 'stroke-linecap': 'round' }, g));
+};
+parti(col, H * 0.07);
+parti('#f4f1ea', 0);
 break;
 }
 case 'persona': drawPersona(g, e); break;
 case 'blob':
 mk('path', { d: blobPath(h), fill: col, opacity: 0.85 }, g); break;
 case 'debris':
-for (let i = 0; i < 7; i++) { const a = i*1.1, rr = h*(0.3+0.6*((i*7)%5)/5);
-mk('circle', { cx: Math.cos(a)*rr, cy: Math.sin(a)*rr, r: h*0.12, fill: col }, g); }
+for (let i = 0; i < 9; i++) {
+const a = i * 1.1, rr = h * (0.15 + 0.75 * ((i * 7) % 5) / 5), cx = Math.cos(a) * rr, cy = Math.sin(a) * rr, r = h * (0.11 + 0.05 * (i % 3)), t = i * 47;
+const pt = (ang, d) => `${(cx + Math.cos((ang + t) * Math.PI / 180) * r * d).toFixed(3)} ${(cy + Math.sin((ang + t) * Math.PI / 180) * r * d).toFixed(3)}`;
+mk('path', { d: `M${pt(0, 1.2)} L${pt(110, 0.7)} L${pt(200, 1)} L${pt(290, 0.6)} Z`, fill: col, stroke: 'rgba(0,0,0,.35)', 'stroke-width': h * 0.02 }, g);
+}
 break;
 case 'object':
-mk('rect', { x: -h*0.5, y: -h*0.5, width: s*0.5, height: s*0.5, fill: col, transform:'rotate(20)' }, g); break;
+if (e.catId === 'partescocca') {
+const T = (x, y) => `${(x * h).toFixed(3)} ${(y * h).toFixed(3)}`;
+mk('path', { d: `M${T(-0.95, -0.25)} Q${T(-0.6, -0.75)} ${T(0.1, -0.7)} L${T(0.9, -0.42)} L${T(0.78, 0.1)} L${T(0.95, 0.42)} L${T(0.2, 0.62)} L${T(-0.15, 0.4)} L${T(-0.7, 0.55)} Z`,
+fill: col, stroke: '#2a2a2a', 'stroke-width': h * 0.05, 'stroke-linejoin': 'round' }, g);
+mk('path', { d: `M${T(-0.75, -0.3)} Q${T(-0.45, -0.6)} ${T(0.1, -0.55)} L${T(0.75, -0.32)}`, fill: 'none', stroke: 'rgba(255,255,255,.55)', 'stroke-width': h * 0.1, 'stroke-linecap': 'round' }, g);
+mk('path', { d: `M${T(-0.6, 0.38)} L${T(-0.15, 0.25)} L${T(0.18, 0.45)} L${T(0.78, 0.3)}`, fill: 'none', stroke: '#111', 'stroke-width': h * 0.08, 'stroke-linecap': 'round' }, g);
+} else {
+const q = mk('g', { transform: 'rotate(20)' }, g);
+mk('rect', { x: -h * 0.7, y: -h * 0.55, width: h * 1.4, height: h * 1.1, rx: h * 0.06, fill: col, stroke: '#222', 'stroke-width': h * 0.05 }, q);
+mk('path', { d: `M${-h * 0.7} 0 L${h * 0.7} 0 M0 ${-h * 0.55} L0 ${h * 0.55}`, stroke: 'rgba(255,255,255,.6)', 'stroke-width': h * 0.1 }, q);
+}
+break;
 case 'hole':
 mk('ellipse', { cx: 0, cy: 0, rx: h, ry: h*0.7, fill: col, stroke:'#000','stroke-width':0.03 }, g);
 mk('ellipse', { cx: 0, cy: 0, rx: h*0.55, ry: h*0.4, fill: '#000', opacity:0.5 }, g);
@@ -956,11 +972,17 @@ case 'quiete':
 mk('circle', { cx: 0, cy: 0, r: h, fill: 'none', stroke: col, 'stroke-width': 0.08, 'stroke-dasharray': '0.3 0.25' }, g);
 mk('circle', { cx: 0, cy: 0, r: h*0.16, fill: col }, g);
 break;
-case 'animale':
-mk('ellipse', { cx: 0, cy: 0, rx: h, ry: h*0.5, fill: col }, g);
-mk('circle', { cx: h*0.85, cy: -h*0.1, r: h*0.28, fill: col }, g);
-[-0.5,-0.1,0.3,0.7].forEach(fx => mk('line', { x1: h*fx, y1: h*0.4, x2: h*fx, y2: h*0.85, stroke: col, 'stroke-width': 0.08 }, g));
+case 'animale': {
+const T = (x, y) => `${(x * h).toFixed(3)} ${(y * h).toFixed(3)}`, bordo = 'rgba(0,0,0,.45)', sw = h * 0.04;
+[[0.38, -1], [0.38, 1], [-0.42, -1], [-0.42, 1]].forEach(([x, sg]) =>
+mk('path', { d: `M${T(x, sg * 0.18)} L${T(x + 0.1, sg * 0.5)}`, stroke: col, 'stroke-width': h * 0.16, 'stroke-linecap': 'round' }, g));
+mk('path', { d: `M${T(-0.62, 0)} Q${T(-0.9, -0.05)} ${T(-1, 0.22)}`, fill: 'none', stroke: col, 'stroke-width': h * 0.08, 'stroke-linecap': 'round' }, g);
+mk('ellipse', { cx: -h * 0.02, cy: 0, rx: h * 0.62, ry: h * 0.32, fill: col, stroke: bordo, 'stroke-width': sw }, g);
+mk('path', { d: `M${T(0.62, -0.12)} L${T(0.66, -0.34)} L${T(0.78, -0.16)} Z M${T(0.62, 0.12)} L${T(0.66, 0.34)} L${T(0.78, 0.16)} Z`, fill: col, stroke: bordo, 'stroke-width': sw }, g);
+mk('ellipse', { cx: h * 0.74, cy: 0, rx: h * 0.2, ry: h * 0.17, fill: col, stroke: bordo, 'stroke-width': sw }, g);
+mk('ellipse', { cx: h * 0.95, cy: 0, rx: h * 0.08, ry: h * 0.09, fill: col, stroke: bordo, 'stroke-width': sw }, g);
 break;
+}
 case 'freccia_terra':
 { const l = e.size || 2, w2 = l*0.16, dir = e.dir || 'dritto';
 const head = (tx, ty, ang) => {
@@ -1339,7 +1361,7 @@ const cand = [0, -0.3, 0.3, -0.55, 0.55, -0.75, 0.75].filter(k => Math.abs(k * h
 const pc = postoVia(e, e.nomeVia, cand, daLoc);
 etichettaVia(g, e.nomeVia, pc.p, 0, e.rot || 0);
 };
-if (s) { drawRoadCorsie(g, e, s, marks); g.appendChild(marks); via(); return; }
+if (s) { drawRoadCorsie(g, e, s, marks); g.appendChild(marks); guardRailStrada(g, e); via(); return; }
 const es = e.edge || 'cont';
 if (es !== 'none') {
 const ew = edgeWidth(es), ed = edgeDash(es), yo = 0.12 + (ew - 0.1) / 2;
@@ -1353,7 +1375,20 @@ const y = -hw + (W * i / lanes);
 const isCenter = (i === Math.round(lanes / 2));
 laneLine(marks, -hl, hl, y, isCenter ? style : 'disc');
 }
-g.appendChild(marks); via();
+g.appendChild(marks); guardRailStrada(g, e); via();
+}
+function guardRailStrada(g, e) {
+const lati = { dx: [1], sx: [-1], both: [-1, 1] }[e.guard]; if (!lati) return;
+const L = +e.len || 0, hl = L / 2, hw = (+e.wid || 0) / 2, lm = latiMarc(e);
+const da = Math.min(L, Math.max(0, +e.guardDa || 0));
+const a = e.guardA != null && e.guardA !== '' && !isNaN(+e.guardA) ? Math.min(L, Math.max(da, +e.guardA)) : L;
+if (a - da < 0.2) return;
+const x1 = -hl + da, x2 = -hl + a;
+lati.forEach(sg => {
+const y = +(sg * (hw + (sg > 0 ? lm.dx : lm.sx) + 0.45)).toFixed(3);
+mk('line', { x1, y1: y, x2, y2: y, stroke: '#555', 'stroke-width': 0.14 }, g);
+mk('line', { x1, y1: y, x2, y2: y, stroke: '#555', 'stroke-width': 0.4, 'stroke-dasharray': '0.07 0.93' }, g);
+});
 }
 function geometriaRaccordo(e) {
 const a = (+e.ang || 90) * Math.PI / 180, th = Math.abs(a), sg = a >= 0 ? 1 : -1;

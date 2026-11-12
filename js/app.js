@@ -8,6 +8,9 @@ RS.NOVITA = [
 { build: 274, data: '2026-11-12', voci: [
 'Protezione dei dati: i dati delle persone (conducenti, proprietari, passeggeri, pedoni, testimoni, patenti, assicurazione, firme e foto dei documenti) restano sul dispositivo per 30 giorni dall\'ultima modifica della tavola, poi si cancellano da soli da ogni copia: bozza, versioni di sicurezza, tavole salvate nell\'app, bozze messe da parte, versioni dei file e archivio delle foto; nell\'app Android anche le foto dei documenti nella galleria (RILSIN/Documenti). Restano disegno, misure, foto della scena e dati tecnici dei veicoli.',
 'Qualche giorno prima l\'app avvisa con l\'elenco delle tavole: «Tienili altri 30 giorni» oppure salvale come file. Dopo l\'aggiornamento ogni tavola ha comunque 30 giorni.',
+'Guard-rail a scelta sui tratti di strada: nelle proprietà, sezione «Guard-rail», a destra, a sinistra o su entrambi i lati (guardando verso la fine del tratto), anche solo fra due distanze dall\'inizio («Da» e «A»). Sta fuori dalla banchina e dal marciapiede.',
+'Curve: il guard-rail si mette anche «a destra» o «a sinistra» (oltre che sul lato esterno o interno della curva) e anche solo su un pezzo del tracciato, da… fino a… metri.',
+'Scheda Sinistro rivista: icone più grandi e leggibili in tutta la tavolozza (si inquadrano sul disegno vero); persona a terra e cadavere sdraiati nell\'icona; il cadavere è la sagoma del corpo (contorno scuro, interno chiaro) e non più una figura nera uguale alla persona; «Parte di veicolo» è un pezzo di carrozzeria e non più uguale a «Oggetto disperso» (ora una scatola); detriti a schegge spigolose; animale più riconoscibile.',
 'Nuova voce «🧹 Dati personali sul dispositivo» (menu Applicazione): togli subito i dati personali dalla tavola aperta e dalle sue copie, oppure pulisci tutto il dispositivo. I file salvati fuori dall\'app e l\'archivio condiviso dell\'ufficio non si toccano.'
 ] },
 { build: 273, data: '2026-11-12', voci: [

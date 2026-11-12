@@ -10,7 +10,7 @@ const SEZ = { cA: 1, cB: 1, corsia: 3.5, spart: 0, banch: 0.5, marc: 0 };
 const sezione = e => Object.assign({}, SEZ, e.sez || {});
 const margini = s => RS.elements.margini ? RS.elements.margini(s) : { su: +s.banch || 0, giu: +s.banch || 0 };
 const largh = s => { const m = margini(s); return r2((s.cA + s.cB) * s.corsia + (s.cA && s.cB ? (+s.spart || 0) : 0) + m.su + m.giu); };
-const GUARD = [['', 'nessuno'], ['est', "sul lato esterno"], ['int', "sul lato interno"], ['both', 'su entrambi i lati']];
+const GUARD = [['', 'nessuno'], ['dx', 'a destra'], ['sx', 'a sinistra'], ['est', "sul lato esterno della curva"], ['int', "sul lato interno della curva"], ['both', 'su entrambi i lati']];
 const raggioDa = (c, f) => (c > 0 && f > 0) ? c * c / (8 * f) + f / 2 : 0;
 const cache = new Map();
 function geo(e) {
@@ -36,7 +36,7 @@ for (let i = 1; i <= n; i++) { x += Math.cos(h) * L / n; y += Math.sin(h) * L / 
 }
 });
 const est = archi.length ? -archi[0].sg : -1;
-const lati = { est: [est], int: [-est], both: [-1, 1] }[e.guard] || [];
+const lati = { dx: [1], sx: [-1], est: [est], int: [-est], both: [-1, 1] }[e.guard] || [];
 const fuori = hw + marc + (lati.length ? 0.8 : 0.2);
 let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
 [-fuori, fuori].forEach(o => P.forEach(p => {
@@ -51,6 +51,19 @@ const g = { P, archi, s, wid, hw, marc, mDx: lm.dx, mSx: lm.sx, lati, w: x1 - x0
 if (cache.size > 60) cache.clear();
 cache.set(k, g);
 return g;
+}
+function parte(P, da, a) {
+const out = [], lerp = (p, q, t) => ({ x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t, h: p.h + (q.h - p.h) * t });
+if (da <= 0) out.push(P[0]);
+let cum = 0;
+for (let i = 1; i < P.length; i++) {
+const p = P[i - 1], q = P[i], l = Math.hypot(q.x - p.x, q.y - p.y), c0 = cum; cum += l;
+if (l <= 0) continue;
+if (c0 < da && cum > da) out.push(lerp(p, q, (da - c0) / l));
+if (cum > a) { if (c0 < a) out.push(lerp(p, q, (a - c0) / l)); break; }
+if (cum >= da) out.push(q);
+}
+return out;
 }
 const off = (P, o) => P.map(p => ({ x: p.x - Math.sin(p.h) * o, y: p.y + Math.cos(p.h) * o }));
 const linD = Q => 'M' + Q.map(p => r3(p.x) + ' ' + r3(p.y)).join(' L');
@@ -124,8 +137,10 @@ if (spart > 1.2) mk('path', { d: fascia(P, yC + 0.3, yLA - 0.3), fill: '#a9bf8e'
 if (es !== 'none') { linea(marks, P, yC - 0.17, 'cont'); linea(marks, P, yLA + 0.17, 'cont'); }
 } else linea(marks, P, yC, e.line || 'disc');
 }
-G.lati.forEach(sg => {
-const d = linD(off(P, sg * (hw + (sg > 0 ? G.mDx : G.mSx) + 0.45)));
+const gDa = Math.max(0, +e.guardDa || 0), gA = e.guardA != null && e.guardA !== '' && !isNaN(+e.guardA) ? Math.min(G.svil, +e.guardA) : G.svil;
+const PG = gDa > 0 || gA < G.svil ? parte(P, gDa, gA) : P;
+if (PG.length > 1) G.lati.forEach(sg => {
+const d = linD(off(PG, sg * (hw + (sg > 0 ? G.mDx : G.mSx) + 0.45)));
 mk('path', { d, fill: 'none', stroke: '#555', 'stroke-width': 0.14 }, g);
 mk('path', { d, fill: 'none', stroke: '#555', 'stroke-width': 0.4, 'stroke-dasharray': '0.07 0.93' }, g);
 });
@@ -223,6 +238,7 @@ return `<div class="inc-pan">
           <label class="inc-wide">Striscia centrale${selIn('data-cp="line"', e.line || 'disc', [['disc', 'tratteggiata'], ['cont', 'continua'], ['double', 'doppia continua'], ['mixed', 'continua e tratteggiata'], ['none', 'nessuna']])}</label>
           <label class="inc-wide">Strisce di margine${selIn('data-cp="edge"', e.edge || 'cont', [['cont', 'continue'], ['disc', 'tratteggiate'], ['wide', 'continue larghe'], ['none', 'nessuna']])}</label>
           <label class="inc-wide">Guard-rail${selIn('data-cp="guard"', e.guard || '', GUARD)}</label>
+          ${e.guard ? `<label>Guard-rail da (m)${numIn('data-cg="guardDa"', r2(+e.guardDa || 0), 0.5, 0)}</label><label>fino a (m)${numIn('data-cg="guardA"', r2(e.guardA != null && e.guardA !== '' ? Math.min(+e.guardA, G.svil) : G.svil), 0.5, 0)}</label>` : ''}
         </div>
       </div>
       <div class="inc-sez"><div class="inc-sez-t">Marciapiedi <span class="muted">· destra e sinistra guardando verso la fine del tracciato</span></div>
@@ -258,6 +274,10 @@ cambia(() => { e.sez = Object.assign({}, SEZ, e.sez, { [k]: (k === 'cA' || k ===
 root.querySelectorAll('[data-cmarc]').forEach(inp => inp.addEventListener('change', () => {
 const k = inp.dataset.cmarc, v = k === 'marcLati' ? inp.value : num(inp); if (k !== 'marcLati' && isNaN(v)) return;
 cambia(() => { e.sez = Object.assign({}, SEZ, e.sez); RS.elements.impostaMarc(e.sez, k, v); }, true);
+}));
+root.querySelectorAll('[data-cg]').forEach(inp => inp.addEventListener('change', () => {
+const k = inp.dataset.cg, v = num(inp); if (isNaN(v)) return;
+cambia(() => { if (k === 'guardA' && v >= geo(e).svil - 0.01) delete e.guardA; else e[k] = Math.max(0, v); }, false);
 }));
 root.querySelectorAll('[data-cp]').forEach(inp => inp.addEventListener('change', () => {
 const k = inp.dataset.cp;
