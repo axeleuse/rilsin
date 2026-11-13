@@ -31,6 +31,14 @@ RS.bn = !!opts.bn; RS.minSimbolo = minS; RS.minTesto = minT;
 try { s.render(true); if (opts.bn) stradeTecniche(s.gElements); if (minT) ingrandisciTesti(s, minT); contenuto = s.gElements.innerHTML; }
 finally { RS.bn = false; RS.minSimbolo = 0; RS.minTesto = 0; s.render(true); }
 } else if (haScalaGrafica) { s.render(true); contenuto = s.gElements.innerHTML; }
+if (opts.senzaNord) {
+const ids = s.elements.filter(e => e.type === 'north').map(e => String(e.id));
+if (ids.length) {
+const tmp = document.createElementNS(NS, 'g'); tmp.innerHTML = contenuto;
+tmp.querySelectorAll('[data-id]').forEach(n => { if (ids.indexOf(n.getAttribute('data-id')) >= 0) n.remove(); });
+contenuto = tmp.innerHTML;
+}
+}
 parts.push(`<g>${contenuto}</g>`);
 if (!opts.senzaCornice) parts.push(`<rect x="${bx+0.1}" y="${by+0.1}" width="${w-0.2}" height="${h-0.2}" fill="none" stroke="#222" stroke-width="0.08"/>`);
 parts.push('</svg>');
@@ -135,7 +143,7 @@ const old = s.scaleDenom; if (!s.fuoriScala) s.scaleDenom = D;
 let r;
 const aw = T.Aw / k, ah = T.Ah / k, cc = T.centro || { x: 0, y: 0 };
 const riquadro = s.fuoriScala ? null : { x: cc.x - aw / 2, y: cc.y - ah / 2, w: aw, h: ah };
-try { r = this.buildSvg({ footer: false, margin: 2, bn: !!opz.bn, senzaFiligrana: true, senzaCornice: true, riquadro }); }
+try { r = this.buildSvg({ footer: false, margin: 2, bn: !!opz.bn, senzaFiligrana: true, senzaCornice: true, riquadro, senzaNord: po.nord === false }); }
 finally { s.scaleDenom = old; ridisegnaSeScala(s); }
 const dw = r.w * k, dh = r.h * k, dx = T.ax + (T.Aw - dw) / 2, dy = T.ay + (T.Ah - dh) / 2;
 const { PW, PH, testa } = T;
@@ -152,7 +160,7 @@ out.push(`<rect width="${PW}" height="${PH}" fill="#ffffff"/>`);
 out.push(r.svg.replace('<svg ', `<svg x="${f(dx)}" y="${f(dy)}" width="${f(dw)}" height="${f(dh)}" `));
 if (s.elements.some(e => e.type === 'image' && e.fonte === 'Google Maps' && (!RS.layers || RS.layers.visible(e))))
 t(T.ax + 2, T.ay + T.Ah - 2, 2.2, 'Sfondo: immagini © Google (Google Maps)');
-const bozza = (po.bozza || (RS.verifica && !RS.verifica.chiuso()));
+const bozza = inBozza(po);
 if (bozza && !opz.senzaFiligrana) {
 const cx = T.ax + T.Aw / 2, cy = T.ay + T.Ah / 2, fs = Math.min(T.Aw, T.Ah) * 0.22;
 out.push(`<text x="${f(cx)}" y="${f(cy)}" font-size="${f(fs)}" font-weight="bold" fill="#c00" opacity="0.14" text-anchor="middle" dy="0.35em" letter-spacing="${f(fs * 0.12)}" transform="rotate(-32 ${f(cx)} ${f(cy)})">BOZZA</text>`);
@@ -395,13 +403,17 @@ if (v.fase && v.fase !== 'quiete' && RS.elements.siglaFase) { const sg = RS.elem
 sez.push({ t: 'Veicoli', r });
 }
 const altri = [];
-els.filter(e => e.type === 'surveypt').sort((a, b) => (a.n || 0) - (b.n || 0)).forEach(e => altri.push(V('P:' + e.n, 'P' + e.n + ' \u2014 ' + (e.descr || 'punto di rilievo'))));
+els.filter(e => e.type === 'surveypt').sort((a, b) => (a.n || 0) - (b.n || 0)).forEach(e => altri.push(V('P:' + e.n, cod(e) + ' \u2014 ' + (e.descr || 'punto di rilievo'))));
 const nomiTracce = {};
 els.filter(e => e.type === 'skid').forEach(e => { const n = e.stile === 'solco' ? 'solco / abrasione' : e.dashed ? 'scarrocciamento' : 'traccia di frenata'; nomiTracce[n] = 1; });
 Object.keys(nomiTracce).forEach(n => altri.push(V('tr:' + n, n)));
-const simboli = {};
-els.filter(e => e.type === 'symbol' && !e.letter && !e.inc && e.nome).forEach(e => { simboli[e.nome] = 1; });
-Object.keys(simboli).forEach(n => altri.push(V('sim:' + n, n.charAt(0).toLowerCase() + n.slice(1))));
+const simboli = {}, minuscolo = n => n.charAt(0).toLowerCase() + n.slice(1);
+const legati = new Set(els.filter(e => e.type === 'surveypt' && e.diSimbolo).map(e => e.diSimbolo));
+const conEtichetta = els.filter(e => e.type === 'symbol' && !e.letter && !e.inc && e.nome && !legati.has(e.id) && String(e.label || '').trim())
+.sort((a, b) => String(a.label).localeCompare(String(b.label), undefined, { numeric: true }));
+conEtichetta.forEach(e => altri.push(V('simL:' + String(e.label).trim() + ':' + e.nome, String(e.label).trim() + ' — ' + minuscolo(e.nome))));
+els.filter(e => e.type === 'symbol' && !e.letter && !e.inc && e.nome && !legati.has(e.id) && !String(e.label || '').trim()).forEach(e => { simboli[e.nome] = 1; });
+Object.keys(simboli).forEach(n => altri.push(V('sim:' + n, minuscolo(n))));
 if (els.some(e => e.type === 'measure')) altri.push(V('quote', 'quote in metri'));
 if (altri.length) sez.push({ t: 'Elementi rilevati', r: altri });
 if (grezza) return sez;
@@ -451,23 +463,24 @@ const o = Array.isArray(po && po.ordine) ? po.ordine.filter((k, i, a) => RIQUADR
 RIQUADRI.forEach(k => { if (o.indexOf(k) < 0) o.push(k); });
 return o;
 }
+function riquadriStampati(po) { return ordineRiquadri(po).filter(k => k !== 'firme' || po.firme !== false); }
 function aCapoMm(txt, w, size) {
 const max = Math.max(8, Math.floor(w / (size * 0.5))), righe = []; let cur = '';
 String(txt).split(/\s+/).forEach(p => { if ((cur + ' ' + p).trim().length > max && cur) { righe.push(cur); cur = p; } else cur = (cur + ' ' + p).trim(); });
 if (cur) righe.push(cur); return righe;
 }
-function inBozza(po) { return !!(po.bozza || (RS.verifica && !RS.verifica.chiuso())); }
+function inBozza(po) { return !po.senzaBozza && !!(po.bozza || (RS.verifica && !RS.verifica.chiuso())); }
 function righeDatiRilievo(po, meta, W) {
 const dati = [], viaT = viaSenzaComune(meta), comT = nomeComune(meta);
-if (viaT) dati.push(['Luogo', viaT]);
-if (comT) dati.push(['Comune', comT]);
+if (viaT && po.luogo !== false) dati.push(['Luogo', viaT]);
+if (comT && po.luogo !== false) dati.push(['Comune', comT]);
 if (po.data !== false) dati.push(['Data e ora', meta.data || new Date().toLocaleDateString('it-IT')]);
 if (po.numero !== false && meta.numero) dati.push(['Prot. n.', meta.numero]);
 if (po.operatore !== false && meta.operatore) dati.push(['Rilevatore', meta.operatore]);
 if (po.coordinate !== false && meta.coordinate) dati.push(['Coordinate', meta.coordinate]);
 if (po.condizioni && meta.condizioni) dati.push(['Condizioni', meta.condizioni]);
 if (po.condizioni && meta.luce) dati.push(['Luce', meta.luce]);
-dati.push(['Stato', inBozza(po) ? 'BOZZA (rilievo non chiuso)' : 'DEFINITIVO']);
+if (po.stato !== false) dati.push(['Stato', RS.verifica && !RS.verifica.chiuso() ? 'BOZZA (rilievo non chiuso)' : po.bozza ? 'BOZZA' : 'DEFINITIVO']);
 const r = []; dati.forEach(d => aCapoMm(d[1], W - 17, 2.3).forEach((rr, i) => r.push([i ? '' : d[0], rr])));
 return r;
 }
@@ -486,7 +499,7 @@ return 17;
 function disposizione(land, s, po, meta, PW, PH, testa) {
 const legenda = po.legenda !== false, scelta = po.disposizione || 'auto';
 const pos = scelta !== 'auto' ? scelta : (land && legenda ? 'destra' : 'basso');
-const ordine = ordineRiquadri(po);
+const ordine = riquadriStampati(po);
 if (pos === 'destra' || pos === 'sinistra') {
 const CW = 74, x = pos === 'sinistra' ? 0 : PW - CW;
 return { pos, legenda, ordine, ax: pos === 'sinistra' ? CW : 0, ay: testa, Aw: PW - CW, Ah: PH - testa,
@@ -495,8 +508,8 @@ pann: { tipo: 'colonna', x, y: testa, w: CW, h: PH - testa } };
 let Hs, celle = null;
 if (legenda) Hs = land ? 62 : 72;
 else {
-const PESO = { comando: 0.31, dati: 0.31, scala: 0.19, firme: 0.19 };
-let x = 0; celle = ordine.map(k => { const w = PW * PESO[k], c = { k, x, w, h: altezzaRiquadro(k, po, meta, w - 6) }; x += w; return c; });
+const PESO = { comando: 0.31, dati: 0.31, scala: 0.19, firme: 0.19 }, tot = ordine.reduce((a, k) => a + PESO[k], 0) || 1;
+let x = 0; celle = ordine.map(k => { const w = PW * PESO[k] / tot, c = { k, x, w, h: altezzaRiquadro(k, po, meta, w - 6) }; x += w; return c; });
 Hs = Math.max(22, ...celle.map(c => c.h)) + 1;
 }
 const y = pos === 'alto' ? testa : PH - Hs;
@@ -524,6 +537,7 @@ return ' in località ' + fmt(via);
 function clip(s, n) { s = String(s); return s.length > n ? s.slice(0, n-1) + '…' : s; }
 function docTitle() { return (RS.storage.currentName) || 'Planimetria del sinistro'; }
 function esc(s) { return String(s == null ? '' : s).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c])); }
+function cod(e) { return RS.verifica && RS.verifica.codicePunto ? RS.verifica.codicePunto(e) : 'P' + e.n; }
 function attoData() {
 const s = RS.scene, m = s.meta || {};
 const meas = [];
@@ -578,9 +592,9 @@ const inizioAltre = meas.length;
 s.elements.filter(e => e.type === 'measure').forEach(e => { q++; if (usateQ.has(e.id)) return; const v = (e.valore!=null&&e.valore!=='')?Number(e.valore):edist(e.pts[0], e.pts[1]); meas.push(['Q' + (q - 1), e.note || 'quota', [it2(v) + ' m']]); });
 s.elements.filter(e => e.type === 'skid').forEach(e => meas.push(['F' + (f++), e.note || (e.stile === 'solco' ? 'solco / abrasione' : e.dashed ? 'scarrocciamento' : 'traccia di frenata') + (e.veicolo ? ' del veicolo ' + e.veicolo : '') + ', lunghezza', [it2(eplen(e)) + ' m']]));
 const fineAltre = meas.length;
-s.elements.filter(e => e.type === 'surveypt' && !meas.some(r => r[0] === 'P' + e.n)).forEach(e => {
+s.elements.filter(e => e.type === 'surveypt' && !meas.some(r => r[0] === cod(e))).forEach(e => {
 const c = sist ? sist(e) : e;
-meas.push(['P' + e.n, e.descr || 'punto di rilievo', ['(' + it2(c.x) + ' ; ' + it2(c.y) + ')']]);
+meas.push([cod(e), e.descr || 'punto di rilievo', ['(' + it2(c.x) + ' ; ' + it2(c.y) + ')']]);
 });
 const sezioni = [];
 const td = v => `<td class="val">${v || '—'}</td>`;
@@ -631,8 +645,8 @@ x.cosa = p.el && p.el.letter ? 'caposaldo aggiunto' + (descrCap(p.el) ? ': ' + d
 });
 Object.keys(perVeicolo).forEach(L => perVeicolo[L].lista.sort((a, b) => String(a.T).localeCompare(String(b.T), undefined, { numeric: true })));
 const altri = punti.filter(x => !x.p.veicolo).sort((a, b) => String(a.T).localeCompare(String(b.T), undefined, { numeric: true }));
-const senzaMisure = s.elements.filter(e => e.type === 'surveypt' && !punti.some(x => x.T === 'P' + e.n));
-senzaMisure.forEach(e => altri.push({ T: 'P' + e.n, cosa: (e.descr || 'punto di rilievo') + ' (posizione indicata sulla planimetria)', p: { dist: [] }, orto: null }));
+const senzaMisure = s.elements.filter(e => e.type === 'surveypt' && !punti.some(x => x.T === cod(e)));
+senzaMisure.forEach(e => altri.push({ T: cod(e), cosa: (e.descr || 'punto di rilievo') + ' (posizione indicata sulla planimetria)', p: { dist: [] }, orto: null }));
 altri.sort((a, b) => String(a.T).localeCompare(String(b.T), undefined, { numeric: true }));
 if (altri.length) sezioni.push(['Altri punti rilevati', tabPunti(altri, 'Descrizione')]);
 const rAltre = meas.slice(inizioAltre, fineAltre).map(r => [r[0], r[1], r[2].join(' ')]);

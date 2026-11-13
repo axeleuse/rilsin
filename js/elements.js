@@ -1546,7 +1546,8 @@ const t = N('text');
 t.setAttribute('x', h*1.1); t.setAttribute('y', -h*0.7); t.setAttribute('font-size', s*1.1);
 t.setAttribute('fill', '#0a7'); t.setAttribute('font-weight', '700');
 t.setAttribute('paint-order', 'stroke'); t.setAttribute('stroke', '#f4f1e8'); t.setAttribute('stroke-width', 0.06);
-t.textContent = e.n != null ? e.n : '';
+if (e.cod && e.diSimbolo && RS.scene && RS.scene.get && RS.scene.get(e.diSimbolo)) return;
+t.textContent = e.cod ? e.cod : e.n != null ? e.n : '';
 g.appendChild(t);
 annotaNumero(t, e, h*1.1, -h*0.7, s*1.1, h);
 }
@@ -2315,7 +2316,16 @@ t: x.s + ' — ' + nomeFase(x.v.fase).toLowerCase() }));
 els.filter(e => e.letter).forEach(e => rows.push({ key: 'cap:' + e.letter, ref: e, c: e.color, t: e.letter + ' — Caposaldo' }));
 if (RS.incroci) RS.incroci.vociLegenda().forEach(r => rows.push(r));
 const seen = {};
-els.filter(e => e.type === 'symbol' && !e.letter && !e.inc).forEach(e => {
+const cod = sp => RS.verifica && RS.verifica.codicePunto ? RS.verifica.codicePunto(sp) : 'P' + sp.n;
+const lettera = e => {
+const sp = els.find(p => p.type === 'surveypt' && p.diSimbolo === e.id && p.n != null);
+return sp ? { t: cod(sp), sp } : String(e.label || '').trim() ? { t: String(e.label).trim() } : null;
+};
+const conLettera = els.filter(e => e.type === 'symbol' && !e.letter && !e.inc).map(e => ({ e, l: lettera(e) })).filter(x => x.l)
+.sort((a, b) => a.l.t.localeCompare(b.l.t, undefined, { numeric: true }));
+conLettera.forEach(({ e, l }) => rows.push({ key: 'symL:' + e.id, ref: e, c: e.color, sp: l.sp, t: l.t + ' — ' + (e.nome || e.sym) }));
+const giaElencati = new Set(conLettera.map(x => x.e.id));
+els.filter(e => e.type === 'symbol' && !e.letter && !e.inc && !giaElencati.has(e.id)).forEach(e => {
 const STATI = { rosso: 'rosso', giallo: 'giallo', verde: 'verde', lampeggiante: 'giallo lampeggiante', spento: 'spento' };
 const k = (e.catId || e.sym) + (e.stato ? ':' + e.stato : ''); if (seen[k]) return; seen[k] = 1;
 rows.push({ key: 'sym:' + k, ref: e, c: e.color, t: (e.nome || e.sym) + (e.stato && STATI[e.stato] ? ' (' + STATI[e.stato] + ')' : '') });
@@ -2328,7 +2338,9 @@ if (k.indexOf('veh:') === 0) return 'veic:' + k.slice(4);
 if (k.indexOf('cap:') === 0) return k;
 if (k.indexOf('fase:') === 0 && r.ref) return 'fase:' + siglaFase(r.ref);
 if (k.indexOf('sym:') === 0 && r.ref && r.ref.nome) return 'sim:' + r.ref.nome;
-if (r.t && !r.custom && !/^(veh|cap|fase|sym|x)\d*:/.test(k)) return 'str:' + r.t;
+if (k.indexOf('symL:') === 0 && r.sp) return 'P:' + r.sp.n;
+if (k.indexOf('symL:') === 0 && r.ref && r.ref.nome) return 'simL:' + String(r.ref.label || '').trim() + ':' + r.ref.nome;
+if (r.t && !r.custom && !/^(veh|cap|fase|sym|symL|x)\d*:/.test(k)) return 'str:' + r.t;
 return '';
 }
 function legendRows(le) {

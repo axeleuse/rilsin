@@ -2218,7 +2218,7 @@ el('printBody').innerHTML =
          </div>
          <div class="po-ordine" id="poOrdine">
            <div class="po-ord-t">Ordine dei riquadri <span class="pchk-hint">(dall'alto in basso; affiancati da sinistra a destra quando non c'è la legenda)</span></div>
-           ${(RS.exportUtil.ordineRiquadri(po)).map((k, i, a) => `<div class="po-ord-r"><span>${i + 1}. ${escAttr(RS.exportUtil.NOMI_RIQUADRI[k])}</span>
+           ${(RS.exportUtil.ordineRiquadri(po)).map((k, i, a) => `<div class="po-ord-r"><span>${i + 1}. ${escAttr(RS.exportUtil.NOMI_RIQUADRI[k])}${k === 'firme' && po.firme === false ? ' <span class="pchk-hint">(non stampato)</span>' : ''}</span>
              <button class="mini" data-ord="${k}:-1"${i ? '' : ' disabled'} title="Sposta su">↑</button><button class="mini" data-ord="${k}:1"${i < a.length - 1 ? '' : ' disabled'} title="Sposta giù">↓</button></div>`).join('')}
          </div>
          <h4>Cosa includere nel cartiglio</h4>
@@ -2233,11 +2233,14 @@ el('printBody').innerHTML =
            ${chk('scala', S.elements.some(e => e.type === 'graphscale')
 ? 'Scala <span class="pchk-hint">(la barra è già sul disegno)</span>' : 'Scala e barra metrica')}
            ${S.elements.some(e => e.type === 'north')
-? `<label class="pchk pchk-empty" title="La freccia Nord è già sul disegno: il cartiglio non ne aggiunge un'altra"><input type="checkbox" disabled> Freccia Nord <span class="pchk-hint">(già sul disegno)</span></label>`
+? chk('nord','Freccia Nord <span class="pchk-hint">(quella del disegno)</span>')
 : chk('nord','Freccia Nord')}
            ${chk('logo','Logo del Comando')}
+           ${chk('luogo','Luogo e comune')}
+           ${chk('stato','Stato (bozza o definitivo)')}
+           ${chk('firme','Firme dei verbalizzanti')}
            ${RS.verifica && !RS.verifica.chiuso()
-? `<label class="pchk pchk-empty" title="Il rilievo non è chiuso: la filigrana c'è sempre. Si chiude da Dati e misure → Controllo e chiusura"><input type="checkbox" checked disabled> Filigrana “BOZZA” <span class="pchk-hint">(fino alla chiusura del rilievo)</span></label>`
+? `<label class="pchk" title="Il rilievo non è ancora chiuso (Dati e misure → Controllo e chiusura): di solito la tavola esce con la filigrana BOZZA; togliendo la spunta esce senza"><input type="checkbox" data-po-no="senzaBozza"${po.senzaBozza ? '' : ' checked'}> Filigrana “BOZZA” <span class="pchk-hint">(il rilievo non è ancora chiuso)</span></label>`
 : chk('bozza','Filigrana “BOZZA”')}
            ${chk('simboli','Simboli e scritte leggibili (simboli almeno 3,5 mm, scritte almeno 2,5 mm sul foglio)')}
          </div>
@@ -2279,9 +2282,15 @@ el('poOrient').addEventListener('change', () => { S.printOpts = S.printOpts || {
 el('printBody').querySelectorAll('[data-po]').forEach(inp => {
 inp.addEventListener('change', () => {
 S.printOpts = S.printOpts || {}; S.printOpts[inp.dataset.po] = inp.checked;
+if (inp.dataset.po === 'firme') { S._foglio = undefined; S.drawGrid(); S.drawFoglio(); const sc = el('printBody').scrollTop; this.openPrint(); el('printBody').scrollTop = sc; return; }
 this.renderPrintPreview();
 });
 });
+el('printBody').querySelectorAll('[data-po-no]').forEach(inp => inp.addEventListener('change', () => {
+S.printOpts = S.printOpts || {};
+if (inp.checked) delete S.printOpts[inp.dataset.poNo]; else S.printOpts[inp.dataset.poNo] = true;
+this.renderPrintPreview();
+}));
 el('printBody').querySelectorAll('[data-po-act]').forEach(b => b.onclick = () => {
 if (b.dataset.poAct === 'reset') { S.printOpts = {}; try { localStorage.removeItem('rilsin:stampaLayout'); } catch (e) {} S._foglio = undefined; S.drawGrid(); S.drawFoglio(); this.openPrint(); return; }
 this.closePrint(); RS.exportUtil.print();
@@ -2707,7 +2716,7 @@ if (!ids.length) { this.toast(p.T + ' non ha quote sul disegno: le sue misure so
 S.select(ids); this.closeData();
 });
 wrap.querySelectorAll('[data-pdel]').forEach(b => b.onclick = () => {
-const T = b.dataset.pdel, punto = /^P\d+$/.test(T);
+const T = b.dataset.pdel, punto = !!RS.verifica.puntoDaCodice(T);
 if (!confirm(punto ? 'Eliminare il punto ' + T + ' con tutte le sue misure (quote sul disegno e righe del registro)?' : 'Cancellare le misure di ' + T + ' (quote sul disegno e righe del registro)?')) return;
 RS.verifica.eliminaPunto(T); this.refreshMeasures(); this._rpRidisegna();
 });
@@ -3345,7 +3354,8 @@ if (t === 'cap') return els.find(e => e.letter === v);
 if (t === 'veic') return els.find(e => e.type === 'vehicle' && (e.label || '?') === v && (!e.fase || e.fase === 'quiete')) || els.find(e => e.type === 'vehicle' && (e.label || '?') === v);
 if (t === 'fase') return els.find(e => e.type === 'vehicle' && e.fase && RS.elements.siglaFase && RS.elements.siglaFase(e) === v);
 if (t === 'sim') return els.find(e => e.type === 'symbol' && e.nome === v);
-if (t === 'P') return els.find(e => e.type === 'surveypt' && String(e.n) === v);
+if (t === 'P') { const sp = els.find(e => e.type === 'surveypt' && String(e.n) === v); return (sp && sp.diSimbolo && S.get(sp.diSimbolo)) || sp; }
+if (t === 'simL') { const [lb, ...nm] = v.split(':'); return els.find(e => e.type === 'symbol' && String(e.label || '').trim() === lb && e.nome === nm.join(':')); }
 if (t === 'tr') return els.find(e => e.type === 'skid');
 if (t === 'quote') return els.find(e => e.type === 'measure');
 return null;
@@ -3981,7 +3991,11 @@ h += `<div class="mis-hint">Trascina il pallino accanto alla lettera per spostar
 if (e.llx != null || e.lly != null)
 h += `<div class="pbtns"><button class="pbtn" data-b="lblreset">↺ Riporta la lettera al suo posto</button></div>`;
 }
-else h += textFld('Etichetta', 'label', e.label || '');
+else {
+h += textFld('Etichetta', 'label', e.label || '');
+const spL = RS.verifica && RS.scene.elements.find(x => x.type === 'surveypt' && x.diSimbolo === e.id && x.n != null);
+if (spL) h += `<div class="mis-hint">Punto di rilievo <b>${escAttr(RS.verifica.codicePunto(spL))}</b> nelle misure guidate e in legenda. Scrivi qui una sigla (per esempio U) per chiamarlo così.</div>`;
+}
 if (e.sym === 'limite') h += textFld('Valore', 'text', e.text || '50');
 if (e.sym === 'chilometrica') h += textFld('Progressiva', 'text', e.text || 'km 0+000');
 if (e.sym === 'pmv') h += textFld('Messaggio', 'text', e.text || 'INCIDENTE');
@@ -4128,6 +4142,13 @@ return;
 const sezK = e.type === 'road' && (RS.elements.SEZIONE_K[k] || k === 'wid');
 if (sezK && RS.elements.SEZIONE_K[k]) RS.elements.avviaSezione(e);
 e[k] = v;
+const spL = k === 'label' && e.type === 'symbol' && commit && RS.verifica ? RS.scene.elements.find(x => x.type === 'surveypt' && x.diSimbolo === e.id) : null;
+if (spL) {
+const prima = RS.verifica.codicePunto(spL); RS.verifica.allineaNomiPunti(); const dopo = RS.verifica.codicePunto(spL), scritta = String(v || '').trim().toUpperCase();
+if (prima !== dopo) RS.ui.toast('Nelle misure il punto ora si chiama ' + dopo);
+else if (scritta && scritta !== dopo) RS.ui.toast('«' + String(v).trim() + '» non può essere il nome del punto nelle misure (serve una sigla breve, come U o X1, non già usata da capisaldi, veicoli o altri punti): resta ' + dopo, 5000);
+setTimeout(() => RS.ui.renderProps(), 0);
+}
 if (sezK) { RS.elements.aggiornaSezione(e, k); if (commit) setTimeout(() => RS.ui.renderProps(), 0); }
 if (k === 'cod' && e.sym === 'cartello') {
 const d = RS.catalog.SEGNALETICA.find(x => x.cod === v);
@@ -4590,8 +4611,8 @@ let cambi = 0;
 const verso = T => new RegExp('(?:→|->)\\s*' + T + '\\b');
 const conMisure = T => (S.misure || []).some(m => verso(T).test(m.descr || '') && m.val !== '' && m.val != null) ||
 els.some(q => q.type === 'measure' && new RegExp('(?:→|->)\\s*' + T + '\\b|^' + T + '\\s*\\(ordinata').test(q.note || ''));
-els.filter(e => e.type === 'surveypt' && e.diSimbolo && !S.get(e.diSimbolo) && !conMisure('P' + e.n)).forEach(e => {
-const T = 'P' + e.n;
+els.filter(e => e.type === 'surveypt' && e.diSimbolo && !S.get(e.diSimbolo) && !conMisure(RS.verifica.codicePunto(e))).forEach(e => {
+const T = RS.verifica.codicePunto(e);
 if (S.misure) S.misure = S.misure.filter(m => !(verso(T).test(m.descr || '') && (m.val === '' || m.val == null)));
 S.remove([e.id]); cambi++;
 });
@@ -4601,6 +4622,7 @@ const d = String(e.nome || ((RS.catalog.byId && RS.catalog.byId(e.catId)) || {})
 S.add({ type: 'surveypt', x: round2(e.x), y: round2(e.y), n: nextSurveyN(), descr: d, size: 0.7, diSimbolo: e.id }, false);
 cambi++;
 });
+cambi += RS.verifica.allineaNomiPunti();
 if (cambi) { S.render(); S.snapshot(); }
 return cambi;
 }
@@ -4635,9 +4657,9 @@ const base = /\(base\)/i.test(k[4]) || (!n && caps.indexOf(L) >= 0 && coppiaBase
 let descrizione;
 if (base) descrizione = 'base: distanza fra i capisaldi ' + da + ' e ' + a;
 else if (!n && caps.indexOf(L) >= 0) descrizione = 'dal caposaldo ' + da + ' al caposaldo aggiunto ' + a;
-else if (L === 'P' && n && els.some(e => e.type === 'surveypt' && String(e.n) === n)) {
-const sp = els.find(e => e.type === 'surveypt' && String(e.n) === n);
-descrizione = 'dal caposaldo ' + da + ' al punto di rilievo ' + a + (sp && sp.descr ? ' (' + sp.descr + ')' : '');
+else if (RS.verifica.puntoDaCodice(a)) {
+const sp = RS.verifica.puntoDaCodice(a);
+descrizione = 'dal caposaldo ' + da + ' al punto di rilievo ' + a + (sp.descr ? ' (' + sp.descr + ')' : '');
 }
 else if (n && els.some(e => e.type === 'vehicle' && String(e.label || '').toUpperCase() === L)) descrizione = 'dal caposaldo ' + da + ' al punto ' + n + ' del veicolo ' + L;
 else descrizione = 'dal caposaldo ' + da + ' a ' + a;
@@ -4649,7 +4671,9 @@ const S = RS.scene, els = S.elements, NS = 'http://www.w3.org/2000/svg';
 const cap = els.find(e => e.letter && String(e.letter).toUpperCase() === p.da); if (!cap) return '';
 const m = /^([A-Z]{1,3})(\d*)$/.exec(p.a) || [], L = m[1], n = m[2];
 let T = null, V = null;
-if (n) {
+const spP = RS.verifica.puntoDaCodice(p.a);
+if (spP) T = { x: spP.x, y: spP.y };
+else if (n) {
 V = els.find(e => e.type === 'vehicle' && String(e.label || '').toUpperCase() === L && (!e.fase || e.fase === 'quiete') && e.rilpts && e.rilpts.some(r => String(r.n) === n));
 if (V) { const r = V.rilpts.find(x => String(x.n) === n), a = (V.rot || 0) * Math.PI / 180; T = { x: V.x + r.lx * Math.cos(a) - r.ly * Math.sin(a), y: V.y + r.lx * Math.sin(a) + r.ly * Math.cos(a) }; }
 else { const sp = els.find(e => e.type === 'surveypt' && L === 'P' && String(e.n) === n); if (sp) T = { x: sp.x, y: sp.y }; }
@@ -4727,7 +4751,9 @@ if (!p) return null;
 const els = RS.scene.elements, cap = els.find(e => e.letter && String(e.letter).toUpperCase() === p.da); if (!cap) return null;
 const k = /^([A-Z]{1,3})(\d*)$/.exec(p.a) || [], L = k[1], n = k[2];
 let T = null;
-if (n) {
+const spP = RS.verifica.puntoDaCodice(p.a);
+if (spP) T = { x: spP.x, y: spP.y };
+else if (n) {
 const V = els.find(e => e.type === 'vehicle' && String(e.label || '').toUpperCase() === L && (!e.fase || e.fase === 'quiete') && e.rilpts && e.rilpts.some(r => String(r.n) === n));
 if (V) { const r = V.rilpts.find(x => String(x.n) === n), a = (V.rot || 0) * Math.PI / 180; T = { x: V.x + r.lx * Math.cos(a) - r.ly * Math.sin(a), y: V.y + r.lx * Math.sin(a) + r.ly * Math.cos(a) }; }
 else { const sp = els.find(e => e.type === 'surveypt' && L === 'P' && String(e.n) === n); if (sp) T = { x: sp.x, y: sp.y }; }

@@ -1,10 +1,15 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 278;
-RS.DATA_BUILD = '2026-11-12';
+RS.BUILD = 279;
+RS.DATA_BUILD = '2026-11-13';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 279, data: '2026-11-13', voci: [
+'Punto d\'urto, posizione di quiete, macchie, detriti e gli altri punti utili: la sigla scritta in «Etichetta» (per esempio U) diventa il nome del punto nelle misure guidate, nel Rilievo dei punti, nell\'atto e in legenda, anche nelle misure già prese. Senza sigla resta P1, P2… Le proprietà del simbolo dicono come si chiama il punto; una sigla già usata da un caposaldo, da un veicolo o da un altro punto non vale e il programma lo dice.',
+'Legenda: i simboli con un\'etichetta compaiono uno per uno con la loro lettera («T1 — albero», «U — punto d\'urto»), sia nella legenda della planimetria sia in quella disegnata sulla tavola.',
+'Anteprima di stampa: nuove spunte per le firme dei verbalizzanti (senza, il riquadro sparisce e il disegno ha più spazio), luogo e comune, stato (bozza o definitivo). Si possono togliere anche la freccia Nord del disegno e la filigrana BOZZA prima della chiusura del rilievo.'
+] },
 { build: 278, data: '2026-11-13', voci: [
 'Disegni grandi: trascinando un oggetto vicino al bordo della tavola (spostandolo, allungandolo da una maniglia o disegnandone uno nuovo) la vista scorre da sola in quella direzione finché il dito resta lì, piano all\'inizio e più svelta sul bordo; l\'oggetto resta sotto il dito. Si ferma appena si alza il dito o ci si allontana dal bordo.',
 'Calamita fra elementi uguali: recinzione con recinzione, guard-rail con guard-rail, muro, siepe, new jersey, strisce… Avvicinando l\'estremità di uno a quella di un altro dello stesso tipo (circa 24 pixel) si attaccano: spostandolo, allungandolo dalla maniglia (l\'altra estremità resta ferma e l\'elemento ruota quel poco che serve) o disegnandone uno nuovo che parte o arriva lì. Un cerchio verde con «calamita» mostra l\'aggancio. Elementi diversi non si attaccano fra loro.',

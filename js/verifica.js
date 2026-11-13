@@ -5,11 +5,44 @@ const m2 = v => Number(v).toFixed(2).replace('.', ',');
 const cm = v => Math.round(Math.abs(v) * 100) + ' cm';
 const tolMisura = d => 0.05 + 0.01 * d;
 const tolDisegno = d => 0.10 + 0.02 * d;
+function codicePunto(e) { return e && e.cod ? String(e.cod).toUpperCase() : 'P' + (e ? e.n : ''); }
+function puntoDaCodice(T) {
+T = String(T || '').toUpperCase();
+return RS.scene.elements.find(e => e.type === 'surveypt' && e.n != null && codicePunto(e) === T) || null;
+}
+function codiceDaEtichetta(label, sp) {
+const S = RS.scene, t = String(label || '').trim().toUpperCase();
+if (!/^[A-Z]{1,3}\d{0,3}$/.test(t)) return '';
+if (t === 'P' + sp.n) return '';
+if (/^P\d+$/.test(t)) return '';
+if (S.elements.some(e => e.letter && String(e.letter).toUpperCase() === t)) return '';
+const vk = /^([A-Z]+)(\d*)$/.exec(t);
+if (S.elements.some(e => e.type === 'vehicle' && e.label && String(e.label).toUpperCase() === vk[1] && (vk[2] || vk[1] === t))) return '';
+if (S.elements.some(e => e.type === 'surveypt' && e !== sp && e.n != null && codicePunto(e) === t)) return '';
+return t;
+}
+function rinominaPunto(vecchio, nuovo) {
+const S = RS.scene, re = new RegExp('(^|[^A-Za-z0-9])' + vecchio + '(?![A-Za-z0-9])', 'gi'), sost = (m, a) => a + nuovo;
+(S.misure || []).forEach(m => { if (m.descr) m.descr = String(m.descr).replace(re, sost); });
+S.elements.forEach(e => { if (e.type === 'measure' && e.note) e.note = String(e.note).replace(re, sost); });
+}
+function allineaNomiPunti() {
+const S = RS.scene; let cambi = 0;
+S.elements.filter(e => e.type === 'surveypt' && e.diSimbolo && e.n != null).forEach(sp => {
+const sim = S.get(sp.diSimbolo); if (!sim) return;
+const vuole = codiceDaEtichetta(sim.label, sp), vecchio = codicePunto(sp), nuovo = vuole || 'P' + sp.n;
+if (nuovo === vecchio) return;
+rinominaPunto(vecchio, nuovo);
+if (vuole) sp.cod = vuole; else delete sp.cod;
+cambi++;
+});
+return cambi;
+}
 function punti() {
 const cap = {}, tgt = {};
 RS.scene.elements.forEach(e => {
 if (e.letter) cap[String(e.letter).toUpperCase()] = { x: e.x, y: e.y };
-if (e.type === 'surveypt' && e.n != null) tgt['P' + e.n] = { x: e.x, y: e.y };
+if (e.type === 'surveypt' && e.n != null) tgt[codicePunto(e)] = { x: e.x, y: e.y };
 });
 veicoliMisurati().forEach(e => {
 const r = (e.rot || 0) * Math.PI / 180, c = Math.cos(r), s = Math.sin(r);
@@ -158,7 +191,7 @@ return Object.keys(out).sort((a, b) => a.localeCompare(b, undefined, { numeric: 
 const p = out[T];
 p.dist.sort((a, b) => a.da.localeCompare(b.da));
 p.metodo = p.ord ? 'ortogonali' : 'distanze';
-p.el = cap[T] || S.elements.find(e => e.type === 'surveypt' && 'P' + e.n === T) || null;
+p.el = cap[T] || puntoDaCodice(T);
 p.veicolo = !p.el ? veicoliMisurati().concat(S.elements.filter(e => e.type === 'vehicle')).find(e => e.label && T.indexOf(String(e.label).toUpperCase()) === 0 && /^\d+$/.test(T.slice(String(e.label).length))) || null : null;
 const err = esiti.find(x => x.punto === T && x.livello === 'errore');
 if (err) p.qualita = { liv: 'errore', testo: err.testo };
@@ -240,7 +273,7 @@ return true;
 }
 function eliminaPunto(T) {
 const S = RS.scene;
-const p = puntiRilevati().find(x => x.T === T) || { dist: [], el: S.elements.find(e => e.type === 'surveypt' && 'P' + e.n === T) || null };
+const p = puntiRilevati().find(x => x.T === T) || { dist: [], el: puntoDaCodice(T) };
 const ids = [p.asc && p.asc.q, p.ord && p.ord.q].concat(p.dist.map(d => d.q)).filter(Boolean).map(q => q.id);
 if (p.el && p.el.type === 'surveypt') ids.push(p.el.id);
 const vuote = (S.misure || []).map((m, i) => { const k = RX.exec(m.descr || ''); return k && k[2].toUpperCase() === T && (m.val === '' || m.val == null) && !/\(base\)/i.test(m.descr) ? i : -1; }).filter(i => i >= 0);
@@ -295,7 +328,7 @@ gruppi.push({ tipo: 'veicolo', titolo: 'Veicolo ' + v.label + (v.fase === 'quiet
 punti: v.rilpts.slice().sort((a, b) => a.n - b.n).map(r => voce(L + r.n, { veicolo: v, nome: 'spigolo ' + r.n })) });
 });
 const pp = S.elements.filter(e => e.type === 'surveypt' && e.n != null).sort((a, b) => a.n - b.n);
-if (pp.length) gruppi.push({ tipo: 'punti', titolo: 'Punti', punti: pp.map(e => voce('P' + e.n, { el: e, nome: e.descr || '' })) });
+if (pp.length) gruppi.push({ tipo: 'punti', titolo: 'Punti', punti: pp.map(e => voce(codicePunto(e), { el: e, nome: e.descr || '' })) });
 const altriCap = Object.keys(cap).filter(L => base.indexOf(L) < 0).sort();
 if (base.length && altriCap.length) gruppi.push({ tipo: 'capisaldi', titolo: 'Capisaldi aggiunti', punti: altriCap.map(L => voce(L, { el: cap[L], nome: cap[L].descr || 'caposaldo' })) });
 const resto = Object.keys(P).concat(Object.keys(vuote).filter(T => !P[T])).filter((T, i, a) => a.indexOf(T) === i)
@@ -454,13 +487,13 @@ const L = Math.hypot(pB.x - pA.x, pB.y - pA.y); if (L < 0.001) return;
 const ux = (pB.x - pA.x) / L, uy = (pB.y - pA.y) / L, lato = (q.ril && q.ril.lato) || 1, o = valoreQuota(q);
 const P = { x: pA.x + asc.v * ux - lato * o * uy, y: pA.y + asc.v * uy + lato * o * ux };
 ortog.add(T);
-const e = S.elements.find(x => (x.letter && String(x.letter).toUpperCase() === T) || (x.type === 'surveypt' && 'P' + x.n === T));
+const e = S.elements.find(x => (x.letter && String(x.letter).toUpperCase() === T) || (x.type === 'surveypt' && x.n != null && codicePunto(x) === T));
 if (!e) return;
 const sp = Math.hypot(P.x - e.x, P.y - e.y);
 if (sp > 0.01) cambi.push({ tipo: 'ortogonale', T, nome: (e.letter ? 'Caposaldo ' : 'Punto ') + T, sp, el: e, nuovo: P });
 });
-S.elements.filter(e => e.type === 'surveypt' && e.n != null && !ortog.has('P' + e.n)).forEach(e => {
-const T = 'P' + e.n, p = posizione(T, { x: e.x, y: e.y });
+S.elements.filter(e => e.type === 'surveypt' && e.n != null && !ortog.has(codicePunto(e))).forEach(e => {
+const T = codicePunto(e), p = posizione(T, { x: e.x, y: e.y });
 if (!p) return;
 if (p.incoerente) { scartati.push(T); return; }
 const sp = Math.hypot(p.x - e.x, p.y - e.y);
@@ -593,7 +626,7 @@ graphscale: 'scala grafica', image: 'sfondo', foto: 'segnaposto foto', sketch: '
 function nomeEl(e) {
 if (e.type === 'vehicle') return 'veicolo ' + ((RS.elements.siglaFase && RS.elements.siglaFase(e)) || e.label || '');
 if (e.letter) return 'caposaldo ' + e.letter;
-if (e.type === 'surveypt') return 'punto P' + e.n;
+if (e.type === 'surveypt') return 'punto ' + codicePunto(e);
 if (e.type === 'measure') return 'quota' + (e.note ? ' ' + e.note : '');
 if (e.type === 'symbol') return (e.nome || e.sym || 'simbolo').toLowerCase() + (e.label ? ' ' + e.label : '');
 if (e.type === 'text') return 'testo «' + String(e.text || '').slice(0, 20) + '»';
@@ -672,6 +705,7 @@ return `<div style="margin-top:14px;font-size:11.5px;border:1px solid #999;paddi
 const verifica = {
 controllaMisure, voci, stima, pianoAllineamento, applicaAllineamento, statoPerAtti,
 qualitaTriangolo, basePerPunto, veicoliMisurati, puntiRilevati, ricalcolaPunto, correggiMisura, eliminaPunto, ordinataLunga,
+codicePunto, puntoDaCodice, allineaNomiPunti,
 schedaRilievo, descriviCambio,
 chiuso() { return !!(RS.scene.meta && RS.scene.meta.chiusura); },
 chiudi(box) {

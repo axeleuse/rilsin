@@ -1091,7 +1091,7 @@ const ns = v.rilpts.map(p => p.n).sort((a, b) => a - b);
 return 'Veicolo ' + v.label + ': punti ' + v.label + ns[0] + (ns.length > 1 ? '–' + v.label + ns[ns.length - 1] : '');
 });
 const pp = E.filter(e => e.type === 'surveypt').sort((a, b) => a.n - b.n);
-if (pp.length) righe.push('Punti ' + pp.map(p => 'P' + p.n + (p.descr ? ' (' + p.descr + ')' : '')).join(', '));
+if (pp.length) righe.push('Punti ' + pp.map(p => (RS.verifica ? RS.verifica.codicePunto(p) : 'P' + p.n) + (p.descr ? ' (' + p.descr + ')' : '')).join(', '));
 const extra = [], nf = E.filter(e => e.type === 'skid').length, nu = E.filter(e => e.type === 'symbol' && e.sym === 'impact').length;
 if (nf) extra.push(nf === 1 ? 'la frenata (inizio e fine)' : nf + ' frenate (inizio e fine)');
 if (nu) extra.push(nu === 1 ? 'il punto d\'urto' : nu + ' punti d\'urto');

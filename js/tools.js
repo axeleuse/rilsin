@@ -1206,7 +1206,7 @@ if (e.type === 'symbol') return e.letter ? 'caposaldo ' + e.letter : (e.nome || 
 if (e.type === 'measure') return 'estremo della quota';
 if (e.type === 'skid') return 'punto della traccia';
 if (e.type === 'roadway') return 'vertice della carreggiata';
-if (e.type === 'surveypt') return 'punto di rilievo ' + (e.n || '');
+if (e.type === 'surveypt') return 'punto di rilievo ' + (RS.verifica ? RS.verifica.codicePunto(e) : 'P' + (e.n || ''));
 if (e.pts) return 'vertice';
 return 'centro dell\'oggetto';
 }
