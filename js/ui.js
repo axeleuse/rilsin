@@ -1801,14 +1801,14 @@ p.innerHTML =
          <div class="tri-seg" data-seg="cosa">
            <button data-v="punto" class="${cosa === 'punto' ? 'on' : ''}">Punto P${nextSurveyN()}</button>
            <button data-v="cap" class="${cosa === 'cap' ? 'on' : ''}">Caposaldo ${escAttr(prossimaLettera())}</button>
-           <button data-v="spigolo" class="${cosa === 'spigolo' ? 'on' : ''}"${bers.length ? '' : ' disabled title="Numera prima i punti del veicolo: Proprietà del veicolo → Numera punti rilievo"'}>Spigolo veicolo</button>
+           <button data-v="spigolo" class="${cosa === 'spigolo' ? 'on' : ''}"${bers.length ? '' : ' disabled title="Numera prima i punti del veicolo: Proprietà del veicolo → Numera punti rilievo"'}>Punto del veicolo</button>
          </div>
          ${cosa === 'spigolo' ? `<div class="tri-row"><label>Punto del veicolo</label><select id="triBers" class="pop-input">${bers.map(x =>
 `<option value="${escAttr(x.k)}"${x.k === bk ? ' selected' : ''}>${escAttr(x.k)} — veicolo ${escAttr(x.label)}, punto ${x.n}${triMisurato(A.letter, x.k) && triMisurato(B.letter, x.k) ? ' ✓' : ''}</option>`).join('')}</select></div>` : ''}
          <div class="tri-cap">Metodo</div>
          <div class="tri-seg" data-seg="metodo">
            <button data-v="dist" class="${dist ? 'on' : ''}">Due distanze</button>
-           <button data-v="ort" class="${dist ? '' : 'on'}"${cosa === 'spigolo' ? ' disabled title="Per gli spigoli dei veicoli servono le due distanze"' : ''}>Ascissa e ordinata</button>
+           <button data-v="ort" class="${dist ? '' : 'on'}"${cosa === 'spigolo' ? ' disabled title="Per i punti dei veicoli servono le due distanze"' : ''}>Ascissa e ordinata</button>
          </div>
          <div class="tri-row"><label>${dist ? 'Distanza da ' + a : 'Ascissa da ' + a + ', lungo la base ' + a + '→' + b} (m)</label><input id="triCanA" class="pop-input" type="number" step="0.01" inputmode="decimal"></div>
          <div class="tri-row"><label>${dist ? 'Distanza da ' + b : 'Ordinata, perpendicolare alla base'} (m)</label><input id="triCanB" class="pop-input" type="number" step="0.01" min="0" inputmode="decimal"></div>
@@ -1979,7 +1979,7 @@ elm = S.add({ type: 'symbol', sym: 'caposaldo', catId: 'caposaldo', nome: def.no
 size: def.size || 0.6, color: def.color || '#b00', letter: nome }, false);
 titolo = 'Caposaldo ' + nome;
 } else if (sc.cosa === 'spigolo') {
-nome = sc.bersaglio; titolo = 'Spigolo ' + nome;
+nome = sc.bersaglio; titolo = 'Punto ' + nome;
 } else {
 const n = nextSurveyN(); nome = 'P' + n; titolo = 'Punto ' + nome;
 elm = S.add({ type: 'surveypt', x: round2(P.x), y: round2(P.y), n, descr: '', size: 0.7 }, false);
@@ -2055,7 +2055,7 @@ p: 'Le schede raccolgono tutto, diviso in gruppi: Veicoli, Strade (con le curve)
 { sel: ['[data-act="sfondo"]', '#scala'], t: '2) Sfondo e scala',
 p: 'Imposta la Scala in alto (es. 1:100). Con Sfondo scarichi dal Geoportale la foto aerea del luogo, già in scala e con il Nord in alto (serve internet e la posizione GPS), oppure importi un’immagine e la calibri su una distanza nota («📐 Calibra scala» nelle proprietà): così il disegno resta in scala reale.' },
 { sel: ['#props', '#props .props-head'], t: '3) Selezione e proprietà',
-p: 'Clicca un oggetto per selezionarlo: a destra ne regoli le proprietà. Veicolo: misure reali, colore, lettera, posizione (su ruote, su un fianco o capovolto) e «🎯 Numera punti rilievo» sugli spigoli. Strada: larghezza, numero di corsie e tipo di striscia. Sul disegno usa le maniglie per ruotare (aggancio agli angoli e gradi) e ridimensionare; trascina per spostare.' },
+p: 'Clicca un oggetto per selezionarlo: a destra ne regoli le proprietà. Veicolo: misure reali, colore, lettera, posizione (su ruote, su un fianco o capovolto) e «🎯 Numera punti rilievo» (sui mozzi delle ruote o sugli spigoli). Strada: larghezza, numero di corsie e tipo di striscia. Sul disegno usa le maniglie per ruotare (aggancio agli angoli e gradi) e ridimensionare; trascina per spostare.' },
 { sel: ['[data-act="righello"]', '[data-act="triangola"]'], t: '4) Misure e triangolazione',
 p: 'Righello: misura al volo trascinando, senza creare una quota. Triangola: clicca due capisaldi e inserisci le due distanze rilevate sul posto → il punto si posiziona con le sue quote. In “Dati e misure → Rilievo dei punti” ogni punto numerato compare con le caselle delle misure da prendere: basta scrivere i valori, oppure usare «Misure guidate».' },
 { sel: ['[data-act="coinvolti"]', '[data-act="misure"]'], t: '5) Coinvolti, dati e misure',
@@ -2651,7 +2651,7 @@ const tn = el('tabNRil'); if (tn) tn.textContent = n || '';
 const gb = el('rpGuidate'); if (gb) gb.textContent = '▶ Misure guidate' + (n ? ' · ' + n + ' da prendere' : '');
 this.renderAllinea(sch);
 if (!sch.gruppi.length) {
-wrap.innerHTML = '<div class="meas-empty">Ancora nessun punto da rilevare.<br>Numera gli spigoli dei veicoli (proprietà del veicolo → «Numera punti rilievo») oppure usa <b>📐 Rileva un punto sulla tavola</b>.</div>';
+wrap.innerHTML = '<div class="meas-empty">Ancora nessun punto da rilevare.<br>Numera i punti dei veicoli (proprietà del veicolo → «Numera punti rilievo»: mozzi delle ruote o spigoli) oppure usa <b>📐 Rileva un punto sulla tavola</b>.</div>';
 return;
 }
 const v = x => (Math.round(x * 100) / 100).toString();
@@ -2811,7 +2811,7 @@ if (giaPrese.has(c)) return false;
 giaPrese.add(c); return true;
 });
 if (!coda.length) {
-if (pronte >= 0) this.toast(RS.verifica.schedaRilievo().gruppi.length ? 'Nessuna misura da prendere: hanno già tutte un valore' : 'Prima numera gli spigoli dei veicoli o piazza un punto P: poi le misure si prendono qui');
+if (pronte >= 0) this.toast(RS.verifica.schedaRilievo().gruppi.length ? 'Nessuna misura da prendere: hanno già tutte un valore' : 'Prima numera i punti dei veicoli o piazza un punto P: poi le misure si prendono qui');
 return;
 }
 const mb = S.meta && S.meta.base || {}, lettera = id => { const c = S.get(id); return c ? String(c.letter).toUpperCase() : ''; };
@@ -3862,7 +3862,7 @@ din += chkFld('Semitrasparente', 'trasp', !!e.trasp);
 din += `<div class="pbtns"><button class="pbtn" data-b="fase-add">＋ Aggiungi un momento</button>` +
 (e.fase && e.label ? `<button class="pbtn" data-b="fase-path">〰 Traccia la traiettoria</button>` : '') + `</div>`;
 din += `<div class="muted aiuto" style="margin-top:4px">${e.fase && e.label
-? `Sul disegno è <b>${escAttr(RS.elements.siglaFase(e))}</b>: le posizioni ricostruite di ${escAttr(e.label)} prendono gli apici (${escAttr(e.label)}′, ${escAttr(e.label)}″…) nell'ordine dei momenti; quella di quiete ha la sola lettera. ${escAttr(e.label)}1, ${escAttr(e.label)}2… restano i punti numerati (spigoli) del veicolo.`
+? `Sul disegno è <b>${escAttr(RS.elements.siglaFase(e))}</b>: le posizioni ricostruite di ${escAttr(e.label)} prendono gli apici (${escAttr(e.label)}′, ${escAttr(e.label)}″…) nell'ordine dei momenti; quella di quiete ha la sola lettera. ${escAttr(e.label)}1, ${escAttr(e.label)}2… restano i punti numerati del veicolo (mozzi delle ruote o spigoli).`
 : 'Crea una copia del veicolo per un momento precedente (percezione del pericolo, frenata, urto…), da trascinare al suo posto.'}</div>`;
 h += section('Dinamica', din, !!e.fase, { riass: e.fase ? escAttr(RS.elements.nomeFase(e.fase).toLowerCase()) : 'posizione unica' });
 const danni = e.danni || [];
@@ -3870,13 +3870,16 @@ h += section('Zona dei danni',
 `<div class="danni-grid">` + RS.elements.DANNI.map(d =>
 `<label class="pchk"><input type="checkbox" data-danno="${d[0]}"${danni.indexOf(d[0]) >= 0 ? ' checked' : ''}> ${d[1]}</label>`).join('') + `</div>`,
 danni.length > 0, { riass: danni.length ? String(danni.length) : 'nessuna' });
+const ribaltato = e.posa && e.posa !== 'ruote';
+const puntiSu = ribaltato ? '' : selFld('Punti sui', 'puntiSu', e.puntiSu === 'spigoli' ? 'spigoli' : 'mozzi', [['mozzi', 'Mozzi delle ruote'], ['spigoli', 'Spigoli della sagoma']]);
 if (e.rilpts && e.rilpts.length) {
-let pt = `<div class="muted aiuto">Trascinali sul disegno per ridisporli (✕ per togliere):</div>`;
-pt += `<div class="ptchips">` + e.rilpts.map((p, i) => `<span class="ptchip">${p.n}<button data-rmpt="${i}" title="Elimina punto">✕</button></span>`).join('') + `</div>`;
+let pt = puntiSu + `<div class="muted aiuto">Trascinali sul disegno per ridisporli (✕ per togliere):</div>`;
+pt += `<div class="ptchips">` + e.rilpts.map((p, i) => `<span class="ptchip" title="${escAttr(e.label || '')}${p.n}: ${escAttr(RS.elements.nomePuntoVeicolo(e, p))}">${p.n}<button data-rmpt="${i}" title="Elimina punto">✕</button></span>`).join('') + `</div>`;
+pt += `<div class="mis-hint esito" style="margin-top:4px">${e.rilpts.slice().sort((a, b) => a.n - b.n).map(p => `<b>${escAttr(e.label || '')}${p.n}</b> ${escAttr(RS.elements.nomePuntoVeicolo(e, p))}`).join(' · ')}</div>`;
 pt += `<div class="pbtns"><button class="pbtn" data-b="pointadd">＋ Punto</button><button class="pbtn" data-b="pointsregen">↺ Rigenera</button><button class="pbtn danger" data-b="points">Rimuovi tutti</button></div>`;
 h += section('Punti di rilievo', pt, e.rilpts.length <= 6, { riass: String(e.rilpts.length) });
 } else {
-h += `<div class="pbtns"><button class="pbtn" data-b="points">🎯 Numera punti rilievo</button></div>`;
+h += puntiSu + `<div class="pbtns"><button class="pbtn" data-b="points">🎯 Numera punti rilievo</button></div>`;
 }
 }
 if (e.type === 'road') {
@@ -3994,7 +3997,7 @@ h += `<div class="pbtns"><button class="pbtn" data-b="lblreset">↺ Riporta la l
 else {
 h += textFld('Etichetta', 'label', e.label || '');
 const spL = RS.verifica && RS.scene.elements.find(x => x.type === 'surveypt' && x.diSimbolo === e.id && x.n != null);
-if (spL) h += `<div class="mis-hint">Punto di rilievo <b>${escAttr(RS.verifica.codicePunto(spL))}</b> nelle misure guidate e in legenda. Scrivi qui una sigla (per esempio U) per chiamarlo così.</div>`;
+if (spL) h += `<div class="mis-hint esito">Punto di rilievo <b>${escAttr(RS.verifica.codicePunto(spL))}</b> nelle misure guidate e in legenda. Scrivi qui una sigla (per esempio U) per chiamarlo così.</div>`;
 }
 if (e.sym === 'limite') h += textFld('Valore', 'text', e.text || '50');
 if (e.sym === 'chilometrica') h += textFld('Progressiva', 'text', e.text || 'km 0+000');
@@ -4120,6 +4123,18 @@ const d = RS.catalog.byId(v); if (!d) return;
 e.catId = d.id; e.nome = d.nome; e.color = d.color;
 RS.scene.render();
 if (commit) { RS.scene.snapshot(); RS.ui.renderLegend(); setTimeout(() => RS.ui.renderProps(), 0); }
+return;
+}
+if (k === 'puntiSu') {
+if (!commit) return;
+const prima = e.puntiSu === 'spigoli' ? 'spigoli' : 'mozzi'; if (v === prima) return;
+const L = String(e.label || '').toUpperCase(), re = L ? new RegExp('(?:→|->)\\s*' + L + '\\d+\\b', 'i') : null;
+const prese = re && (RS.scene.misure || []).some(m => re.test(m.descr || '') && m.val !== '' && m.val != null);
+if (e.rilpts && e.rilpts.length && prese && !confirm('Del veicolo ' + L + ' ci sono già misure prese: i punti ' + L + '1, ' + L + '2… passeranno ' +
+(v === 'mozzi' ? 'sui mozzi delle ruote' : 'sugli spigoli della sagoma') + ' e le misure già scritte varranno per i punti nuovi. Continuare?')) { inp.value = prima; return; }
+if (v === 'spigoli') e.puntiSu = 'spigoli'; else delete e.puntiSu;
+if (e.rilpts && e.rilpts.length) { e.rilpts = RS.elements.makeRilpts(e, 1); e.spigoli = true; }
+RS.scene.render(); RS.scene.snapshot(); setTimeout(() => RS.ui.renderProps(), 0);
 return;
 }
 if (k === 'nomeVia') {
@@ -4661,7 +4676,11 @@ else if (RS.verifica.puntoDaCodice(a)) {
 const sp = RS.verifica.puntoDaCodice(a);
 descrizione = 'dal caposaldo ' + da + ' al punto di rilievo ' + a + (sp.descr ? ' (' + sp.descr + ')' : '');
 }
-else if (n && els.some(e => e.type === 'vehicle' && String(e.label || '').toUpperCase() === L)) descrizione = 'dal caposaldo ' + da + ' al punto ' + n + ' del veicolo ' + L;
+else if (n && els.some(e => e.type === 'vehicle' && String(e.label || '').toUpperCase() === L)) {
+const V = els.find(e => e.type === 'vehicle' && String(e.label || '').toUpperCase() === L && (!e.fase || e.fase === 'quiete') && e.rilpts && e.rilpts.some(r => String(r.n) === n));
+const r = V && V.rilpts.find(x => String(x.n) === n), nome = r && RS.elements.nomePuntoVeicolo ? RS.elements.nomePuntoVeicolo(V, r) : '';
+descrizione = 'dal caposaldo ' + da + ' al punto ' + n + ' del veicolo ' + L + (nome && !/^punto /.test(nome) ? ' (' + nome + ')' : '');
+}
 else descrizione = 'dal caposaldo ' + da + ' a ' + a;
 return { da, a, base, nome: da + ' → ' + a, descr: descrizione };
 }

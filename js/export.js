@@ -604,12 +604,7 @@ const cA = oA ? String(oA.letter).toUpperCase() : (perUso[0] || 'A'), cB = oB ? 
 const descrCap = c => c.descr || (c.nome && c.nome !== 'Caposaldo' ? c.nome : '');
 const nomeSpigolo = (v, n) => {
 const p = (v.rilpts || []).find(r => String(r.n) === String(n)); if (!p) return 'punto ' + n;
-const fx = p.lx / ((v.len || 4) / 2), fy = p.ly / ((v.wid || 1.8) / 2);
-const lon = fx > 0.6 ? 'anteriore' : fx < -0.6 ? 'posteriore' : '', lat = fy < -0.6 ? 'sinistro' : fy > 0.6 ? 'destro' : '';
-if (lon && lat) return 'spigolo ' + lon + ' ' + lat;
-if (lat) return 'fiancata ' + (fy < 0 ? 'sinistra' : 'destra') + (Math.abs(fx) < 0.25 ? ', al centro' : fx > 0 ? ', parte anteriore' : ', parte posteriore');
-if (lon) return 'estremità ' + lon;
-return 'punto ' + n;
+return RS.elements.nomePuntoVeicolo(v, p);
 };
 const riga = x => {
 const v = {}, altre = [];

@@ -325,7 +325,7 @@ const gruppi = [];
 veicoliMisurati().sort((a, b) => String(a.label).localeCompare(String(b.label))).forEach(v => {
 const L = String(v.label).toUpperCase();
 gruppi.push({ tipo: 'veicolo', titolo: 'Veicolo ' + v.label + (v.fase === 'quiete' ? ' (quiete)' : ''), el: v,
-punti: v.rilpts.slice().sort((a, b) => a.n - b.n).map(r => voce(L + r.n, { veicolo: v, nome: 'spigolo ' + r.n })) });
+punti: v.rilpts.slice().sort((a, b) => a.n - b.n).map(r => voce(L + r.n, { veicolo: v, nome: RS.elements.nomePuntoVeicolo ? RS.elements.nomePuntoVeicolo(v, r) : 'punto ' + r.n })) });
 });
 const pp = S.elements.filter(e => e.type === 'surveypt' && e.n != null).sort((a, b) => a.n - b.n);
 if (pp.length) gruppi.push({ tipo: 'punti', titolo: 'Punti', punti: pp.map(e => voce(codicePunto(e), { el: e, nome: e.descr || '' })) });

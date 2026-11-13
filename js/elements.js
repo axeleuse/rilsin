@@ -379,6 +379,7 @@ const sterzo = +e.sterzo || 0;
 const sn = e.snodo ? snodoInfo(e) : null;
 const gAnt = sn ? mk('g', { transform: `rotate(${+e.snodo} ${sn.px} 0)` }) : g;
 function wheel(px, py, wl, ww, sterza, dove) {
+if (registroRuote) registroRuote.push({ px, py });
 const r = mk('rect', { x: px - wl/2, y: py - ww/2, width: wl, height: ww, rx: ww*0.35, fill: TYRE }, dove || g);
 if (sterza && sterzo) r.setAttribute('transform', `rotate(${sterzo} ${px} ${py})`);
 }
@@ -730,6 +731,52 @@ if (e.len > 6.5) return [
 { lx: hl, ly: -hw }, { lx: hl, ly: hw }, { lx: 0, ly: hw },
 { lx: -hl, ly: hw }, { lx: -hl, ly: -hw }, { lx: 0, ly: -hw }];
 return [{ lx: hl, ly: -hw }, { lx: hl, ly: hw }, { lx: -hl, ly: hw }, { lx: -hl, ly: -hw }];
+}
+let registroRuote = null;
+function mozzi(e) {
+const hl = (e.len || 4) / 2, r2 = v => Math.round(v * 100) / 100;
+const due = { bike: 0.3, monopattino: 0.12, moto: 0.25 }[e.kind];
+if (due != null) return [{ lx: r2(hl - due), ly: 0, nome: 'mozzo della ruota anteriore' }, { lx: r2(-hl + due), ly: 0, nome: 'mozzo della ruota posteriore' }];
+const reg = [];
+registroRuote = reg;
+try { drawVehicleBody(N('g'), Object.assign({}, e, { posa: 'ruote', snodo: 0, sterzo: 0 })); } catch (err) {  }
+finally { registroRuote = null; }
+if (!reg.length) return [];
+const assi = [];
+reg.forEach(w => { const a = assi.find(x => Math.abs(x.px - w.px) < 0.05); if (a) a.ys.push(w.py); else assi.push({ px: w.px, ys: [w.py] }); });
+assi.sort((a, b) => b.px - a.px);
+const out = [], lato = (a, quale, nome) => {
+const ys = a.ys, sx = Math.min(...ys), dx = Math.max(...ys);
+if (dx - sx < 0.2) { out.push({ lx: r2(a.px), ly: r2((sx + dx) / 2), nome: 'mozzo della ruota ' + nome }); return; }
+(quale === 'sxdx' ? [[sx, 'sinistro'], [dx, 'destro']] : [[dx, 'destro'], [sx, 'sinistro']])
+.forEach(([y, l]) => out.push({ lx: r2(a.px), ly: r2(y), nome: 'mozzo ' + nome + ' ' + l }));
+};
+lato(assi[0], 'sxdx', 'anteriore');
+const sn = snodoInfo(e);
+if (sn && assi.length > 2) {
+const ant = assi.filter(a => a.px > sn.px && a !== assi[0]).pop();
+if (ant) lato(ant, 'dxsx', e.catId === 'autosnodato' ? 'dell\'asse centrale' : 'posteriore della motrice');
+}
+if (assi.length > 1) lato(assi[assi.length - 1], 'dxsx', 'posteriore');
+return out;
+}
+function nomePuntoVeicolo(v, p) {
+if (!p) return 'punto';
+if (!v.posa || v.posa === 'ruote') {
+const m = mozzi(v).find(h => Math.hypot(h.lx - p.lx, h.ly - p.ly) < 0.3);
+if (m) return m.nome;
+}
+const fx = p.lx / ((v.len || 4) / 2), fy = p.ly / ((v.wid || 1.8) / 2);
+const lon = fx > 0.6 ? 'anteriore' : fx < -0.6 ? 'posteriore' : '', lat = fy < -0.6 ? 'sinistro' : fy > 0.6 ? 'destro' : '';
+if (DUE_RUOTE[v.kind]) {
+if (lat) return fx > 0 ? 'estremità ' + (fy < 0 ? 'sinistra' : 'destra') + ' del manubrio' : 'fianco ' + lat;
+if (lon) return 'estremità ' + lon;
+return 'punto ' + p.n;
+}
+if (lon && lat) return 'spigolo ' + lon + ' ' + lat;
+if (lat) return 'fiancata ' + (fy < 0 ? 'sinistra' : 'destra') + (Math.abs(fx) < 0.25 ? ', al centro' : '');
+if (lon) return 'estremità ' + lon;
+return 'punto ' + p.n;
 }
 function drawVehiclePoints(g, e) {
 const pts = e.rilpts || patternPoints(e).map((p, i) => ({ lx: p.lx, ly: p.ly, n: (e.spigoliBase||1) + i }));
@@ -2650,8 +2697,10 @@ const s = e.size || 0.5;
 return { lx: (e.llx != null ? e.llx : s*0.9), ly: (e.lly != null ? e.lly : -s*0.7) };
 };
 RS.elements.makeRilpts = function (e, base) {
-return patternPoints(e).map((p, i) => ({ lx: p.lx, ly: p.ly, n: base + i }));
+const m = e.puntiSu !== 'spigoli' && (!e.posa || e.posa === 'ruote') ? mozzi(e) : [];
+return (m.length >= 2 ? m : patternPoints(e)).map((p, i) => ({ lx: p.lx, ly: p.ly, n: base + i }));
 };
+RS.elements.mozzi = mozzi; RS.elements.nomePuntoVeicolo = nomePuntoVeicolo;
 RS.elements.resolvePt = function (pt) {
 if (!pt) return { x: 0, y: 0 };
 if (pt.aid == null) return { x: pt.x, y: pt.y };
