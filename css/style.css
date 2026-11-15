@@ -1657,6 +1657,19 @@ body.sole .info-sost-b{background:#000 !important;color:#fff !important;border-c
 @media (max-width:560px){.gm-box.gm-misura{display:flex;flex-direction:column}.gm-box.gm-misura>*{flex-shrink:0}}
 @media (max-width:560px) and (max-height:760px){.gm-misura .gm-k{height:46px}.gm-misura .gm-k.gm-pic{height:40px}.gm-misura .gm-val{margin:6px 0}.gm-misura .gm-dopo{display:none}.gm-misura .gm-mini{height:112px}}
 @media (max-width:560px) and (max-height:640px){.gm-misura .gm-k{height:44px}.gm-misura .gm-ora,.gm-misura .gm-dopo,.gm-misura .gm-descr{display:none}.gm-misura .gm-cambio{padding:4px 8px;font-size:12px}.gm-misura .gm-mini{height:96px}}
+.gm-box.gm-misura{display:flex;flex-direction:column;height:min(820px,calc(100vh - 24px));height:min(820px,calc(100dvh - 24px));overflow:hidden}
+.gm-box.gm-misura>.gm-top,.gm-box.gm-misura>.gm-barra{flex-shrink:0}
+.gm-misura .gm-info{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column}
+.gm-misura .gm-info>*{flex-shrink:0}
+.gm-misura .gm-info>.gm-mini{flex:1 1 136px;min-height:96px;max-height:220px;height:auto}
+.gm-misura .gm-pad{flex:0 0 auto;padding-top:4px}
+.gm-misura .gm-stima,.gm-misura .gm-dopo{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gm-misura .gm-info>.gm-esito:first-child{margin-top:0;margin-bottom:8px}
+@media (min-width:561px) and (max-height:820px){.gm-misura .gm-pad .gm-k{height:46px}.gm-misura .gm-pad .gm-k.gm-pic{height:36px}.gm-misura .gm-invio{height:48px}.gm-misura .gm-val{margin:8px 0}.gm-misura .gm-val span{font-size:28px}}
+@media (max-width:560px){.gm-box.gm-misura{height:100%}.gm-box.gm-misura>.gm-info{flex-shrink:1}
+.gm-misura .gm-pad .gm-k{height:54px}.gm-misura .gm-pad .gm-k.gm-pic{height:42px}.gm-misura .gm-invio{height:52px}.gm-misura .gm-val{margin:8px 0}}
+@media (max-width:560px) and (max-height:760px){.gm-misura .gm-pad .gm-k{height:46px}.gm-misura .gm-pad .gm-k.gm-pic{height:40px}.gm-misura .gm-invio{height:48px}}
+@media (max-width:560px) and (max-height:640px){.gm-misura .gm-pad .gm-k{height:44px}}
 .va-box{width:min(460px,96vw)}
 .va-nota{margin:0 0 10px;font-size:13px;color:var(--muted)}
 .va-card{border:1px solid var(--line2);border-radius:10px;padding:10px 12px;margin:0 0 10px;background:var(--panel2)}

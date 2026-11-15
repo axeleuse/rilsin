@@ -6,6 +6,7 @@ RS.DATA_BUILD = '2026-11-16';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
 { build: 280, data: '2026-11-16', voci: [
+'Misure guidate: il tastierino non si sposta più su e giù fra una misura e l\'altra. La finestra ha sempre la stessa altezza: in basso, fermi, valore, tastierino, Invio, Salta e Indietro; sopra le indicazioni (esito della misura appena presa, caposaldo su cui mettere il nastro, che cosa misurare, piantina), che si adattano allo spazio e, se non ci stanno, scorrono. Il telemetro laser si collega dalla torcia in alto, accanto all\'altoparlante.',
 'Controllo delle misure più affidabile: le tre o più distanze di un punto si confrontano con i capisaldi dove li mettono le misure (base misurata, capisaldi aggiunti dalle loro distanze) e non con il disegno. Prima, con la base o un caposaldo disegnati un po\' fuori posto, misure giuste potevano risultare «sbagliate» (con l\'invito a ripeterle) e un errore vero poteva sfuggire.',
 'Con quattro distanze, la misura da ripetere è quella che, tolta, fa tornare meglio le altre: prima in qualche caso veniva indicata una misura giusta.',
 'Nuovo avviso: quando le distanze tornano ma una di loro è poco controllata dalle altre (gli altri capisaldi arrivano al punto quasi dalla stessa direzione), il programma lo dice e consiglia una distanza da un caposaldo in un\'altra direzione: un errore in quella misura sposterebbe il punto senza che nulla lo segnali.',

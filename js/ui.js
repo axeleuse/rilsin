@@ -2884,23 +2884,26 @@ for (let j = g.pos; j < g.coda.length; j++) { const q = gmParti(g.coda[j].m.desc
 const cambio = daQui ? `<div class="gm-cambio">📍 Nastro sul caposaldo <b>${escAttr(p.da)}</b>: ${daQui} ${daQui === 1 ? 'misura' : 'misure'} da qui, poi si passa al caposaldo seguente</div>` : '';
 const st = gmStima(p);
 const rip = g.ripetiPrima != null ? `<div class="gm-descr gm-ripdescr">↺ da ripetere · prima era ${escAttr(String(g.ripetiPrima).replace('.', ','))} m</div>` : '';
+const laserOn = RS.laser && RS.laser.stato === 'collegato', laserDisp = RS.laser && !laserOn && RS.laser.disponibile();
 v.innerHTML = `<div class="gm-box gm-misura">
-          <div class="gm-top"><span>Misure guidate</span><span>${g.pos + 1} di ${g.coda.length}</span>${tastoVoce}<button class="gm-x" data-gm="chiudi" title="Chiudi (Esc)">✕</button></div>
+          <div class="gm-top"><span>Misure guidate</span><span>${g.pos + 1} di ${g.coda.length}</span>${laserDisp ? `<button class="gm-voce" data-gm="laser" title="Hai un telemetro laser Bluetooth? Collegalo">🔦</button>` : ''}${tastoVoce}<button class="gm-x" data-gm="chiudi" title="Chiudi (Esc)">✕</button></div>
           <div class="gm-barra"><i style="width:${Math.round(g.pos / g.coda.length * 100)}%"></i></div>
-          ${prop}
-          ${cambio}
-          <div class="gm-cosa"><div class="gm-ora">Ora misura</div><div class="gm-nome">${escAttr(p.nome)}</div><div class="gm-descr">${escAttr(p.descr)}</div>${rip}</div>
-          ${p.base ? `<button class="gm-cambiabase" data-gm="cambiabase" title="Scegli altri due capisaldi come base">⇄ Cambia base: scegli altri capisaldi</button>` : ''}
-          ${(() => { const m = gmMini(p); return m ? `<div class="gm-mini">${m}</div>` : ''; })()}
-          <div class="gm-val"><span>${g.testo ? escAttr(g.testo) : '<em>0,00</em>'}</span><small>m</small></div>
-          ${st ? `<div class="gm-stima">sul disegno circa ${escAttr(st.testo)} m</div>` : ''}
-          ${RS.laser && RS.laser.stato === 'collegato' ? `<button class="gm-laser on" data-gm="laser">🔦 ${escAttr(RS.laser.nome || 'Telemetro')}: punta e premi il tasto di misura del telemetro</button>` : ''}
-          <div class="gm-tasti">${['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0'].map(t => `<button class="gm-k" data-gm="${t}">${t}</button>`).join('')}<button class="gm-k" data-gm="canc" title="Cancella">⌫</button></div>
-          <button class="gm-invio" data-gm="ok">Invio · ${g.pos + 1 < g.coda.length ? 'misura seguente' : 'ultima misura'}</button>
-          <div class="gm-riga"><button class="gm-k gm-pic" data-gm="salta">Salta</button><button class="gm-k gm-pic" data-gm="indietro"${g.pos ? '' : ' disabled'}>Indietro</button></div>
-          ${RS.laser && RS.laser.stato !== 'collegato' && RS.laser.disponibile() ? `<button class="gm-laser" data-gm="laser">🔦 Hai un telemetro laser Bluetooth? Collegalo</button>` : ''}
-          ${prop ? '' : esito}
-          ${dopo ? `<div class="gm-dopo">Poi: ${escAttr(dopo)}</div>` : ''}
+          <div class="gm-info">
+            ${prop || esito}
+            ${cambio}
+            <div class="gm-cosa"><div class="gm-ora">Ora misura</div><div class="gm-nome">${escAttr(p.nome)}</div><div class="gm-descr">${escAttr(p.descr)}</div>${rip}</div>
+            ${p.base ? `<button class="gm-cambiabase" data-gm="cambiabase" title="Scegli altri due capisaldi come base">⇄ Cambia base: scegli altri capisaldi</button>` : ''}
+            ${(() => { const m = gmMini(p); return m ? `<div class="gm-mini">${m}</div>` : ''; })()}
+          </div>
+          <div class="gm-pad">
+            <div class="gm-val"><span>${g.testo ? escAttr(g.testo) : '<em>0,00</em>'}</span><small>m</small></div>
+            <div class="gm-stima">${st ? `sul disegno circa ${escAttr(st.testo)} m` : '&nbsp;'}</div>
+            ${laserOn ? `<button class="gm-laser on" data-gm="laser">🔦 ${escAttr(RS.laser.nome || 'Telemetro')}: punta e premi il tasto di misura del telemetro</button>` : ''}
+            <div class="gm-tasti">${['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0'].map(t => `<button class="gm-k" data-gm="${t}">${t}</button>`).join('')}<button class="gm-k" data-gm="canc" title="Cancella">⌫</button></div>
+            <button class="gm-invio" data-gm="ok">Invio · ${g.pos + 1 < g.coda.length ? 'misura seguente' : 'ultima misura'}</button>
+            <div class="gm-riga"><button class="gm-k gm-pic" data-gm="salta">Salta</button><button class="gm-k gm-pic" data-gm="indietro"${g.pos ? '' : ' disabled'}>Indietro</button></div>
+            <div class="gm-dopo">${dopo ? 'Poi: ' + escAttr(dopo) : '&nbsp;'}</div>
+          </div>
         </div>`;
 this._gmVoce(false, p, 0, daQui);
 },
