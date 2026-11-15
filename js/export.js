@@ -665,9 +665,10 @@ veic.forEach(v => { const q = s.elements.find(x => x.type === 'vehicle' && (x.la
 veic.sort((a, b) => String(a.e.label || '~').localeCompare(String(b.e.label || '~'), undefined, { numeric: true }));
 const nomeZona = z => { const d = (RS.elements.DANNI || []).find(x => x[0] === z); return d ? d[1].toLowerCase() : z; };
 const POSA = { fiancosx: 'sul fianco sinistro', fiancodx: 'sul fianco destro', tetto: 'capovolto' };
+const posaDi = e => RS.elements.DUE_RUOTE[e.kind] && POSA[e.posa] && e.posa !== 'tetto' ? 'adagiato ' + POSA[e.posa] : POSA[e.posa] || '';
 const vehRows = veic.map(v => {
 const e = v.e, tipo = (RS.catalog.veicoloById(e.catId) || {}).nome || 'Veicolo';
-const descr = [e.modello ? esc(e.modello) : '', '<span class="muted2">' + esc(tipo) + (POSA[e.posa] ? ', ' + POSA[e.posa] : '') + '</span>'].filter(Boolean).join('<br>');
+const descr = [e.modello ? esc(e.modello) : '', '<span class="muted2">' + esc(tipo) + (posaDi(e) ? ', ' + posaDi(e) : '') + '</span>'].filter(Boolean).join('<br>');
 return `<tr><td class="rif">${esc(e.label || '—')}</td><td>${descr}</td><td>${esc(e.targa ? String(e.targa).toUpperCase() : '—')}</td>` +
 `<td>${esc(e.conducente || '—')}</td><td>${v.danni.length ? esc(v.danni.map(nomeZona).join(', ')) : '—'}</td></tr>`;
 }).join('');
@@ -678,7 +679,7 @@ const tabVeicoli = !veic.length ? '' : `<table class="tveic">${testaPunti('Posiz
 const e = g.v.e, tipo = ((RS.catalog.veicoloById(e.catId) || {}).nome || 'veicolo').toLowerCase();
 const dati = [e.modello ? e.modello + ' (' + tipo + ')' : tipo, e.targa ? 'targa ' + String(e.targa).toUpperCase() : '',
 e.conducente ? 'conducente ' + e.conducente : '', g.v.danni.length ? 'danni: ' + g.v.danni.map(nomeZona).join(', ') : '',
-POSA[e.posa] || '', e.fase && e.fase !== 'quiete' ? 'posizione: ' + (RS.elements.nomeFase(e.fase) || e.fase).toLowerCase() : ''].filter(Boolean).join(', ');
+posaDi(e), e.fase && e.fase !== 'quiete' ? 'posizione: ' + (RS.elements.nomeFase(e.fase) || e.fase).toLowerCase() : ''].filter(Boolean).join(', ');
 return `<tbody class="gveic"><tr class="sub"><td colspan="${nCol}"><b>Veicolo ${esc(e.label || '—')}</b> — ${esc(dati)}</td></tr>` +
 (g.rr.length ? g.rr.map(r => rigaPunto(r, conAltreV)).join('') : `<tr><td></td><td colspan="${nCol - 1}" class="muted2">nessun punto rilevato</td></tr>`) + '</tbody>';
 }).join('') + '</table>';

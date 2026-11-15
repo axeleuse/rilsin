@@ -737,9 +737,17 @@ function mozzi(e) {
 const hl = (e.len || 4) / 2, r2 = v => Math.round(v * 100) / 100;
 const due = { bike: 0.3, monopattino: 0.12, moto: 0.25 }[e.kind];
 if (due != null) {
-const man = { bike: 0.5, monopattino: 0.105, moto: 0.575 }[e.kind], hw = (e.wid || 0.7) / 2;
-return [{ lx: r2(hl - due), ly: 0, nome: 'mozzo della ruota anteriore' }, { lx: r2(-hl + due), ly: 0, nome: 'mozzo della ruota posteriore' },
-{ lx: r2(hl - man), ly: r2(hw * 0.95), nome: 'estremità destra del manubrio' }];
+const hw = (e.wid || 0.7) / 2, W = e.wid || 0.7, L = e.len || 2, k = e.kind;
+const A = 'mozzo della ruota anteriore', P = 'mozzo della ruota posteriore', M = 'estremità del manubrio';
+if (e.posa === 'fiancodx' || e.posa === 'fiancosx') {
+const r = e.posa === 'fiancodx' ? 1 : -1, Y = z => -r * hw + r * z * W;
+const wr = k === 'monopattino' ? Math.min(0.1, W * 0.22) : Math.min(k === 'bike' ? 0.33 : 0.3, W * 0.4, L * 0.16);
+const cxF = hl - wr * 1.02, cxR = -hl + wr * 1.02, zc = wr / W;
+const man = k === 'bike' ? [cxF - wr * 0.3 + 0.12, Math.min(0.95, zc + 0.66) - 0.02] : k === 'monopattino' ? [cxF - 0.16, 0.95] : [cxF - wr * 0.7, 0.86];
+return [{ lx: r2(cxF), ly: r2(Y(zc)), nome: A }, { lx: r2(cxR), ly: r2(Y(zc)), nome: P }, { lx: r2(man[0]), ly: r2(Y(man[1])), nome: M }];
+}
+const man = { bike: 0.5, monopattino: 0.105, moto: 0.575 }[k];
+return [{ lx: r2(hl - due), ly: 0, nome: A }, { lx: r2(-hl + due), ly: 0, nome: P }, { lx: r2(hl - man), ly: r2(hw * 0.95), nome: M }];
 }
 const reg = [];
 registroRuote = reg;
@@ -766,7 +774,7 @@ return out;
 }
 function nomePuntoVeicolo(v, p) {
 if (!p) return 'punto';
-if (!v.posa || v.posa === 'ruote') {
+if (!v.posa || v.posa === 'ruote' || DUE_RUOTE[v.kind]) {
 const d = h => Math.hypot(h.lx - p.lx, h.ly - p.ly);
 const m = mozzi(v).filter(h => d(h) < 0.3).sort((a, b) => d(a) - d(b))[0];
 if (m) return m.nome;
@@ -774,7 +782,7 @@ if (m) return m.nome;
 const fx = p.lx / ((v.len || 4) / 2), fy = p.ly / ((v.wid || 1.8) / 2);
 const lon = fx > 0.6 ? 'anteriore' : fx < -0.6 ? 'posteriore' : '', lat = fy < -0.6 ? 'sinistro' : fy > 0.6 ? 'destro' : '';
 if (DUE_RUOTE[v.kind]) {
-if (lat) return fx > 0 ? 'estremità ' + (fy < 0 ? 'sinistra' : 'destra') + ' del manubrio' : 'fianco ' + lat;
+if (lat && fx > 0) return 'estremità del manubrio';
 if (lon) return 'estremità ' + lon;
 return 'punto ' + p.n;
 }
@@ -2702,7 +2710,7 @@ const s = e.size || 0.5;
 return { lx: (e.llx != null ? e.llx : s*0.9), ly: (e.lly != null ? e.lly : -s*0.7) };
 };
 RS.elements.makeRilpts = function (e, base) {
-const m = e.puntiSu !== 'spigoli' && (!e.posa || e.posa === 'ruote') ? mozzi(e) : [];
+const m = e.puntiSu !== 'spigoli' && (!e.posa || e.posa === 'ruote' || DUE_RUOTE[e.kind]) ? mozzi(e) : [];
 return (m.length >= 2 ? m : patternPoints(e)).map((p, i) => ({ lx: p.lx, ly: p.ly, n: base + i }));
 };
 RS.elements.mozzi = mozzi; RS.elements.nomePuntoVeicolo = nomePuntoVeicolo;

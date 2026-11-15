@@ -3838,8 +3838,11 @@ const tipico = RS.catalog.veicoloById(e.catId);
 if (tipico && (Math.abs(tipico.len - e.len) > 0.005 || Math.abs(tipico.wid - e.wid) > 0.005))
 h += `<div class="pbtns"><button class="pbtn" data-b="dimtipo">↺ Misure tipiche (${String(tipico.len).replace('.', ',')} × ${String(tipico.wid).replace('.', ',')} m)</button></div>`;
 h += `<div class="prow">${numFld('Rotazione °', 'rot', round(e.rot || 0, 1), 1)}${textFld('Lettera', 'label', e.label || '')}</div>`;
-const POSE = [['ruote','Su ruote'],['fiancosx','Su fianco sinistro'],['fiancodx','Su fianco destro'],['tetto','Capovolto (sul tetto)']];
+const POSE = RS.elements.DUE_RUOTE[e.kind]
+? [['ruote','In piedi sulle ruote'],['fiancosx','Adagiato sul fianco sinistro'],['fiancodx','Adagiato sul fianco destro'],['tetto','Capovolto']]
+: [['ruote','Su ruote'],['fiancosx','Su fianco sinistro'],['fiancodx','Su fianco destro'],['tetto','Capovolto (sul tetto)']];
 let asp = selFld('Posizione', 'posa', e.posa || 'ruote', POSE);
+if (RS.elements.DUE_RUOTE[e.kind]) asp += `<div class="mis-hint esito">Se è a terra scegli il fianco su cui è adagiato: nell'atto è scritto nella riga del veicolo; i punti restano mozzo anteriore, mozzo posteriore ed estremità del manubrio.</div>`;
 if (e.kind !== 'trailer' && e.catId !== 'operatrice') asp += numFld('Sterzo ° (+ destra)', 'sterzo', round(e.sterzo || 0, 1), 5);
 if (RS.elements.snodoInfo(e)) asp += numFld('Snodo ° (+ destra)', 'snodo', round(e.snodo || 0, 1), 5);
 asp += chkFld('Freccia di marcia', 'freccia', !!e.freccia);
@@ -3870,7 +3873,7 @@ h += section('Zona dei danni',
 `<div class="danni-grid">` + RS.elements.DANNI.map(d =>
 `<label class="pchk"><input type="checkbox" data-danno="${d[0]}"${danni.indexOf(d[0]) >= 0 ? ' checked' : ''}> ${d[1]}</label>`).join('') + `</div>`,
 danni.length > 0, { riass: danni.length ? String(danni.length) : 'nessuna' });
-const ribaltato = e.posa && e.posa !== 'ruote';
+const ribaltato = e.posa && e.posa !== 'ruote' && !RS.elements.DUE_RUOTE[e.kind];
 const puntiSu = ribaltato ? '' : selFld('Punti sui', 'puntiSu', e.puntiSu === 'spigoli' ? 'spigoli' : 'mozzi', [['mozzi', 'Mozzi delle ruote'], ['spigoli', 'Spigoli della sagoma']]);
 if (e.rilpts && e.rilpts.length) {
 let pt = puntiSu + `<div class="muted aiuto">Trascinali sul disegno per ridisporli (✕ per togliere):</div>`;
@@ -4157,6 +4160,12 @@ return;
 const sezK = e.type === 'road' && (RS.elements.SEZIONE_K[k] || k === 'wid');
 if (sezK && RS.elements.SEZIONE_K[k]) RS.elements.avviaSezione(e);
 e[k] = v;
+if (k === 'posa' && commit && e.type === 'vehicle' && RS.elements.DUE_RUOTE[e.kind] && e.rilpts && e.rilpts.length && e.puntiSu !== 'spigoli') {
+const L = String(e.label || '').toUpperCase(), re = L ? new RegExp('(?:→|->)\\s*' + L + '\\d+\\b', 'i') : null;
+const prese = re && (RS.scene.misure || []).some(m => re.test(m.descr || '') && m.val !== '' && m.val != null);
+if (!prese) e.rilpts = RS.elements.makeRilpts(e, 1);
+setTimeout(() => RS.ui.renderProps(), 0);
+}
 const spL = k === 'label' && e.type === 'symbol' && commit && RS.verifica ? RS.scene.elements.find(x => x.type === 'surveypt' && x.diSimbolo === e.id) : null;
 if (spL) {
 const prima = RS.verifica.codicePunto(spL); RS.verifica.allineaNomiPunti(); const dopo = RS.verifica.codicePunto(spL), scritta = String(v || '').trim().toUpperCase();
