@@ -122,6 +122,28 @@ if (!best || voto < best.voto - 1e-9) best = Object.assign(r, { voto });
 });
 return best;
 }
+function misuraNonControllata(oss, p) {
+if (oss.length < 3) return null;
+const J = oss.map(o => { const dx = p.x - o.x, dy = p.y - o.y, r = Math.hypot(dx, dy) || 1e-9; return [dx / r, dy / r]; });
+let a = 0, b = 0, c = 0; J.forEach(([x, y]) => { a += x * x; b += x * y; c += y * y; });
+const det = a * c - b * b; if (Math.abs(det) < 1e-9) return null;
+let peggio = null, mde = 0;
+J.forEach(([x, y], i) => {
+const h = Math.min(0.9999, (c * x * x - 2 * b * x * y + a * y * y) / det), m = tolMisura(oss[i].d) / (1 - h);
+if (m > mde) { mde = m; peggio = oss[i]; }
+});
+return mde > 1 ? Object.assign({}, peggio, { nascosto: mde }) : null;
+}
+function soluzioni(oss) {
+const partenze = [];
+for (let i = 0; i < oss.length; i++) for (let j = i + 1; j < oss.length; j++) intersezioni(oss[i], oss[j]).forEach(p => partenze.push(p));
+if (!partenze.length) partenze.push({ x: oss.reduce((s, o) => s + o.x, 0) / oss.length, y: oss.reduce((s, o) => s + o.y, 0) / oss.length });
+const sol = [];
+partenze.forEach(p => { const r = affina(oss, p); if (!sol.some(s => Math.hypot(s.x - r.x, s.y - r.y) < 0.01)) sol.push(r); });
+sol.sort((a, b) => a.costo - b.costo);
+const migliore = sol[0].costo;
+return sol.filter(s => s.costo <= migliore + 1e-4);
+}
 function qualitaTriangolo(L, dA, dB, nomi) {
 nomi = nomi || ['A', 'B'];
 if (!(L > 0) || !(dA > 0) || !(dB > 0)) return null;
@@ -357,13 +379,14 @@ const min = Math.min.apply(null, g.map(o => o.d)), max = Math.max.apply(null, g.
 if (max - min > tolMisura(max)) esiti.push({ livello: 'errore', punto: g[0].a, ripeti: { da: g[0].da, a: g[0].a, rif: (g.find(o => o.registro) || g[0]).rif },
 testo: `La misura ${nome(g[0])} è registrata con valori diversi: ${g.map(o => o.rif + ' = ' + m2(o.d) + ' m').join(', ')}. Ripetila e correggi il valore sbagliato.` });
 });
+const misurati = capisaldiMisurati(cap, distanzePerPunto(oss, cap)).noti, dove = L => misurati[L] || cap[L];
 const perPunto = {};
 Object.keys(coppie).forEach(k => {
 const g = coppie[k].slice().sort((a, b) => (b.registro - a.registro));
 let o = g[0];
 if (!cap[o.da] && cap[o.a]) o = Object.assign({}, o, { da: o.a, a: o.da });
 if (!cap[o.da]) return;
-(perPunto[o.a] = perPunto[o.a] || []).push(Object.assign({}, o, { x: cap[o.da].x, y: cap[o.da].y }));
+(perPunto[o.a] = perPunto[o.a] || []).push(Object.assign({}, o, { x: dove(o.da).x, y: dove(o.da).y }));
 });
 const ortog = {};
 RS.scene.elements.filter(e => e.type === 'measure').forEach(q => {
@@ -391,8 +414,9 @@ return { o, altreOk, scarto: Math.hypot(s.x - o.x, s.y - o.y) - o.d,
 lontano: disegnato ? Math.hypot(s.x - disegnato.x, s.y - disegnato.y) : 0 };
 });
 if (g.length >= 4) {
-const ok = prove.filter(p => p.altreOk).sort((a, b) => Math.abs(b.scarto) - Math.abs(a.scarto));
-if (ok.length === 1 || (ok.length && Math.abs(ok[0].scarto) > 2 * Math.abs((ok[1] || { scarto: 0 }).scarto))) {
+prove.forEach((p, i) => { const altre = g.filter((x, j) => j !== i), s = stima(altre, disegnato); p.residuo = Math.max.apply(null, s.scarti.map(Math.abs)); });
+const ok = prove.filter(p => p.altreOk).sort((a, b) => a.residuo - b.residuo);
+if (ok.length === 1 || (ok.length && Math.abs(ok[0].scarto) > tolMisura(ok[0].o.d) && ok[1].residuo > 2 * ok[0].residuo + 0.02)) {
 const p = ok[0];
 esiti.push({ livello: 'errore', punto: T, ripeti: { da: p.o.da, a: T, rif: p.o.rif }, testo: `Punto ${T}: la misura ${conRif(p.o)} non torna con le altre ${g.length - 1} ` +
 `(scarto ${cm(p.scarto)}): senza di lei il punto quadra. Ripeti questa misura; con le altre risulterebbe ${m2(p.o.d + p.scarto)} m.` });
@@ -403,6 +427,11 @@ const p = ord[0];
 esiti.push({ livello: 'errore', punto: T, ripeti: { da: p.o.da, a: T, rif: p.o.rif }, testo: `Punto ${T}: le tre distanze non tornano (scarto fino a ${cm(peggio)}), quindi una è sbagliata. ` +
 `La più probabile è ${conRif(p.o)}: con le altre due risulterebbe ${m2(p.o.d + p.scarto)} m. Ripetila; per esserne certi prendi anche una quarta distanza.` });
 }
+} else {
+const sola = misuraNonControllata(g, tutte);
+if (sola) esiti.push({ livello: 'avviso', punto: T, testo: `Punto ${T}: le distanze tornano, ma ${conRif(sola)} è poco controllata dalle altre ` +
+`(gli altri capisaldi sono quasi in linea con il punto): un suo errore ${sola.nascosto >= 5 ? 'anche grande' : 'fino a circa ' + Math.round(sola.nascosto * 100) + ' cm'} non si vedrebbe. ` +
+`Prendi una distanza da un caposaldo in un'altra direzione.` });
 }
 }
 if (g.length === 2 && !cap[T] && !ortog[T]) {
@@ -414,12 +443,12 @@ else if (q && q.liv === 'accettabile') esiti.push({ livello: 'info', punto: T,
 testo: `Punto ${T}, base ${a.da}–${b.da}: ${q.testo}.` });
 }
 if (ortog[T]) g.forEach(o => {
-const P = ortog[T], atteso = Math.hypot(P.x - o.x, P.y - o.y);
+const P = ortog[T], atteso = Math.hypot(P.x - cap[o.da].x, P.y - cap[o.da].y);
 if (Math.abs(atteso - o.d) > tolMisura(o.d)) esiti.push({ livello: 'errore', punto: T,
 testo: `Punto ${T}: la distanza di controllo ${conRif(o)} di ${m2(o.d)} m non torna con ascissa e ordinata, che danno ${m2(atteso)} m (scarto ${cm(o.d - atteso)}). Ripeti le misure di ${T}.` });
 });
 if (disegnato) g.filter(o => o.registro).forEach(o => {
-const sulDisegno = Math.hypot(disegnato.x - o.x, disegnato.y - o.y);
+const sulDisegno = Math.hypot(disegnato.x - cap[o.da].x, disegnato.y - cap[o.da].y);
 if (Math.abs(sulDisegno - o.d) > tolDisegno(o.d)) esiti.push({ livello: 'info', punto: T,
 testo: `${nome(o)}: misurata ${m2(o.d)} m (${o.rif}), sul disegno ${m2(sulDisegno)} m. Il disegno va avvicinato alla misura: lo fa «Allinea il disegno» nel Rilievo dei punti.` });
 });
@@ -439,9 +468,8 @@ if (!cap[o.da]) return;
 });
 return per;
 }
-function pianoAllineamento() {
-const S = RS.scene, { cap, tgt } = punti(), oss = osservazioni(), per = distanzePerPunto(oss, cap);
-const cambi = [], scartati = [];
+function capisaldiMisurati(cap, per) {
+const S = RS.scene, cambi = [], scartati = [];
 const b = (S.meta && S.meta.base) || {}, A = S.get(b.aId), B = S.get(b.bId);
 const noti = {};
 if (A && B && A !== B) {
@@ -455,8 +483,9 @@ sp: Math.abs(v - L), el: B, nuovo: noti[LB] });
 }
 }
 else Object.keys(cap).forEach(k => { noti[k] = cap[k]; });
+const gruppo = T => (per[T] || []).filter(o => noti[o.da]).map(o => Object.assign({}, o, { x: noti[o.da].x, y: noti[o.da].y }));
 const posizione = (T, disegnato) => {
-const g = (per[T] || []).filter(o => noti[o.da]).map(o => Object.assign({}, o, { x: noti[o.da].x, y: noti[o.da].y }));
+const g = gruppo(T);
 if (g.length < 2) return null;
 const s = stima(g, disegnato);
 if (s.scarti.some((r, i) => Math.abs(r) > tolMisura(g[i].d))) return { incoerente: true };
@@ -475,6 +504,11 @@ if (sp > 0.01) cambi.push({ tipo: 'caposaldo', nome: 'Caposaldo ' + k, sp, el: e
 });
 if (!nuovi) break;
 }
+return { noti, cambi, scartati, gruppo, posizione };
+}
+function pianoAllineamento() {
+const S = RS.scene, { cap, tgt } = punti(), oss = osservazioni(), per = distanzePerPunto(oss, cap);
+const { noti, cambi, scartati, gruppo, posizione } = capisaldiMisurati(cap, per);
 const ortog = new Set();
 S.elements.filter(e => e.type === 'measure').forEach(q => {
 const k = RXORD.exec(q.note || ''); if (!k) return;
@@ -499,21 +533,8 @@ if (p.incoerente) { scartati.push(T); return; }
 const sp = Math.hypot(p.x - e.x, p.y - e.y);
 if (sp > 0.01) cambi.push({ tipo: 'punto', nome: 'Punto ' + T, sp, el: e, nuovo: { x: p.x, y: p.y } });
 });
-veicoliMisurati().forEach(v => {
-const L = String(v.label).toUpperCase(), coppie = [];
-v.rilpts.forEach(p => {
-const T = L + p.n, q = posizione(T, tgt[T]);
-if (!q) return;
-if (q.incoerente) { scartati.push(T); return; }
-const pl = RS.elements.locale ? RS.elements.locale(v, p.lx, p.ly) : p;
-coppie.push({ l: { x: pl.lx, y: pl.ly }, w: q });
-});
-if (!coppie.length) return;
-let rot = (v.rot || 0) * Math.PI / 180, x, y;
-if (coppie.length === 1) {
-const c = coppie[0], cs = Math.cos(rot), sn = Math.sin(rot);
-x = c.w.x - (c.l.x * cs - c.l.y * sn); y = c.w.y - (c.l.x * sn + c.l.y * cs);
-} else {
+const adatta = coppie => {
+let rot, x, y;
 const n = coppie.length, lc = { x: 0, y: 0 }, wc = { x: 0, y: 0 };
 coppie.forEach(c => { lc.x += c.l.x / n; lc.y += c.l.y / n; wc.x += c.w.x / n; wc.y += c.w.y / n; });
 let sx = 0, sy = 0;
@@ -524,12 +545,41 @@ sx += px * qx + py * qy; sy += px * qy - py * qx;
 rot = Math.atan2(sy, sx);
 const cs = Math.cos(rot), sn = Math.sin(rot);
 x = wc.x - (lc.x * cs - lc.y * sn); y = wc.y - (lc.x * sn + lc.y * cs);
-}
-const cs = Math.cos(rot), sn = Math.sin(rot);
 const scarto = Math.sqrt(coppie.reduce((s, c) => {
 const wx = x + c.l.x * cs - c.l.y * sn, wy = y + c.l.x * sn + c.l.y * cs;
 return s + (wx - c.w.x) ** 2 + (wy - c.w.y) ** 2;
-}, 0) / coppie.length);
+}, 0) / n);
+return { rot, x, y, scarto };
+};
+veicoliMisurati().forEach(v => {
+const L = String(v.label).toUpperCase(), cand = [];
+v.rilpts.forEach(p => {
+const T = L + p.n, g = gruppo(T);
+if (g.length < 2) return;
+const sol = soluzioni(g);
+if (sol[0].scarti.some((r, i) => Math.abs(r) > tolMisura(g[i].d))) { scartati.push(T); return; }
+const pl = RS.elements.locale ? RS.elements.locale(v, p.lx, p.ly) : p, vic = tgt[T];
+if (vic) sol.sort((a, b) => Math.hypot(a.x - vic.x, a.y - vic.y) - Math.hypot(b.x - vic.x, b.y - vic.y));
+cand.push({ l: { x: pl.lx, y: pl.ly }, opts: sol.slice(0, 2).map(s => ({ x: s.x, y: s.y })), vic });
+});
+if (!cand.length) return;
+let rot = (v.rot || 0) * Math.PI / 180, x, y, scarto = 0, coppie;
+if (cand.length === 1) {
+const c = { l: cand[0].l, w: cand[0].opts[0] }, cs = Math.cos(rot), sn = Math.sin(rot);
+coppie = [c];
+x = c.w.x - (c.l.x * cs - c.l.y * sn); y = c.w.y - (c.l.x * sn + c.l.y * cs);
+} else {
+const doppi = cand.map((c, i) => c.opts.length > 1 ? i : -1).filter(i => i >= 0).slice(0, 10);
+let best = null;
+for (let m = 0; m < (1 << doppi.length); m++) {
+const scelta = cand.map((c, i) => { const b = doppi.indexOf(i); return { l: c.l, w: c.opts[b >= 0 && (m >> b) & 1 ? 1 : 0], vic: c.vic }; });
+const f = adatta(scelta);
+const lontano = scelta.reduce((s, c) => s + (c.vic ? Math.hypot(c.w.x - c.vic.x, c.w.y - c.vic.y) : 0), 0);
+if (!best || f.scarto < best.f.scarto - 0.02 || (Math.abs(f.scarto - best.f.scarto) <= 0.02 && lontano < best.lontano))
+best = { f, scelta, lontano };
+}
+({ rot, x, y, scarto } = best.f); coppie = best.scelta;
+}
 let gradi = rot * 180 / Math.PI; gradi = ((gradi % 360) + 360) % 360;
 const dRot = ((gradi - (v.rot || 0) + 540) % 360) - 180, sp = Math.hypot(x - v.x, y - v.y);
 if (sp > 0.01 || Math.abs(dRot) > 0.2)
@@ -556,6 +606,8 @@ const e = c.el, prima = { x: e.x, y: e.y };
 e.x = Math.round(c.nuovo.x * 1000) / 1000; e.y = Math.round(c.nuovo.y * 1000) / 1000;
 if (c.nuovo.rot != null) e.rot = Math.round(c.nuovo.rot * 10) / 10;
 if (c.tipo !== 'veicolo') seguiQuote(prima, e);
+const sim = e.type === 'surveypt' && e.diSimbolo ? S.get(e.diSimbolo) : null;
+if (sim && !sim.locked) { sim.x = e.x; sim.y = e.y; }
 });
 if (piano.cambi.length) (piano.ortog || []).forEach(T => ricalcolaPunto(T));
 S.render(); S.snapshot(); S.emit('change');

@@ -691,7 +691,7 @@ return `<div class="inc-pan">
 function lega(root, c) {
 c.bracci = c.bracci || [];
 const S = RS.scene, fatto = (ridisegna) => { S.render(); S.snapshot(); if (RS.ui) { RS.ui.renderLegend && RS.ui.renderLegend(); if (ridisegna) setTimeout(() => RS.ui.renderProps(), 0); } };
-const val = inp => inp.type === 'checkbox' ? inp.checked : inp.type === 'number' ? parseFloat(inp.value) : inp.value;
+const val = inp => inp.type === 'checkbox' ? inp.checked : (inp.type === 'number' || inp.dataset.numero === '1') ? parseFloat(String(inp.value).replace(',', '.')) : inp.value;
 root.querySelectorAll('[data-ip]').forEach(inp => inp.addEventListener('change', () => {
 const k = inp.dataset.ip, v = val(inp);
 if (typeof v === 'number' && isNaN(v)) return;

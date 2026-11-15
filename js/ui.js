@@ -1885,10 +1885,11 @@ F = { x: A.x + dA * ux, y: A.y + dA * uy };
 punti = dB < 0.005 ? [F] : [1, -1].map(s => ({ x: F.x - s * dB * uy, y: F.y + s * dB * ux }));
 } else {
 if (isNaN(dA) || isNaN(dB) || dA <= 0 || dB <= 0) return nessuno('Scrivi le due distanze: i punti possibili compaiono sulla tavola.');
-if (dA + dB <= L) return nessuno(`⚠ Distanze troppo corte: la somma (${(dA + dB).toFixed(2).replace('.', ',')} m) non supera la base (${L.toFixed(2).replace('.', ',')} m).`);
-if (Math.abs(dA - dB) >= L) return nessuno('⚠ Una distanza è troppo lunga rispetto all\'altra.');
+if (dA + dB < L - 0.02) return nessuno(`⚠ Distanze troppo corte: la somma (${(dA + dB).toFixed(2).replace('.', ',')} m) non arriva alla base (${L.toFixed(2).replace('.', ',')} m).`);
+if (Math.abs(dA - dB) > L + 0.02) return nessuno('⚠ Una distanza è troppo lunga rispetto all\'altra.');
 punti = [false, true].map(dx => triangulate({ x: A.x, y: A.y }, { x: B.x, y: B.y }, dA, dB, dx));
 if (!punti[0] || !punti[1]) return nessuno('⚠ Le distanze non si intersecano: ricontrolla.');
+if (Math.hypot(punti[0].x - punti[1].x, punti[0].y - punti[1].y) < 0.01) punti = [punti[0]];
 }
 const scelta = punti.length > 1 ? triProposto(A, B, punti, this._triLati || {}) : { i: 0, motivo: 'sulla base' };
 const ic = el('triCtrl'), ctrl = ort && ic ? parseFloat(ic.value) : NaN;
@@ -4110,7 +4111,7 @@ return;
 }
 let v;
 if (inp.type === 'checkbox') v = inp.checked;
-else if (inp.type === 'number' || inp.type === 'range') { v = parseFloat(inp.value); if (isNaN(v)) return; }
+else if (inp.type === 'number' || inp.type === 'range' || inp.dataset.numero === '1') { v = parseFloat(String(inp.value).replace(',', '.')); if (isNaN(v)) return; }
 else v = inp.value;
 if (k === 'cartello') {
 const d = RS.catalog.byId(v); if (!d) return;
@@ -4652,10 +4653,9 @@ return cambi;
 }
 function triangulate(A, B, dA, dB, sideRight) {
 const dx = B.x-A.x, dy = B.y-A.y, d = Math.hypot(dx, dy);
-if (d === 0 || d > dA+dB || d < Math.abs(dA-dB)) return null;
+if (d === 0 || d > dA+dB+0.02 || d < Math.abs(dA-dB)-0.02) return null;
 const a = (dA*dA - dB*dB + d*d) / (2*d);
-const hh = dA*dA - a*a; if (hh < 0) return null;
-const h = Math.sqrt(hh);
+const h = Math.sqrt(Math.max(0, dA*dA - a*a));
 const mx = A.x + a*dx/d, my = A.y + a*dy/d;
 const ox = -dy/d*h, oy = dx/d*h, s = sideRight ? 1 : -1;
 return { x: mx + s*ox, y: my + s*oy };

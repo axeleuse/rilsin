@@ -1,10 +1,20 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 279;
-RS.DATA_BUILD = '2026-11-13';
+RS.BUILD = 280;
+RS.DATA_BUILD = '2026-11-16';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 280, data: '2026-11-16', voci: [
+'Controllo delle misure più affidabile: le tre o più distanze di un punto si confrontano con i capisaldi dove li mettono le misure (base misurata, capisaldi aggiunti dalle loro distanze) e non con il disegno. Prima, con la base o un caposaldo disegnati un po\' fuori posto, misure giuste potevano risultare «sbagliate» (con l\'invito a ripeterle) e un errore vero poteva sfuggire.',
+'Con quattro distanze, la misura da ripetere è quella che, tolta, fa tornare meglio le altre: prima in qualche caso veniva indicata una misura giusta.',
+'Nuovo avviso: quando le distanze tornano ma una di loro è poco controllata dalle altre (gli altri capisaldi arrivano al punto quasi dalla stessa direzione), il programma lo dice e consiglia una distanza da un caposaldo in un\'altra direzione: un errore in quella misura sposterebbe il punto senza che nulla lo segnali.',
+'Allinea il disegno: i veicoli lunghi (autoarticolati, autosnodati, autobus) con i punti da una parte e dall\'altra della base vanno al loro posto. Con due distanze ogni punto ha due posizioni possibili, speculari rispetto alla base: ora si sceglie la combinazione con cui la sagoma del veicolo torna, non più punto per punto (prima il veicolo poteva finire fuori di decine di centimetri).',
+'Allinea il disegno: il simbolo del punto d\'urto (e della posizione di quiete, delle macchie, dei detriti…) va con il suo punto P dove dicono le misure; prima si spostava solo il punto.',
+'Triangola: un punto sulla retta della base (le due distanze sommate danno la base, entro 2 cm) è accettato; prima risultava «distanze troppo corte».',
+'Telefono e tablet: le misure scritte con la virgola nei campi numerici (base, distanze, altre misure, misure degli oggetti) si leggono sempre; su iPhone un valore come «5,30» poteva andare perso senza avviso.',
+'Autodiagnosi: tre prove nuove, 98 in tutto.'
+] },
 { build: 279, data: '2026-11-13', voci: [
 'Punti dei veicoli sui mozzi delle ruote, dove di solito si prendono le misure: auto, furgoni e mezzi pesanti 1 e 2 sull\'asse anteriore, 3 e 4 su quello posteriore; tutti i mezzi a due ruote (moto, ciclomotori, scooter, bici e monopattini) tre punti: 1 mozzo anteriore, 2 mozzo posteriore, 3 estremità del manubrio, anche quando sono a terra; il fianco su cui il mezzo è adagiato (Posizione: «Adagiato sul fianco destro/sinistro») è scritto a parte, nella riga del veicolo dell\'atto; gli autosnodati anche sull\'asse di mezzo. Nelle proprietà del veicolo, «Punti sui», si può tornare agli spigoli della sagoma. L\'atto, il Rilievo dei punti e le misure guidate dicono di che punto si tratta («A1 mozzo anteriore sinistro», «B1 mozzo della ruota anteriore»); le tavole già fatte tengono i loro punti, con il loro nome giusto.',
 'Punto d\'urto, posizione di quiete, macchie, detriti e gli altri punti utili: la sigla scritta in «Etichetta» (per esempio U) diventa il nome del punto nelle misure guidate, nel Rilievo dei punti, nell\'atto e in legenda, anche nelle misure già prese. Senza sigla resta P1, P2… Le proprietà del simbolo dicono come si chiama il punto; una sigla già usata da un caposaldo, da un veicolo o da un altro punto non vale e il programma lo dice.',
@@ -395,6 +405,27 @@ RS.scene.select(RS.scene.elements.filter(x => !(x.locked && x.type === 'image') 
 const zoomLibero = ev => !!(ev.target && ev.target.closest && ev.target.closest('.pv-grande, .cv-foto'));
 ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, ev => { if (!zoomLibero(ev)) ev.preventDefault(); }, { passive: false }));
 document.addEventListener('touchmove', ev => { if (ev.touches && ev.touches.length > 1 && !zoomLibero(ev)) ev.preventDefault(); }, { passive: false });
+const touch = (() => { try { return matchMedia('(pointer: coarse)').matches || !!RS.ios; } catch (e) { return !!RS.ios; } })();
+if (touch) {
+document.addEventListener('focusin', ev => {
+const t = ev.target;
+if (!t || t.tagName !== 'INPUT' || t.type !== 'number') return;
+const v = t.value;
+try { t.type = 'text'; } catch (e) { return; }
+t.setAttribute('inputmode', 'decimal'); t.setAttribute('autocomplete', 'off');
+t.dataset.numero = '1'; t.value = v;
+}, true);
+const virgola = ev => {
+const t = ev.target;
+if (!t || t.tagName !== 'INPUT' || !t.dataset || t.dataset.numero !== '1') return;
+if (t.value.indexOf(',') < 0) return;
+const pos = t.selectionStart;
+t.value = t.value.replace(/,/g, '.');
+try { t.setSelectionRange(pos, pos); } catch (e) {}
+};
+document.addEventListener('input', virgola, true);
+document.addEventListener('change', virgola, true);
+}
 const scrive = n => !!n && (n.tagName === 'TEXTAREA' || n.isContentEditable ||
 (n.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|reset|range|color|file|image)$/i.test(n.type || '')));
 const tocco = () => window.matchMedia && matchMedia('(pointer: coarse)').matches;
