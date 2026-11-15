@@ -736,7 +736,11 @@ let registroRuote = null;
 function mozzi(e) {
 const hl = (e.len || 4) / 2, r2 = v => Math.round(v * 100) / 100;
 const due = { bike: 0.3, monopattino: 0.12, moto: 0.25 }[e.kind];
-if (due != null) return [{ lx: r2(hl - due), ly: 0, nome: 'mozzo della ruota anteriore' }, { lx: r2(-hl + due), ly: 0, nome: 'mozzo della ruota posteriore' }];
+if (due != null) {
+const man = { bike: 0.5, monopattino: 0.105, moto: 0.575 }[e.kind], hw = (e.wid || 0.7) / 2;
+return [{ lx: r2(hl - due), ly: 0, nome: 'mozzo della ruota anteriore' }, { lx: r2(-hl + due), ly: 0, nome: 'mozzo della ruota posteriore' },
+{ lx: r2(hl - man), ly: r2(hw * 0.95), nome: 'estremità destra del manubrio' }];
+}
 const reg = [];
 registroRuote = reg;
 try { drawVehicleBody(N('g'), Object.assign({}, e, { posa: 'ruote', snodo: 0, sterzo: 0 })); } catch (err) {  }
@@ -763,7 +767,8 @@ return out;
 function nomePuntoVeicolo(v, p) {
 if (!p) return 'punto';
 if (!v.posa || v.posa === 'ruote') {
-const m = mozzi(v).find(h => Math.hypot(h.lx - p.lx, h.ly - p.ly) < 0.3);
+const d = h => Math.hypot(h.lx - p.lx, h.ly - p.ly);
+const m = mozzi(v).filter(h => d(h) < 0.3).sort((a, b) => d(a) - d(b))[0];
 if (m) return m.nome;
 }
 const fx = p.lx / ((v.len || 4) / 2), fy = p.ly / ((v.wid || 1.8) / 2);
