@@ -428,7 +428,7 @@ return Object.assign({
 titolo: '', orient: 'auto', comando: true, stazione: true, numero: true, data: true,
 operatore: true, condizioni: false, coordinate: true, scala: true, nord: true, logo: true, bozza: false, bn, simboli: true, scalaFissa,
 luogo: true, stato: true, firme: true,
-legenda: lay.legenda !== false, disposizione: lay.disposizione || 'auto', ordine: Array.isArray(lay.ordine) ? lay.ordine : null
+legenda: lay.legenda !== false, disposizione: lay.disposizione || 'auto', ordine: Array.isArray(lay.ordine) ? lay.ordine : null, tabMisure: lay.tabMisure || ''
 }, this.printOpts || {});
 },
 applyMetaDefaults() {

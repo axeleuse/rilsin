@@ -1,10 +1,18 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 282;
+RS.BUILD = 283;
 RS.DATA_BUILD = '2026-11-16';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 283, data: '2026-11-17', voci: [
+'Punti del veicolo: un pallino piccolo segna il punto esatto e il numero sta fuori dalla sagoma, legato da un filo sottile; i numeri vicini si allargano da soli. Il disegno non resta più coperto dai cerchi. Si trascina il pallino.',
+'Il nome di ogni punto (mozzo anteriore sinistro, spigolo posteriore lato tetto...) resta quello stabilito anche se il punto si sposta. In Proprietà, Punti di rilievo, ogni punto ha il suo nome scritto: si può cambiare a mano o scegliere dall\'elenco; vuoto torna automatico.',
+'Tabella delle misure sul foglio di stampa: nelle opzioni di stampa, Disposizione del foglio, si sceglie se metterla con la legenda (sotto nella colonna, accanto nella fascia) o nel disegno, in uno dei quattro angoli. Ha le stesse righe dell\'atto: base, punti di ogni veicolo con il nome e le distanze dai due capisaldi, altri punti, tracce e altre misure.',
+'Motrice ridisegnata: telaio con le traverse, parafanghi, serbatoio, batterie, passerella con i tubi dell\'aria, ralla; anche su un fianco.',
+'Mezzi pesanti su un fianco: autocisterna, motrice e macchina operatrice hanno i punti in fondo al mezzo (testata del serbatoio, telaio, benna) e non più a metà, sulla cabina.',
+'Autodiagnosi: 101 prove.'
+] },
 { build: 282, data: '2026-11-17', voci: [
 'Veicoli ridisegnati, visti dall\'alto come nelle foto aeree. Auto: carrozzeria sagomata con il volume, vetri (parabrezza, finestrini, lunotto) con il tetto sopra, fari a goccia, fanali, specchietti. Furgoni, camper e ambulanza: muso arrotondato, parabrezza, tetto con le nervature. Camion e mezzi articolati: cabina nuova con parabrezza, deflettore e specchi; cassoni con il volume. Autobus: fascia dei finestrini, condizionatore e botole sul tetto, parabrezza grande. Le misure restano quelle vere (la scala non cambia) e i mozzi restano dove erano.',
 'Su un fianco: sagoma laterale con gli angoli arrotondati, luce dal lato del tetto, ruote con cerchi e razze. Capovolti: auto e furgoni con la loro sagoma arrotondata e il sottoscocca. In bianco e nero luci e ombre si spengono e la trama segue la sagoma.',

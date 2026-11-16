@@ -2222,6 +2222,9 @@ el('printBody').innerHTML =
              <select id="poDisp">${[['auto', 'Automatica'], ['destra', 'In una colonna a destra'], ['sinistra', 'In una colonna a sinistra'], ['basso', 'In una fascia in basso'], ['alto', 'In una fascia in alto']]
 .map(([v, l]) => `<option value="${v}"${(po.disposizione || 'auto') === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
            <label class="pchk" style="align-self:end"><input type="checkbox" id="poLegenda"${po.legenda !== false ? ' checked' : ''}> Legenda <span class="pchk-hint">${po.legenda !== false ? '' : '(senza: il disegno ha più spazio)'}</span></label>
+           <div class="gfield" style="grid-column:1/-1"><label>Tabella delle misure sul foglio <span class="pchk-hint">(le stesse righe dell'atto delle misure)</span></label>
+             <select id="poTabMis">${[['', 'No'], ['colonna', 'Con la legenda (sotto o accanto)'], ['bs', 'Nel disegno, in basso a sinistra'], ['bd', 'Nel disegno, in basso a destra'], ['as', 'Nel disegno, in alto a sinistra'], ['ad', 'Nel disegno, in alto a destra']]
+.map(([v, l]) => `<option value="${v}"${(po.tabMisure || '') === v ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
          </div>
          <div class="po-ordine" id="poOrdine">
            <div class="po-ord-t">Ordine dei riquadri <span class="pchk-hint">(dall'alto in basso; affiancati da sinistra a destra quando non c'è la legenda)</span></div>
@@ -2268,10 +2271,11 @@ try { localStorage.setItem('rilsin:stampaBn', S.printOpts.bn ? '1' : '0'); } cat
 this.renderPrintPreview();
 });
 const salvaLayout = () => {
-try { localStorage.setItem('rilsin:stampaLayout', JSON.stringify({ legenda: S.printOpts.legenda !== false, disposizione: S.printOpts.disposizione || 'auto', ordine: S.printOpts.ordine || null })); } catch (e) {}
+try { localStorage.setItem('rilsin:stampaLayout', JSON.stringify({ legenda: S.printOpts.legenda !== false, disposizione: S.printOpts.disposizione || 'auto', ordine: S.printOpts.ordine || null, tabMisure: S.printOpts.tabMisure || '' })); } catch (e) {}
 S._foglio = undefined; S.drawGrid(); S.drawFoglio();
 };
 el('poDisp').addEventListener('change', () => { S.printOpts = S.printOpts || {}; S.printOpts.disposizione = el('poDisp').value; salvaLayout(); this.renderPrintPreview(); });
+el('poTabMis').addEventListener('change', () => { S.printOpts = S.printOpts || {}; S.printOpts.tabMisure = el('poTabMis').value; salvaLayout(); this.renderPrintPreview(); });
 el('poLegenda').addEventListener('change', () => { S.printOpts = S.printOpts || {}; S.printOpts.legenda = el('poLegenda').checked; salvaLayout(); const sc = el('printBody').scrollTop; this.openPrint(); el('printBody').scrollTop = sc; });
 el('poOrdine').addEventListener('click', ev => {
 const b = ev.target.closest('[data-ord]'); if (!b) return;
@@ -3299,6 +3303,12 @@ v.rilpts.splice(+btn.dataset.rmpt, 1);
 if (!v.rilpts.length) { delete v.rilpts; delete v.spigoli; }
 RS.scene.render(); RS.scene.snapshot(); this.renderProps();
 });
+body.querySelectorAll('[data-ptnome]').forEach(inp => inp.onchange = () => {
+const v = RS.scene.get(RS.scene.selection[0]), p = v && v.rilpts && v.rilpts[+inp.dataset.ptnome]; if (!p) return;
+p.nome = inp.value.replace(/\s+/g, ' ').trim();
+if (!p.nome) inp.value = RS.elements.nomePuntoVeicolo(v, p);
+RS.scene.snapshot();
+});
 body.querySelectorAll('[data-danno]').forEach(cb => cb.onchange = () => {
 const v = RS.scene.get(RS.scene.selection[0]); if (!v) return;
 const d = (v.danni || []).filter(k => k !== cb.dataset.danno);
@@ -3894,7 +3904,12 @@ const puntiSu = ribaltato ? '' : selFld('Punti sui', 'puntiSu', e.puntiSu === 's
 if (e.rilpts && e.rilpts.length) {
 let pt = puntiSu + `<div class="muted aiuto">Trascinali sul disegno per ridisporli (✕ per togliere):</div>`;
 pt += `<div class="ptchips">` + e.rilpts.map((p, i) => `<span class="ptchip" title="${escAttr(e.label || '')}${p.n}: ${escAttr(RS.elements.nomePuntoVeicolo(e, p))}">${p.n}<button data-rmpt="${i}" title="Elimina punto">✕</button></span>`).join('') + `</div>`;
-pt += `<div class="mis-hint esito" style="margin-top:4px">${e.rilpts.slice().sort((a, b) => a.n - b.n).map(p => `<b>${escAttr(e.label || '')}${p.n}</b> ${escAttr(RS.elements.nomePuntoVeicolo(e, p))}`).join(' · ')}</div>`;
+const nomiStd = [...new Set([].concat(RS.elements.mozzi(Object.assign({}, e, { posa: 'ruote' })), RS.elements.mozzi(Object.assign({}, e, { posa: 'tetto' })),
+(e.posa === 'fiancodx' || e.posa === 'fiancosx') ? RS.elements.makeRilpts(Object.assign({}, e), 1) : []).map(q => q.nome).filter(Boolean))];
+pt += `<datalist id="ptnomi-dl">${nomiStd.concat(['spigolo anteriore sinistro', 'spigolo anteriore destro', 'spigolo posteriore sinistro', 'spigolo posteriore destro', 'estremità anteriore', 'estremità posteriore'])
+.filter((x, i, a) => a.indexOf(x) === i).map(x => `<option value="${escAttr(x)}">`).join('')}</datalist>`;
+pt += `<div class="ptnomi">` + e.rilpts.map((p, i) => ({ p, i })).sort((a, b) => a.p.n - b.p.n).map(({ p, i }) =>
+`<label class="ptnome"><b>${escAttr(e.label || '')}${p.n}</b><input type="text" data-ptnome="${i}" list="ptnomi-dl" value="${escAttr(RS.elements.nomePuntoVeicolo(e, p))}" title="Nome del punto nell'atto: si può riscrivere"></label>`).join('') + `</div>`;
 pt += `<div class="pbtns"><button class="pbtn" data-b="pointadd">＋ Punto</button><button class="pbtn" data-b="pointsregen">↺ Rigenera</button><button class="pbtn danger" data-b="points">Rimuovi tutti</button></div>`;
 h += section('Punti di rilievo', pt, e.rilpts.length <= 6, { riass: String(e.rilpts.length) });
 } else {
@@ -4301,7 +4316,7 @@ if (b.dataset.b === 'pointadd') {
 const e = S.get(sel[0]); if (!e || e.type !== 'vehicle') return;
 e.rilpts = e.rilpts || [];
 const n = e.rilpts.reduce((m, p) => Math.max(m, p.n), 0) + 1;
-e.rilpts.push({ lx: 0, ly: 0, n }); e.spigoli = true;
+e.rilpts.push({ lx: 0, ly: 0, n, nome: '' }); e.spigoli = true;
 S.render(); S.snapshot(); RS.ui.renderProps();
 RS.ui.toast('Punto ' + n + ' aggiunto al centro — trascinalo in posizione');
 return;

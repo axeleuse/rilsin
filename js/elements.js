@@ -301,12 +301,12 @@ ruota(-.7, rr*0.8); ruota(.72, rr*0.8);
 return;
 }
 if (e.catId === 'operatrice') {
-mk('rect', { x: X(-1), y: Math.min(+Y(0), +Y(.26)), width: L*0.66, height: W*0.26, rx: W*0.12, fill: '#2a2a2a', stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
+mk('path', { d: Ptondo([[-1, 0], [-1, .26], [.32, .26], [.32, 0]], W*0.12, true), fill: '#2a2a2a', stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
 for (let x = -.88; x <= .24; x += .16) mk('circle', { cx: x*hl, cy: +Y(.13), r: W*0.08, fill: '#666', stroke: '#222', 'stroke-width': 0.02 }, g);
 scocca([[-.98, .28], [-.98, .62], [.18, .62], [.18, .28]]);
 scocca([[-.16, .62], [-.16, .98], [.12, .98], [.18, .62]]); vetro([[-.12, .66], [-.12, .92], [.08, .92], [.13, .66]]);
 mk('path', { d: `M${X(.16)} ${Y(.5)} L${X(.52)} ${Y(.98)} L${X(.86)} ${Y(.42)}`, fill: 'none', stroke: col, 'stroke-width': W*0.09, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, g);
-mk('path', { d: `M${X(.78)} ${Y(.46)} L${X(1)} ${Y(.38)} L${X(.98)} ${Y(.08)} L${X(.8)} ${Y(.16)} Z`, fill: '#4a4a4a', stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
+mk('path', { d: Ptondo([[.78, .46], [1, .38], [.98, .08], [.8, .16]], 0.05, true), fill: '#4a4a4a', stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
 return;
 }
 const cassone = e.catId === 'betoniera' ? '#b9a27a' : e.catId === 'carroattrezzi' ? '#9aa3ab' : '#dcd7c9';
@@ -317,8 +317,8 @@ scocca([[x0, .18], [x0, 1], [.9, 1], [1, .84], [1, .18]]);
 vetro([[x0 + .06, .6], [x0 + .06, .9], [.88, .9], [.96, .62]]);
 riga(x0 + .04, .2, x0 + .04, .96); luce(1, .22, .32, LIGHT);
 if (e.catId === 'cisterna') {
-const y0 = +Y(.24), y1 = +Y(.96), yt = Math.min(y0, y1), ht = Math.abs(y1 - y0);
-mk('rect', { x: X(-1), y: yt, width: (x0 - .04 + 1) * hl, height: ht, rx: ht * 0.45, fill: '#c9ced5', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
+const ht = Math.abs(+Y(.96) - +Y(.24));
+lucido(mk('path', { d: Ptondo([[-1, .24], [-1, .96], [x0 - .04, .96], [x0 - .04, .24]], ht * 0.45, true), fill: '#c9ced5', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g), r > 0 ? 'vLatoP' : 'vLatoN');
 for (let x = -.7; x < x0 - .2; x += .3) riga(x, .26, x, .94, 0.04);
 mk('rect', { x: +X(-1) + 0.05, y: Math.min(+Y(.4), +Y(.6)), width: 0.1, height: W * 0.2, fill: '#f08a00' }, g);
 } else if (alto > .3) {
@@ -326,7 +326,13 @@ const xe = kind === 'roadtrain' ? -.1 : -1;
 scocca([[xe, .22], [xe, alto], [x0 - .04, alto], [x0 - .04, .22]], e.catId === 'vvf' ? col : cassone);
 for (let x = xe + .1; x < x0 - .08; x += .12) riga(x, .24, x, alto - .02, 0.02);
 if (e.catId === 'vvf') mk('line', { x1: X(xe + .04), y1: Y(.97), x2: X(.9), y2: Y(.97), stroke: '#d8dde2', 'stroke-width': W * 0.05 }, g);
-} else mk('line', { x1: X(-1), y1: Y(.24), x2: X(x0), y2: Y(.24), stroke: '#333', 'stroke-width': 0.14 }, g);
+} else {
+const zr = Math.min(.42, rr * 2 / W + .04);
+scocca([[-1, .14], [-1, zr - .04], [x0 - .02, zr - .04], [x0 - .02, .14]], '#3a3d42');
+mk('path', { d: P([[-.58, zr - .04], [-.58, zr + .04], [-.3, zr + .04], [-.3, zr - .04]]), fill: '#7d838b', stroke: '#0b0b0b', 'stroke-width': 0.03 }, g);
+mk('path', { d: P([[-.8, zr - .06], [-.8, zr], [-.12, zr], [-.12, zr - .06]]), fill: '#1f2226', stroke: '#0b0b0b', 'stroke-width': 0.02 }, g);
+lucido(mk('path', { d: Ptondo([[.06, .16], [.06, .34], [x0 - .1, .34], [x0 - .1, .16]], 0.12), fill: '#c9ced5', stroke: '#222', 'stroke-width': 0.03 }, g), 'vVetro');
+}
 if (e.catId === 'carroattrezzi') mk('line', { x1: X(-.2), y1: Y(.42), x2: X(-1), y2: Y(.62), stroke: '#333', 'stroke-width': W*0.08, 'stroke-linecap': 'round' }, g);
 ruota(1 - cab*0.5, rr);
 }
@@ -691,10 +697,28 @@ wheel(-hl*0.30, -off, wl*0.9, ww); wheel(-hl*0.30, off, wl*0.9, ww);
 wheel(-hl*0.62, -off, wl*0.9, ww); wheel(-hl*0.62, off, wl*0.9, ww);
 const cab = L*0.24, bx = -hl, bw = L-cab-0.08;
 if (cat === 'motrice') {
-mk('line', { x1: -hl+0.1, y1: -hw*0.4, x2: hl-cab, y2: -hw*0.4, stroke: '#333', 'stroke-width': 0.12 }, g);
-mk('line', { x1: -hl+0.1, y1: hw*0.4, x2: hl-cab, y2: hw*0.4, stroke: '#333', 'stroke-width': 0.12 }, g);
-mk('circle', { cx: -hl*0.45, cy: 0, r: W*0.24, fill: '#8a8f96', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
-mk('path', { d: `M${-hl*0.45 - W*0.24} 0 L${-hl*0.45 + W*0.1} 0`, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
+const q = v => +v.toFixed(3), xc = hl - cab, xr = -hl*0.45, rf = W*0.26;
+[-1, 1].forEach(s => mk('rect', { x: q(-hl + 0.05), y: q(s*hw*0.38 - 0.1), width: q(xc + hl), height: 0.2, fill: '#2b2e33', stroke: '#0b0b0b', 'stroke-width': 0.03 }, g));
+for (let x = -hl + 0.35; x < xc - 0.2; x += 0.75) mk('rect', { x: q(x), y: q(-hw*0.38), width: 0.1, height: q(hw*0.76), fill: '#3a3d42' }, g);
+[-1, 1].forEach(s => {
+const x0 = -hl*0.62 - wl*0.32, x1 = -hl*0.30 + wl*0.32, y0 = s > 0 ? hw - ww*1.02 : -hw + 0.02;
+lucido(mk('rect', { x: q(x0), y: q(y0), width: q(x1 - x0), height: q(ww), rx: 0.1, fill: '#24272b', stroke: '#0b0b0b', 'stroke-width': 0.04 }, g));
+});
+const xt0 = -hl*0.30 + wl*0.45, xt1 = xc - 0.08;
+if (xt1 - xt0 > 0.3) {
+lucido(mk('rect', { x: q(xt0), y: q(-hw + 0.04), width: q(xt1 - xt0), height: q(W*0.22), rx: q(W*0.1), fill: '#c9ced5', stroke: '#222', 'stroke-width': 0.04 }, g), 'vVetro');
+lucido(mk('rect', { x: q(xt0 + (xt1 - xt0)*0.35), y: q(hw - 0.04 - W*0.2), width: q((xt1 - xt0)*0.65), height: q(W*0.2), rx: 0.06, fill: '#3a3d42', stroke: '#0b0b0b', 'stroke-width': 0.04 }, g));
+}
+const xp0 = Math.max(xr + rf + 0.1, xc - 0.7);
+mk('rect', { x: q(xp0), y: q(-hw*0.55), width: q(xc - xp0), height: q(hw*1.1), fill: '#9aa0a6', stroke: '#0b0b0b', 'stroke-width': 0.03 }, g);
+for (let y = -hw*0.5; y < hw*0.5; y += 0.16) mk('line', { x1: q(xp0 + 0.04), y1: q(y), x2: q(xc - 0.04), y2: q(y + 0.08), stroke: 'rgba(0,0,0,.25)', 'stroke-width': 0.025 }, g);
+[['#d32f2f', -0.22], ['#f2b400', 0.22]].forEach(([c, y]) =>
+mk('circle', { cx: q(xp0 + Math.min(0.3, (xc - xp0)/2)), cy: q(y), r: 0.13, fill: 'none', stroke: c, 'stroke-width': 0.05, 'stroke-dasharray': '0.06 0.03' }, g));
+lucido(mk('circle', { cx: q(xr), cy: 0, r: q(rf), fill: '#7d838b', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g));
+mk('circle', { cx: q(xr), cy: 0, r: q(rf*0.55), fill: 'none', stroke: 'rgba(0,0,0,.35)', 'stroke-width': 0.03 }, g);
+mk('path', { d: `M${q(xr - rf - 0.02)} ${q(-rf*0.42)} L${q(xr)} -0.06 L${q(xr)} 0.06 L${q(xr - rf - 0.02)} ${q(rf*0.42)} Z`, fill: '#2b2e33' }, g);
+mk('rect', { x: q(-hl), y: q(-hw*0.92), width: 0.14, height: q(hw*1.84), rx: 0.04, fill: '#2b2e33', stroke: '#0b0b0b', 'stroke-width': 0.03 }, g);
+[-1, 1].forEach(s => mk('rect', { x: q(-hl + 0.02), y: q(s > 0 ? hw*0.55 : -hw*0.85), width: 0.1, height: q(hw*0.3), rx: 0.03, fill: TAIL }, g));
 } else if (cat === 'cisterna') {
 B(bx, -hw*0.94, bw, W*0.94, '#c9ced5', W*0.45);
 mk('rect', { x: bx + 0.2, y: -hw*0.2, width: bw - 0.4, height: hw*0.26, rx: 0.1, fill: 'rgba(255,255,255,.55)' }, g);
@@ -955,6 +979,7 @@ return out;
 }
 function nomePuntoVeicolo(v, p) {
 if (!p) return 'punto';
+if (p.nome) return p.nome;
 const d = h => Math.hypot(h.lx - p.lx, h.ly - p.ly), vicino = l => l.filter(h => d(h) < 0.3).sort((a, b) => d(a) - d(b))[0];
 const fianco = !DUE_RUOTE[v.kind] && (v.posa === 'fiancodx' || v.posa === 'fiancosx');
 if (fianco) { const s = vicino(puntiFiancata(v)); if (s) return s.nome; }
@@ -973,21 +998,42 @@ return 'punto ' + p.n;
 }
 function drawVehiclePoints(g, e) {
 const pts = e.rilpts || patternPoints(e).map((p, i) => ({ lx: p.lx, ly: p.ly, n: (e.spigoliBase||1) + i }));
-const rad = Math.max(0.24, e.wid*0.17);
-pts.forEach((p0, i) => {
+const hl = (e.len || 4) / 2, hw = (e.wid || 1.8) / 2, q = v => +v.toFixed(3);
+const rad = Math.max(0.2, Math.min(0.3, (e.wid || 1.8) * 0.12)), dot = rad * 0.42, gap = rad * 2.1, rot = e.rot || 0;
+const L = pts.map((p0, i) => {
 const p = Object.assign({}, p0, locale(e, p0.lx, p0.ly));
-const gp = N('g'); gp.setAttribute('transform', `translate(${p.lx} ${p.ly})`);
-gp.setAttribute('data-rilpt', i); gp.setAttribute('cursor', 'grab');
-mk('circle', { cx: 0, cy: 0, r: rad, fill: '#fff', stroke: '#c00', 'stroke-width': rad*0.24 }, gp);
+const fx = Math.abs(p.lx) / hl, fy = Math.abs(p.ly) / hw;
+return fy > fx ? { p, i, ox: p.lx, oy: (p.ly < 0 ? -1 : 1) * (Math.max(hw, Math.abs(p.ly)) + gap) }
+: { p, i, ox: (p.lx < 0 ? -1 : 1) * (Math.max(hl, Math.abs(p.lx)) + gap), oy: p.ly };
+});
+const min = rad * 2.3;
+for (let it = 0; it < 40; it++) for (let a = 0; a < L.length; a++) for (let b = a + 1; b < L.length; b++) {
+const A = L[a], B = L[b], dx = B.ox - A.ox, dy = B.oy - A.oy, d = Math.hypot(dx, dy);
+if (d >= min) continue;
+const ux = d ? dx / d : (Math.abs(A.oy) > hw ? 1 : 0), uy = d ? dy / d : (Math.abs(A.oy) > hw ? 0 : 1), k = (min - d) / 2;
+A.ox -= ux * k; A.oy -= uy * k; B.ox += ux * k; B.oy += uy * k;
+}
+const r = rot * Math.PI / 180, mondo = (x, y) => ({ x: (e.x || 0) + x * Math.cos(r) - y * Math.sin(r), y: (e.y || 0) + x * Math.sin(r) + y * Math.cos(r) });
+L.forEach(({ p, ox, oy }) => {
+const dx = ox - p.lx, dy = oy - p.ly, d = Math.hypot(dx, dy);
+if (d > rad + dot) mk('line', { x1: q(p.lx + dx / d * dot), y1: q(p.ly + dy / d * dot), x2: q(ox - dx / d * rad), y2: q(oy - dy / d * rad), stroke: '#c00', 'stroke-width': q(rad * 0.15) }, g);
+});
+L.forEach(({ p, ox, oy }) => {
+mk('circle', { cx: q(ox), cy: q(oy), r: q(rad), fill: '#fff', stroke: '#c00', 'stroke-width': q(rad * 0.2) }, g);
 const t = N('text');
-t.setAttribute('x', 0); t.setAttribute('y', 0); t.setAttribute('font-size', rad*1.3);
+t.setAttribute('x', q(ox)); t.setAttribute('y', q(oy)); t.setAttribute('font-size', q(rad * 1.3));
 t.setAttribute('text-anchor', 'middle'); t.setAttribute('dy', '0.35em');
 t.setAttribute('fill', '#c00'); t.setAttribute('font-weight', '700');
-t.setAttribute('transform', `rotate(${-(e.rot||0)})`);
-t.textContent = p.n;
-gp.appendChild(t); g.appendChild(gp);
-const r = (e.rot||0)*Math.PI/180;
-ostacolo(t, (e.x||0) + p.lx*Math.cos(r) - p.ly*Math.sin(r), (e.y||0) + p.lx*Math.sin(r) + p.ly*Math.cos(r), rad);
+t.setAttribute('transform', `rotate(${-rot} ${q(ox)} ${q(oy)})`);
+t.textContent = p.n; g.appendChild(t);
+const w = mondo(ox, oy); ostacolo(t, w.x, w.y, rad);
+});
+L.forEach(({ p, i }) => {
+const gp = N('g'); gp.setAttribute('transform', `translate(${q(p.lx)} ${q(p.ly)})`);
+gp.setAttribute('data-rilpt', i); gp.setAttribute('cursor', 'grab');
+mk('circle', { cx: 0, cy: 0, r: q(rad * 1.1), fill: 'rgba(0,0,0,0)' }, gp);
+mk('circle', { cx: 0, cy: 0, r: q(dot), fill: '#c00', stroke: '#fff', 'stroke-width': q(dot * 0.4) }, gp);
+g.appendChild(gp);
 });
 }
 const spec = l => l.map(p => [-p[0], p[1]]);
@@ -2892,7 +2938,11 @@ return { lx: (e.llx != null ? e.llx : s*0.9), ly: (e.lly != null ? e.lly : -s*0.
 RS.elements.makeRilpts = function (e, base) {
 const fianco = !DUE_RUOTE[e.kind] && (e.posa === 'fiancodx' || e.posa === 'fiancosx');
 const m = fianco ? puntiFiancata(e) : e.puntiSu !== 'spigoli' ? mozzi(e) : [];
-return (m.length >= 2 ? m : patternPoints(e)).map((p, i) => ({ lx: p.lx, ly: p.ly, n: base + i }));
+return (m.length >= 2 ? m : patternPoints(e)).map((p, i) => {
+const q = { lx: p.lx, ly: p.ly, n: base + i };
+q.nome = p.nome || nomePuntoVeicolo(e, q);
+return q;
+});
 };
 RS.elements.mozzi = mozzi; RS.elements.nomePuntoVeicolo = nomePuntoVeicolo;
 RS.elements.resolvePt = function (pt) {

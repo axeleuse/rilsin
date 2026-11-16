@@ -229,19 +229,67 @@ let y = y1 - hs.reduce((a, b) => a + b, 0); const inizio = y;
 Ly.ordine.forEach((kk, i) => { ln(x, y, x + w, y, 0.25); disegnaRiquadro(kk, x, y, w, hs[i]); y += hs[i]; });
 return inizio;
 };
+const dove = po.tabMisure || '';
+const TM = dove ? attoData().tabMisure : null;
+const tmRighe = TM ? (TM.righe.length ? TM.righe : [{ t: 'Nessuna misura ancora presa' }]) : [];
+const tmMisura = hMax => {
+const H = (fs, n, cut) => fs * 1.45 * (n + 2 + (cut ? 1 : 0)) + fs * 0.6;
+let fs = 2.1; while (fs > 1.65 && H(fs, tmRighe.length) > hMax) fs = +(fs - 0.05).toFixed(2);
+let n = tmRighe.length; while (n > 1 && H(fs, n, n < tmRighe.length) > hMax) n--;
+return { fs, n, cut: n < tmRighe.length, h: H(fs, n, n < tmRighe.length) };
+};
+const tmDisegna = (x, y, w, M) => {
+const fs = M.fs, rh = fs * 1.45, xb = x + w - 1.2, xa = xb - fs * 4.4, xd = x + 1.2 + fs * 2.9, cw = fs * 0.5;
+const tt = (X, Y, s, size, a) => t(X, Y, size, s, a);
+out.push(`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(M.h)}" fill="#fff" stroke="${C}" stroke-width="0.3"/>`);
+out.push(`<rect x="${f(x)}" y="${f(y)}" width="${f(w)}" height="${f(rh)}" fill="#222"/>`);
+tt(x + 1.2, y + rh * 0.72, 'MISURE (in metri)', fs, ' font-weight="bold" fill="#fff"');
+let yy = y + rh;
+tt(x + 1.2, yy + rh * 0.72, 'Rif.', fs * 0.9, ' font-weight="bold" fill="#444"'); tt(xd, yy + rh * 0.72, 'Descrizione', fs * 0.9, ' font-weight="bold" fill="#444"');
+tt(xa, yy + rh * 0.72, 'da ' + TM.cA, fs * 0.9, ' font-weight="bold" fill="#444" text-anchor="end"'); tt(xb, yy + rh * 0.72, 'da ' + TM.cB, fs * 0.9, ' font-weight="bold" fill="#444" text-anchor="end"');
+ln(x, yy + rh, x + w, yy + rh, 0.2);
+tmRighe.slice(0, M.n).forEach(r => {
+yy += rh; const b = yy + rh * 0.72;
+if (r.t) { out.push(`<rect x="${f(x + 0.15)}" y="${f(yy + 0.1)}" width="${f(w - 0.3)}" height="${f(rh - 0.2)}" fill="#ececec"/>`); tt(x + 1.2, b, clip(r.t, Math.floor((w - 2.4) / cw)), fs, ' font-weight="bold"'); return; }
+tt(x + 1.2, b, r.k, fs, ' font-weight="bold" fill="#b00"');
+if (r.v != null) {
+const v = clip(r.v, Math.floor((xb - xd) * 0.6 / cw));
+tt(xb, b, v, fs, ' text-anchor="end"');
+tt(xd, b, clip(r.d, Math.max(4, Math.floor((xb - xd - v.length * cw - fs) / cw))), fs);
+} else {
+tt(xd, b, clip(r.d, Math.max(4, Math.floor((xa - fs * 3.6 - xd) / cw))), fs);
+tt(xa, b, r.a || '—', fs, ' text-anchor="end"'); tt(xb, b, r.b || '—', fs, ' text-anchor="end"');
+}
+});
+if (M.cut) tt(x + 1.2, yy + rh * 1.72, '… le altre misure nell\'atto delle misure', fs * 0.9, ' font-style="italic" fill="#444"');
+};
+const tmNelDisegno = ang => {
+const w = Math.min(84, T.Aw * 0.45), M = tmMisura(T.Ah - 6), sx = /s$/.test(ang), basso = /^b/.test(ang);
+tmDisegna(sx ? T.ax + 2 : T.ax + T.Aw - 2 - w, basso ? T.ay + T.Ah - 2 - M.h - (sx ? 3 : 0) : T.ay + 2, w, M);
+};
 if (P.tipo === 'colonna') {
 const xl = Ly.pos === 'sinistra' ? P.x + P.w : P.x; ln(xl, P.y, xl, PH, 0.35);
-const yTop = pila(P.x, P.w, P.y + P.h);
+let yTop = pila(P.x, P.w, P.y + P.h);
+if (dove === 'colonna') {
+const M = tmMisura((yTop - P.y) * (Ly.legenda ? 0.7 : 1) - 3);
+tmDisegna(P.x + 1.5, yTop - M.h - 1.5, P.w - 3, M); yTop -= M.h + 2;
+}
 if (Ly.legenda) disegnaLegenda(P.x, P.y, P.w, yTop);
 } else if (P.tipo === 'fascia') {
 const yb = Ly.pos === 'alto' ? P.y + P.h : P.y; ln(0, yb, PW, yb, 0.35);
 const xr = PW * 0.55; ln(xr, P.y, xr, P.y + P.h, 0.35);
 pila(xr, PW - xr, P.y + P.h);
-disegnaLegenda(0, P.y, xr, P.y + P.h);
+if (dove === 'colonna') {
+const xm = xr * 0.46; ln(xm, P.y, xm, P.y + P.h, 0.25);
+disegnaLegenda(0, P.y, xm, P.y + P.h);
+tmDisegna(xm + 1.5, P.y + 1.5, xr - xm - 3, tmMisura(P.h - 3));
+} else disegnaLegenda(0, P.y, xr, P.y + P.h);
 } else {
 const yb = Ly.pos === 'alto' ? P.y + P.h : P.y; ln(0, yb, PW, yb, 0.35);
 P.celle.forEach((c, i) => { if (i) ln(c.x, P.y, c.x, P.y + P.h, 0.25); disegnaRiquadro(c.k, c.x, P.y + 0.5, c.w, P.h - 1); });
+if (dove === 'colonna') tmNelDisegno('bs');
 }
+if (/^[ab][sd]$/.test(dove)) tmNelDisegno(dove);
 out.push('</svg>');
 const svg = opz.bn ? inGrigio(out.join('\n')) : out.join('\n');
 return { svg, sized: svg.replace('<svg ', `<svg width="${PW}mm" height="${PH}mm" `), landscape: T.landscape, denom: D, note: T.note, PW, PH };
@@ -687,7 +735,22 @@ const capVerbale = caps.filter(c => !aggiunti.has(c.id)).map(c => ({ L: String(c
 const metodi = [...new Set(punti.map(x => x.p.metodo === 'ortogonali' ? 'delle coordinate ortogonali' : 'delle triangolazioni'))];
 const sezVerbale = (tabVeicoli ? [['Posizione dei veicoli', tabVeicoli]] : []).concat(sezioni);
 const emblema = RS.emblema || (typeof location !== 'undefined' ? new URL('emblema.png', location.href).href : 'emblema.png');
-return { m, vehRows, info, logo, emblema, capVerbale, basi: basi.map(b => ({ a: b[0], b: b[1], v: it2(b[2]) })), metodi, sezVerbale };
+const sm = x => x == null ? '' : String(x).replace(/ m\b/g, '');
+const rigaTM = r => r.x.orto
+? { k: r.x.T, d: r.x.cosa, v: r.x.orto.map(t => sm(t).replace(/^ascissa/, 'asc.').replace(/^ordinata/, 'ord.').replace(/ verso \S+$/, '')).join(' · ') }
+: { k: r.x.T, d: r.x.cosa + (r.altre.length ? ' (' + r.altre.map(sm).join(', ') + ')' : ''), a: sm(r.v[cA]), b: sm(r.v[cB]) };
+const tm = { cA, cB, righe: [] };
+basi.forEach(b => tm.righe.push({ k: 'Base', d: 'fra i capisaldi ' + b[0] + ' e ' + b[1], v: it2(b[2]) }));
+fogliV.forEach(g => {
+if (!g.rr.length) return;
+const e = g.v.e, tipo = ((RS.catalog.veicoloById(e.catId) || {}).nome || 'veicolo').toLowerCase();
+tm.righe.push({ t: 'Veicolo ' + (e.label || '—') + ' — ' + (e.modello || tipo) + (posaDi(e) ? ', ' + posaDi(e) : '') });
+g.rr.forEach(r => tm.righe.push(rigaTM(r)));
+});
+const altriTM = altri.filter(x => x.p.dist.length || x.orto).map(x => Object.assign({ x }, riga(x)));
+if (altriTM.length) { tm.righe.push({ t: 'Altri punti' }); altriTM.forEach(r => tm.righe.push(rigaTM(r))); }
+if (rAltre.length) { tm.righe.push({ t: 'Tracce e altre misure' }); rAltre.forEach(r => tm.righe.push({ k: r[0], d: r[1], v: sm(r[2]) })); }
+return { m, vehRows, info, logo, emblema, capVerbale, basi: basi.map(b => ({ a: b[0], b: b[1], v: it2(b[2]) })), metodi, sezVerbale, tabMisure: tm };
 }
 const ATTO_CSS =
 `body{font:12.5px/1.45 "Times New Roman",Georgia,serif;color:#111}

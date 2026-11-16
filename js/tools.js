@@ -606,6 +606,7 @@ el.pts[op.i] = mkPt(this.snapPoint(w)); RS.scene.render(); return;
 if (op.kind === 'rilpt') {
 const v = RS.scene.get(op.vid); if (!v || !v.rilpts || !v.rilpts[op.i]) return;
 const loc = toLocal(w, v.x, v.y, v.rot || 0);
+if (v.rilpts[op.i].nome === undefined && RS.elements.nomePuntoVeicolo) v.rilpts[op.i].nome = RS.elements.nomePuntoVeicolo(v, v.rilpts[op.i]);
 v.rilpts[op.i].lx = Math.round(loc.x*100)/100;
 v.rilpts[op.i].ly = Math.round(loc.y*100)/100;
 RS.scene.render(); return;
