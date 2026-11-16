@@ -1,10 +1,17 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 281;
+RS.BUILD = 282;
 RS.DATA_BUILD = '2026-11-16';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 282, data: '2026-11-17', voci: [
+'Veicoli ridisegnati, visti dall\'alto come nelle foto aeree. Auto: carrozzeria sagomata con il volume, vetri (parabrezza, finestrini, lunotto) con il tetto sopra, fari a goccia, fanali, specchietti. Furgoni, camper e ambulanza: muso arrotondato, parabrezza, tetto con le nervature. Camion e mezzi articolati: cabina nuova con parabrezza, deflettore e specchi; cassoni con il volume. Autobus: fascia dei finestrini, condizionatore e botole sul tetto, parabrezza grande. Le misure restano quelle vere (la scala non cambia) e i mozzi restano dove erano.',
+'Su un fianco: sagoma laterale con gli angoli arrotondati, luce dal lato del tetto, ruote con cerchi e razze. Capovolti: auto e furgoni con la loro sagoma arrotondata e il sottoscocca. In bianco e nero luci e ombre si spengono e la trama segue la sagoma.',
+'Due ruote con il proprio disegno: motociclo (serbatoio, cupolino, scarico, pneumatico largo), scooter (scocca larga, pedana, scudo, manubrio carenato), ciclomotore a ruote alte (corpo stretto, portapacchi), anche quando sono adagiati su un fianco. Non c\'è più l\'ovale attorno: si rimette con «Contorno evidenziato» nelle proprietà.',
+'Punti di rilievo dei veicoli su un fianco: sugli spigoli veri della sagoma («spigolo anteriore, lato ruote», «spigolo posteriore, lato tetto»…), non più agli angoli del rettangolo, fuori dal disegno. Capovolti: sui mozzi, che da sopra si vedono, con destra e sinistra scambiate. Cambiando la posizione del veicolo i punti si rifanno da soli, se non ci sono ancora misure prese.',
+'Autodiagnosi: una prova nuova, 99 in tutto.'
+] },
 { build: 281, data: '2026-11-16', voci: [
 'Aggancio (menu Vista): spento, gli oggetti non si agganciano più a niente e restano esattamente dove li si porta. Prima spegneva solo la griglia: continuavano ad agganciarsi ai punti degli altri oggetti, alla calamita fra elementi uguali, agli allineamenti e alle guide, e la rotazione scattava su 0, 45 e 90 gradi. La scelta vale per tutte le tavole del dispositivo finché non la si cambia; accendendo o spegnendo, un messaggio dice che cosa fa.',
 'Detriti, punto d\'urto, macchie, oggetti a terra e gli altri punti utili: dopo le misure sul disegno non compare più il punto verde accanto al simbolo. Il punto da misurare c\'è ancora (nelle misure guidate, nel Rilievo dei punti, nell\'atto e in legenda) e lo segna il simbolo stesso, che si sposta con lui.',

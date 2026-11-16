@@ -231,6 +231,13 @@ this.defs.innerHTML =
 '<feFuncB type="linear" slope="0.55" intercept="0.42"/></feComponentTransfer></filter>' +
 '<filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">' +
 '<feDropShadow dx="0.12" dy="0.16" stdDeviation="0.14" flood-color="#000" flood-opacity="0.32"/></filter>' +
+'<linearGradient id="vLuce" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".34"/><stop offset=".18" stop-color="#000" stop-opacity="0"/>' +
+'<stop offset=".44" stop-color="#fff" stop-opacity=".2"/><stop offset=".56" stop-color="#fff" stop-opacity=".2"/><stop offset=".82" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".34"/></linearGradient>' +
+'<linearGradient id="vTetto" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".2"/><stop offset=".5" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#000" stop-opacity=".2"/></linearGradient>' +
+'<linearGradient id="vVetro" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a9c0d2" stop-opacity=".38"/><stop offset=".5" stop-color="#a9c0d2" stop-opacity=".05"/><stop offset="1" stop-color="#a9c0d2" stop-opacity=".28"/></linearGradient>' +
+'<linearGradient id="vLatoP" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".3"/><stop offset=".55" stop-color="#fff" stop-opacity=".04"/><stop offset=".85" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient>' +
+'<linearGradient id="vLatoN" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#000" stop-opacity=".3"/><stop offset=".55" stop-color="#fff" stop-opacity=".04"/><stop offset=".85" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#000" stop-opacity=".12"/></linearGradient>' +
+'<radialGradient id="vCerchio"><stop offset="0" stop-color="#d9dde2"/><stop offset=".7" stop-color="#9aa1a8"/><stop offset="1" stop-color="#5d636a"/></radialGradient>' +
 '<filter id="sheetShadow" x="-8%" y="-8%" width="116%" height="116%">' +
 '<feDropShadow dx="0" dy="0.5" stdDeviation="0.7" flood-color="#000" flood-opacity="0.45"/></filter>' +
 '<pattern id="patDanni" width="0.22" height="0.22" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">' +

@@ -3863,7 +3863,7 @@ if (e.kind !== 'trailer' && e.catId !== 'operatrice') asp += numFld('Sterzo ° (
 if (RS.elements.snodoInfo(e)) asp += numFld('Snodo ° (+ destra)', 'snodo', round(e.snodo || 0, 1), 5);
 asp += chkFld('Freccia di marcia', 'freccia', !!e.freccia);
 if (RS.elements.DUE_RUOTE[e.kind]) {
-asp += chkFld('Contorno evidenziato', 'evidenzia', e.evidenzia !== false);
+asp += chkFld('Contorno evidenziato', 'evidenzia', e.evidenzia === true);
 asp += chkFld('Conducente a bordo', 'pilota', !!e.pilota);
 }
 asp += colorFld(e.color);
@@ -3889,7 +3889,7 @@ h += section('Zona dei danni',
 `<div class="danni-grid">` + RS.elements.DANNI.map(d =>
 `<label class="pchk"><input type="checkbox" data-danno="${d[0]}"${danni.indexOf(d[0]) >= 0 ? ' checked' : ''}> ${d[1]}</label>`).join('') + `</div>`,
 danni.length > 0, { riass: danni.length ? String(danni.length) : 'nessuna' });
-const ribaltato = e.posa && e.posa !== 'ruote' && !RS.elements.DUE_RUOTE[e.kind];
+const ribaltato = (e.posa === 'fiancodx' || e.posa === 'fiancosx') && !RS.elements.DUE_RUOTE[e.kind];
 const puntiSu = ribaltato ? '' : selFld('Punti sui', 'puntiSu', e.puntiSu === 'spigoli' ? 'spigoli' : 'mozzi', [['mozzi', 'Mozzi delle ruote'], ['spigoli', 'Spigoli della sagoma']]);
 if (e.rilpts && e.rilpts.length) {
 let pt = puntiSu + `<div class="muted aiuto">Trascinali sul disegno per ridisporli (✕ per togliere):</div>`;
@@ -4176,7 +4176,7 @@ return;
 const sezK = e.type === 'road' && (RS.elements.SEZIONE_K[k] || k === 'wid');
 if (sezK && RS.elements.SEZIONE_K[k]) RS.elements.avviaSezione(e);
 e[k] = v;
-if (k === 'posa' && commit && e.type === 'vehicle' && RS.elements.DUE_RUOTE[e.kind] && e.rilpts && e.rilpts.length && e.puntiSu !== 'spigoli') {
+if (k === 'posa' && commit && e.type === 'vehicle' && e.rilpts && e.rilpts.length) {
 const L = String(e.label || '').toUpperCase(), re = L ? new RegExp('(?:→|->)\\s*' + L + '\\d+\\b', 'i') : null;
 const prese = re && (RS.scene.misure || []).some(m => re.test(m.descr || '') && m.val !== '' && m.val != null);
 if (!prese) e.rilpts = RS.elements.makeRilpts(e, 1);

@@ -86,12 +86,60 @@ const coloreVeicolo = (e, def) => RS.bn ? '#f4f4f4' : (e.color || def);
 const DUE_RUOTE = { moto: 1, bike: 1, monopattino: 1 };
 function drawTramaBN(g, e) {
 if (!RS.bn || DUE_RUOTE[e.kind]) return;
-const r = (e.kind || 'car') === 'car' && (!e.posa || e.posa === 'ruote') ? Math.min(0.55, e.wid*0.3) : 0.15;
-mk('rect', { x: -e.len/2, y: -e.wid/2, width: e.len, height: e.wid, rx: r, fill: `url(#patBN${tramaVeicolo(e)})`,
-stroke: nero, 'stroke-width': 0.06, opacity: 0.7 }, g);
+const kind = e.kind || 'car', W = e.wid, hl = e.len/2, hw = W/2, suRuote = !e.posa || e.posa === 'ruote';
+const tr = { fill: `url(#patBN${tramaVeicolo(e)})`, stroke: nero, 'stroke-width': 0.06, opacity: 0.7 };
+if ((kind === 'car' || kind === 'van') && (suRuote || e.posa === 'tetto')) {
+const sg = SAGOME[FORMA_AUTO[e.catId] || 'auto'] || SAGOME.auto, furgone = kind === 'van' && !FORMA_AUTO[e.catId];
+const rF = furgone ? Math.min(W*0.4, 0.75) : Math.min(W*0.55, W*sg.r*1.9), rR = furgone ? 0.14 : Math.min(W*0.45, W*sg.r*1.5);
+mk('path', Object.assign({ d: sagoma(-hl, hl, hw, rF, rR) }, tr), g);
+return;
+}
+const r = kind === 'car' && suRuote ? Math.min(0.55, W*0.3) : 0.15;
+mk('rect', Object.assign({ x: -hl, y: -hw, width: e.len, height: W, rx: r }, tr), g);
 }
 const GLASS = 'rgba(36,50,64,.82)', ROOFL = 'rgba(255,255,255,.16)',
-TYRE = '#101012', LIGHT = 'rgba(255,244,205,.95)', TAIL = 'rgba(214,42,42,.92)';
+TYRE = '#101012', LIGHT = 'rgba(255,244,205,.95)', TAIL = 'rgba(214,42,42,.92)', VETRO = '#1f2a33';
+function lucido(n, id) {
+if (RS.bn || !n || !n.parentNode) return n;
+const c = n.cloneNode(false);
+c.setAttribute('fill', `url(#${id || 'vLuce'})`);
+['stroke', 'stroke-width', 'stroke-dasharray', 'stroke-linejoin', 'filter', 'class'].forEach(a => c.removeAttribute(a));
+c.setAttribute('pointer-events', 'none');
+n.parentNode.insertBefore(c, n.nextSibling);
+return n;
+}
+function sagoma(x0, x1, h, rF, rR) {
+const q = v => +v.toFixed(3);
+rF = Math.min(rF, (x1 - x0) / 2, h); rR = Math.min(rR, (x1 - x0) / 2, h);
+const fy = Math.max(0.2, 1 - rF / h * 1.25), ry = Math.max(0.2, 1 - rR / h * 1.1);
+return `M${q(x0 + rR)} ${q(-h)} L${q(x1 - rF)} ${q(-h)} C${q(x1 - rF*0.3)} ${q(-h)} ${q(x1)} ${q(-h*(fy + (1 - fy)*0.65))} ${q(x1)} ${q(-h*fy)} ` +
+`L${q(x1)} ${q(h*fy)} C${q(x1)} ${q(h*(fy + (1 - fy)*0.65))} ${q(x1 - rF*0.3)} ${q(h)} ${q(x1 - rF)} ${q(h)} ` +
+`L${q(x0 + rR)} ${q(h)} C${q(x0 + rR*0.25)} ${q(h)} ${q(x0)} ${q(h*(ry + (1 - ry)*0.64))} ${q(x0)} ${q(h*ry)} ` +
+`L${q(x0)} ${q(-h*ry)} C${q(x0)} ${q(-h*(ry + (1 - ry)*0.64))} ${q(x0 + rR*0.25)} ${q(-h)} ${q(x0 + rR)} ${q(-h)} Z`;
+}
+function fariEFanali(g, xF, xB, h) {
+const q = v => +v.toFixed(3);
+[-1, 1].forEach(s => {
+mk('path', { d: `M${q(xF - 0.05)} ${q(s*h*0.52)} Q${q(xF - 0.02)} ${q(s*h*0.78)} ${q(xF - 0.22)} ${q(s*h*0.9)} L${q(xF - 0.3)} ${q(s*h*0.78)} Q${q(xF - 0.16)} ${q(s*h*0.66)} ${q(xF - 0.12)} ${q(s*h*0.52)} Z`,
+fill: '#f4f1d8', stroke: 'rgba(0,0,0,.4)', 'stroke-width': 0.018 }, g);
+mk('path', { d: `M${q(xB + 0.04)} ${q(s*h*0.5)} Q${q(xB + 0.03)} ${q(s*h*0.8)} ${q(xB + 0.2)} ${q(s*h*0.92)} L${q(xB + 0.26)} ${q(s*h*0.8)} Q${q(xB + 0.12)} ${q(s*h*0.7)} ${q(xB + 0.1)} ${q(s*h*0.5)} Z`,
+fill: '#c62828', stroke: 'rgba(0,0,0,.4)', 'stroke-width': 0.018 }, g);
+});
+}
+function cabinaPesante(tg, x0, x1, hw, col) {
+const cab = x1 - x0, q = v => +v.toFixed(3);
+lucido(mk('path', { d: sagoma(x0, x1, hw, Math.min(0.42, hw*0.32), 0.06), fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, tg));
+const xg = x1 - Math.min(0.62, cab*0.3);
+const vetro = `M${q(x1 - 0.1)} ${q(-hw*0.78)} Q${q(x1 - 0.04)} 0 ${q(x1 - 0.1)} ${q(hw*0.78)} L${q(xg)} ${q(hw*0.86)} L${q(xg)} ${q(-hw*0.86)} Z`;
+lucido(mk('path', { d: vetro, fill: VETRO, stroke: 'rgba(0,0,0,.5)', 'stroke-width': 0.03 }, tg), 'vVetro');
+lucido(mk('rect', { x: q(x0 + 0.08), y: q(-hw*0.86), width: q(Math.max(0.2, xg - x0 - 0.12)), height: q(hw*1.72), rx: 0.12, fill: col, stroke: 'rgba(0,0,0,.3)', 'stroke-width': 0.025 }, tg), 'vTetto');
+mk('rect', { x: q(x0 + 0.14), y: q(-hw*0.62), width: q(Math.max(0.12, (xg - x0)*0.42)), height: q(hw*1.24), rx: 0.1, fill: 'rgba(255,255,255,.2)', stroke: 'rgba(0,0,0,.25)', 'stroke-width': 0.02 }, tg);
+[-1, 1].forEach(s => {
+mk('line', { x1: q(xg + 0.05), y1: q(s*hw), x2: q(xg - 0.02), y2: q(s*(hw + 0.26)), stroke: '#222', 'stroke-width': 0.04 }, tg);
+mk('rect', { x: q(xg - 0.12), y: q(s > 0 ? hw + 0.18 : -hw - 0.3), width: 0.2, height: 0.12, rx: 0.03, fill: '#1c1c1c' }, tg);
+mk('rect', { x: q(x1 - 0.12), y: q(s > 0 ? hw*0.55 : -hw*0.85), width: 0.1, height: q(hw*0.3), rx: 0.03, fill: '#f4f1d8', stroke: 'rgba(0,0,0,.4)', 'stroke-width': 0.015 }, tg);
+});
+}
 const PROFILI = {
 auto:       { zb: .16, zr: .50, tr: [-.84, .58], rw0: [-.60, .60], rw1: [-.40, .95], roofE: .06, zroof: .96, ws: [.40, .60], bon: [.90, .52], zf: .42 },
 berlina:    { zb: .16, zr: .52, tr: [-.86, .60], rw0: [-.52, .62], rw1: [-.30, .95], roofE: .10, zroof: .96, ws: [.42, .60], bon: [.92, .52], zf: .42 },
@@ -110,20 +158,52 @@ if (DUE_RUOTE[e.kind]) { drawTwoWheelDown(g, e); return; }
 if (e.posa === 'tetto') { drawSottoscocca(g, e); return; }
 drawFiancata(g, e);
 }
+let registroSpigoli = null;
+function puntiFiancata(e) {
+const reg = [];
+registroSpigoli = reg;
+try { drawFiancata(N('g'), Object.assign({}, e, { snodo: 0 })); } catch (err) {  }
+finally { registroSpigoli = null; }
+if (!reg.length) return [];
+const hl = e.len / 2, hw = e.wid / 2, r = e.posa === 'fiancodx' ? 1 : -1, r2 = v => Math.round(v * 100) / 100;
+const yR = -r * hw, yT = r * hw;
+const angoli = [[hl, yR, 'anteriore', 'lato ruote'], [hl, yT, 'anteriore', 'lato tetto'], [-hl, yT, 'posteriore', 'lato tetto'], [-hl, yR, 'posteriore', 'lato ruote']];
+const out = [];
+angoli.forEach(([x, y, lon, lat]) => {
+const p = reg.reduce((a, q) => !a || Math.hypot(q.x - x, q.y - y) < Math.hypot(a.x - x, a.y - y) ? q : a, null);
+if (p && !out.some(o => Math.hypot(o.lx - p.x, o.ly - p.y) < 0.2)) out.push({ lx: r2(p.x), ly: r2(p.y), nome: 'spigolo ' + lon + ', ' + lat });
+});
+return out;
+}
 function drawFiancata(g, e) {
 const L = e.len, W = e.wid, hl = L/2, hw = W/2, col = coloreVeicolo(e, '#2f6fed'), kind = e.kind || 'car';
 const r = e.posa === 'fiancodx' ? 1 : -1;
 const X = fx => (fx * hl).toFixed(3), Y = z => (-r*hw + r*z*W).toFixed(3);
 const P = pts => pts.map((p, i) => (i ? 'L' : 'M') + X(p[0]) + ' ' + Y(p[1])).join(' ') + ' Z';
-const scocca = (pts, fill) => mk('path', { d: P(pts), fill: fill || col, stroke: '#0b0b0b', 'stroke-width': 0.05, 'stroke-linejoin': 'round' }, g);
-const vetro = pts => mk('path', { d: P(pts), fill: GLASS, stroke: 'rgba(0,0,0,.35)', 'stroke-width': 0.02, 'stroke-linejoin': 'round' }, g);
+const Ptondo = (pts, raggio, registra) => {
+const v = pts.map(p => ({ x: p[0] * hl, y: +Y(p[1]) })), n = v.length, q = t => t.toFixed(3);
+let d = '';
+for (let i = 0; i < n; i++) {
+const a = v[(i - 1 + n) % n], b = v[i], c = v[(i + 1) % n];
+const la = Math.hypot(b.x - a.x, b.y - a.y), lc = Math.hypot(c.x - b.x, c.y - b.y), rr = Math.min(raggio, la / 3, lc / 3);
+const p1 = { x: b.x + (a.x - b.x) / (la || 1) * rr, y: b.y + (a.y - b.y) / (la || 1) * rr }, p2 = { x: b.x + (c.x - b.x) / (lc || 1) * rr, y: b.y + (c.y - b.y) / (lc || 1) * rr };
+d += (i ? 'L' : 'M') + q(p1.x) + ' ' + q(p1.y) + 'Q' + q(b.x) + ' ' + q(b.y) + ' ' + q(p2.x) + ' ' + q(p2.y);
+if (registra && registroSpigoli) registroSpigoli.push({ x: 0.25*p1.x + 0.5*b.x + 0.25*p2.x, y: 0.25*p1.y + 0.5*b.y + 0.25*p2.y });
+}
+return d + 'Z';
+};
+const scocca = (pts, fill) => lucido(mk('path', { d: Ptondo(pts, Math.min(0.32, W*0.14), true), fill: fill || col, stroke: '#0b0b0b', 'stroke-width': 0.05, 'stroke-linejoin': 'round' }, g), r > 0 ? 'vLatoP' : 'vLatoN');
+const vetro = pts => lucido(mk('path', { d: Ptondo(pts, 0.08), fill: VETRO, stroke: 'rgba(0,0,0,.45)', 'stroke-width': 0.02, 'stroke-linejoin': 'round' }, g), 'vVetro');
 const riga = (x1, z1, x2, z2, w) => mk('line', { x1: X(x1), y1: Y(z1), x2: X(x2), y2: Y(z2), stroke: 'rgba(0,0,0,.4)', 'stroke-width': w || 0.03 }, g);
 const luce = (fx, z0, z1, c) => mk('rect', { x: Math.min(fx*hl, fx*hl + (fx > 0 ? -0.14 : 0.14)), y: Math.min(+Y(z0), +Y(z1)), width: 0.14, height: Math.abs(+Y(z1) - +Y(z0)), rx: 0.03, fill: c }, g);
 const ruota = (fx, rr) => {
 const cx = fx * hl, cy = +Y(rr / W);
 mk('circle', { cx, cy, r: rr, fill: TYRE }, g);
-mk('circle', { cx, cy, r: rr*0.58, fill: '#8b9097', stroke: '#2a2a2a', 'stroke-width': 0.02 }, g);
-mk('circle', { cx, cy, r: rr*0.2, fill: '#3a3a3a' }, g);
+mk('circle', { cx, cy, r: rr*0.86, fill: 'none', stroke: '#2b2b2e', 'stroke-width': rr*0.06 }, g);
+mk('circle', { cx, cy, r: rr*0.6, fill: RS.bn ? '#8b9097' : 'url(#vCerchio)', stroke: '#2a2a2a', 'stroke-width': 0.02 }, g);
+for (let k = 0; k < 5; k++) { const a = k * Math.PI * 2 / 5 - Math.PI / 2;
+mk('line', { x1: +(cx + Math.cos(a)*rr*0.2).toFixed(3), y1: +(cy + Math.sin(a)*rr*0.2).toFixed(3), x2: +(cx + Math.cos(a)*rr*0.54).toFixed(3), y2: +(cy + Math.sin(a)*rr*0.54).toFixed(3), stroke: '#5d636a', 'stroke-width': rr*0.1, 'stroke-linecap': 'round' }, g); }
+mk('circle', { cx, cy, r: rr*0.2, fill: '#3a3a3a', stroke: '#888', 'stroke-width': 0.015 }, g);
 };
 const rr = Math.min(W*0.2, L*0.085, 0.45);
 if (kind === 'car' || FORMA_AUTO[e.catId]) {
@@ -266,8 +346,15 @@ if (kind === 'roadtrain') { ruota(.25, rr); ruota(-.32, rr); }
 function drawSottoscocca(g, e) {
 const L = e.len, W = e.wid, hl = L/2, hw = W/2, col = coloreVeicolo(e, '#2f6fed'), kind = e.kind || 'car';
 const lungo = L > 6.5;
-mk('rect', { x: -hl, y: -hw, width: L, height: W, rx: lungo ? 0.2 : Math.min(0.5, W*0.26), fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
+if (!lungo && kind !== 'truck' && kind !== 'bus') {
+const sg = SAGOME[FORMA_AUTO[e.catId] || 'auto'] || SAGOME.auto, furgone = kind === 'van' && !FORMA_AUTO[e.catId];
+const rF = furgone ? Math.min(W*0.4, 0.75) : Math.min(W*0.55, W*sg.r*1.9), rR = furgone ? 0.14 : Math.min(W*0.45, W*sg.r*1.5);
+lucido(mk('path', { d: sagoma(-hl, hl, hw, rF, rR), fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05, 'stroke-linejoin': 'round' }, g));
+mk('path', { d: sagoma(-hl + 0.1, hl - 0.1, hw - 0.1, rF*0.8, rR*0.8), fill: '#3b3f45' }, g);
+} else {
+lucido(mk('rect', { x: -hl, y: -hw, width: L, height: W, rx: lungo ? 0.2 : Math.min(0.5, W*0.26), fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g));
 mk('rect', { x: -hl + 0.1, y: -hw + 0.1, width: L - 0.2, height: W - 0.2, rx: lungo ? 0.12 : Math.min(0.4, W*0.22), fill: '#3b3f45' }, g);
+}
 [-1, 1].forEach(s => {
 mk('rect', { x: hl - 0.12, y: s > 0 ? hw - W*0.24 : -hw + W*0.06, width: 0.1, height: W*0.18, rx: 0.03, fill: LIGHT }, g);
 mk('rect', { x: -hl + 0.02, y: s > 0 ? hw - W*0.24 : -hw + W*0.06, width: 0.1, height: W*0.18, rx: 0.03, fill: TAIL }, g);
@@ -286,7 +373,7 @@ const assi = kind === 'bus' ? [hl*0.7, -hl*0.62] : kind === 'artic' ? [hl*0.8, h
 assi.forEach((x, i) => {
 mk('line', { x1: x, y1: -hw + 0.2, x2: x, y2: hw - 0.2, stroke: '#666', 'stroke-width': 0.1 }, g);
 const doppia = i > 0 && kind !== 'bus';
-[-1, 1].forEach(s => { pneumatico(x, s*(hw - W*0.13), L*0.06 + 0.4, W*0.16); if (doppia) pneumatico(x, s*(hw - W*0.3), L*0.06 + 0.4, W*0.14); });
+[-1, 1].forEach(s => { pneumatico(x, s*(hw - W*0.032), L*0.06 + 0.4, W*0.16); if (doppia) pneumatico(x, s*(hw - W*0.2), L*0.06 + 0.4, W*0.14); });
 });
 mk('line', { x1: hl - L*0.12, y1: 0, x2: -hl*0.3, y2: 0, stroke: '#8a8f96', 'stroke-width': 0.08 }, g);
 return;
@@ -298,7 +385,7 @@ mk('rect', { x: -hl*0.56, y: -hw*0.62, width: hl*0.34, height: hw*0.5, rx: 0.06,
 mk('path', { d: `M${hl*0.5} ${hw*0.22} L${-hl*0.1} ${hw*0.3} L${-hl*0.86} ${hw*0.34}`, fill: 'none', stroke: '#a3a8ae', 'stroke-width': 0.07, 'stroke-linejoin': 'round' }, g);
 mk('ellipse', { cx: -hl*0.62, cy: hw*0.34, rx: hl*0.12, ry: hw*0.16, fill: '#8a8f96', stroke: '#555', 'stroke-width': 0.02 }, g);
 mk('line', { x1: hl*0.34, y1: 0, x2: -hl*ru, y2: 0, stroke: '#6f747b', 'stroke-width': 0.06 }, g);
-[ru, -ru].forEach(f => {
+(kind === 'van' && !FORMA_AUTO[e.catId] ? [0.62, -0.6] : [ru, -ru]).forEach(f => {
 mk('line', { x1: f*hl, y1: -off, x2: f*hl, y2: off, stroke: '#666', 'stroke-width': 0.08 }, g);
 [-1, 1].forEach(s => pneumatico(f*hl, s*off, wl, ww));
 });
@@ -307,8 +394,7 @@ function drawTwoWheelDown(g, e) {
 const L = e.len, W = e.wid, hl = L/2, hw = W/2, col = e.color || '#d23838', k = e.kind;
 const r = e.posa === 'fiancodx' ? 1 : -1;
 const Y = z => -r*hw + r*z*W;
-const wr = k === 'monopattino' ? Math.min(0.1, W*0.22) : Math.min(k === 'bike' ? 0.33 : 0.3, W*0.4, L*0.16);
-const cxF = hl - wr*1.02, cxR = -hl + wr*1.02, cy = Y(wr / W);
+const { wr, cxF, cxR } = ruoteLato(e), cy = Y(wr / W);
 const tubo = (x1, z1, x2, z2, c, w) => mk('line', { x1, y1: Y(z1), x2, y2: Y(z2), stroke: c, 'stroke-width': w, 'stroke-linecap': 'round' }, g);
 const ruota = (cx, sottile) => {
 mk('circle', { cx, cy, r: wr, fill: 'none', stroke: TYRE, 'stroke-width': sottile ? wr*0.16 : wr*0.32 }, g);
@@ -333,10 +419,29 @@ mk('rect', { x: cxR, y: Math.min(Y(zc - 0.02), Y(zc + 0.12)), width: cxF - cxR, 
 tubo(cxF, zc, cxF - 0.08, 0.95, '#2a2a2a', 0.05); tubo(cxF - 0.16, 0.95, cxF + 0.02, 0.95, '#2a2a2a', 0.05);
 return;
 }
+if (e.catId === 'scooter' || e.catId === 'ciclomotore') {
+const cic = e.catId === 'ciclomotore', zs = cic ? 0.66 : 0.6, zp = zc + (cic ? 0.2 : 0.12);
+const Pz = pts => pts.map((p, i) => (i ? 'L' : 'M') + (+p[0]).toFixed(3) + ' ' + (+Y(p[1])).toFixed(3)).join(' ') + ' Z';
+const piena = (pts, fill) => lucido(mk('path', { d: Pz(pts), fill, stroke: '#0b0b0b', 'stroke-width': 0.03, 'stroke-linejoin': 'round' }, g), r > 0 ? 'vLatoP' : 'vLatoN');
+ruota(cxR); ruota(cxF);
+tubo(-0.12, zc - 0.02, cxR - wr*0.5, zc + 0.04, '#a3a8ae', 0.07);
+piena([[-hl + 0.03, zc + 0.04], [-hl + 0.02, zs - 0.1], [-hl + 0.12, zs - 0.02], [-0.12, zs - 0.02], [0.04, zp + 0.06],
+[0.04, zp - 0.06], [cxR + wr*1.1, zc - 0.02], [cxR - wr*0.2, zc + 0.02]], col);
+mk('path', { d: Pz([[0, zp - 0.06], [0, zp + 0.06], [hl*0.3, zp + 0.06], [hl*0.3, zp - 0.06]]), fill: '#3a3d42', stroke: '#0b0b0b', 'stroke-width': 0.02 }, g);
+piena([[hl*0.2, zp - 0.06], [hl*0.22, zp + 0.08], [hl*0.34, 0.88], [hl*0.52, 0.88], [hl*0.5, zp + 0.1], [hl*0.44, zp - 0.06]], col);
+tubo(cxF, zc, hl*0.47, 0.86, '#2a2a2a', 0.05);
+mk('path', { d: Pz([[-hl*0.84, zs - 0.01], [-0.08, zs], [-0.1, zs + 0.08], [-hl*0.8, zs + 0.07]]), fill: '#1a1a1a' }, g);
+if (cic) { tubo(-hl + 0.03, zs + 0.03, -hl*0.62, zs + 0.03, '#333', 0.03); [-hl + 0.06, -hl*0.78].forEach(x => tubo(x, zs - 0.04, x, zs + 0.03, '#333', 0.025)); }
+mk('path', { d: Pz([[hl*0.38, 0.86], [hl*0.38, 0.97], [hl*0.52, 0.95], [hl*0.52, 0.86]]), fill: col, stroke: '#0b0b0b', 'stroke-width': 0.02 }, g);
+tubo(hl*0.36, 0.96, hl*0.46, 0.96, '#1a1a1a', 0.045);
+mk('circle', { cx: hl*0.53, cy: Y(0.9), r: Math.min(0.06, W*0.07), fill: LIGHT, stroke: '#333', 'stroke-width': 0.012 }, g);
+mk('circle', { cx: -hl + 0.05, cy: Y(zs - 0.1), r: 0.03, fill: TAIL }, g);
+return;
+}
 ruota(cxR); ruota(cxF);
 tubo(cxF, zc, cxF - wr*0.7, 0.86, '#2a2a2a', 0.06);
-mk('path', { d: `M${cxR + wr*0.6} ${Y(zc + 0.1)} L${-hl*0.25} ${Y(0.42)} L${hl*0.32} ${Y(0.5)} L${cxF - wr*0.75} ${Y(0.78)} L${hl*0.05} ${Y(0.8)} L${-hl*0.2} ${Y(0.66)} L${-hl*0.62} ${Y(0.62)} Z`,
-fill: col, stroke: '#0b0b0b', 'stroke-width': 0.035, 'stroke-linejoin': 'round' }, g);
+lucido(mk('path', { d: `M${cxR + wr*0.6} ${Y(zc + 0.1)} L${-hl*0.25} ${Y(0.42)} L${hl*0.32} ${Y(0.5)} L${cxF - wr*0.75} ${Y(0.78)} L${hl*0.05} ${Y(0.8)} L${-hl*0.2} ${Y(0.66)} L${-hl*0.62} ${Y(0.62)} Z`,
+fill: col, stroke: '#0b0b0b', 'stroke-width': 0.035, 'stroke-linejoin': 'round' }, g), r > 0 ? 'vLatoP' : 'vLatoN');
 mk('path', { d: `M${-hl*0.7} ${Y(0.62)} L${-hl*0.15} ${Y(0.66)} L${-hl*0.12} ${Y(0.74)} L${-hl*0.66} ${Y(0.72)} Z`, fill: '#1a1a1a' }, g);
 mk('rect', { x: -hl*0.12, y: Math.min(Y(0.2), Y(0.44)), width: hl*0.32, height: W*0.24, rx: 0.04, fill: '#555b63' }, g);
 tubo(-hl*0.05, 0.22, cxR - wr*0.1, 0.3, '#a3a8ae', 0.06);
@@ -411,7 +516,7 @@ return;
 }
 if (kind === 'monopattino') {
 mk('rect', { x: -hl, y: -0.045, width: 0.24, height: 0.09, rx: 0.03, fill: '#111' }, g);
-mk('rect', { x: -hl+0.18, y: -W*0.34, width: L-0.36, height: W*0.68, rx: 0.06, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.03 }, g);
+lucido(mk('rect', { x: -hl+0.18, y: -W*0.34, width: L-0.36, height: W*0.68, rx: 0.06, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.03 }, g));
 const st = sterzante(hl-0.12);
 mk('rect', { x: hl-0.24, y: -0.045, width: 0.24, height: 0.09, rx: 0.03, fill: '#111' }, st);
 mk('circle', { cx: hl-0.12, cy: 0, r: W*0.13, fill: '#333' }, st);
@@ -419,31 +524,67 @@ mk('rect', { x: hl-0.15, y: -hw*0.95, width: 0.09, height: hw*1.9, rx: 0.04, fil
 return;
 }
 if (kind === 'moto') {
-mk('rect', { x: -hl, y: -W*0.17, width: 0.5, height: W*0.34, rx: 0.09, fill: '#111' }, g);
-const st = sterzante(hl-0.58);
-mk('rect', { x: hl-0.5, y: -W*0.17, width: 0.5, height: W*0.34, rx: 0.09, fill: '#111' }, st);
-mk('rect', { x: -hl+0.42, y: -hw*0.92, width: L-0.84, height: W*0.92, rx: W*0.44, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
-mk('rect', { x: -hl+0.58, y: -hw*0.5, width: L*0.34, height: W*0.5, rx: 0.08, fill: '#1a1a1a' }, g);
-const st2 = sterzante(hl-0.58);
-mk('rect', { x: hl-0.62, y: -hw*0.98, width: 0.09, height: hw*1.96, rx: 0.04, fill: '#111' }, st2);
-mk('circle', { cx: hl-0.2, cy: 0, r: W*0.15, fill: LIGHT }, st2);
+const q = v => +v.toFixed(3), T = '#141416', m = dueRuoteAlto(e), sc = e.catId === 'scooter', cic = e.catId === 'ciclomotore';
+const ombra = (d, f, extra) => lucido(mk('path', Object.assign({ d, fill: f || col, stroke: '#0b0b0b', 'stroke-width': 0.025 }, extra || {}), g));
+if (sc || cic) {
+const rl = cic ? 0.56 : 0.42, fl = cic ? 0.56 : 0.4, rw = cic ? 0.11 : 0.16, fw = cic ? 0.1 : 0.13, xs = m.man[0];
+mk('rect', { x: q(m.post - rl/2), y: q(-rw/2), width: rl, height: rw, rx: q(rw*0.45), fill: T }, g);
+const st = sterzante(xs);
+mk('rect', { x: q(m.ant - fl/2), y: q(-fw/2), width: fl, height: fw, rx: q(fw*0.45), fill: T }, st);
+const bw = cic ? hw*0.62 : hw*0.78, x0 = -hl + (cic ? 0.2 : 0.04);
+ombra(`M${q(x0)} 0 C${q(x0)} ${q(-bw*0.75)} ${q(x0 + 0.26)} ${q(-bw)} ${q(-hl*0.4)} ${q(-bw)} L${q(-0.04)} ${q(-bw*0.85)} L${q(-0.04)} ${q(bw*0.85)} L${q(-hl*0.4)} ${q(bw)} C${q(x0 + 0.26)} ${q(bw)} ${q(x0)} ${q(bw*0.75)} ${q(x0)} 0 Z`);
+if (cic) { const r0 = -hl + 0.04, r1 = -hl + 0.3; mk('rect', { x: q(r0), y: -0.11, width: q(r1 - r0), height: 0.22, rx: 0.03, fill: 'none', stroke: '#333', 'stroke-width': 0.022 }, g);
+for (let x = r0 + 0.06; x < r1; x += 0.06) mk('line', { x1: q(x), y1: -0.11, x2: q(x), y2: 0.11, stroke: '#555', 'stroke-width': 0.014 }, g); }
+mk('rect', { x: q(x0 + 0.02), y: -0.05, width: 0.04, height: 0.1, fill: TAIL }, g);
+mk('path', { d: `M${q(-hl*0.7)} 0 Q${q(-hl*0.68)} ${q(-bw*0.66)} ${q(-hl*0.26)} ${q(-bw*0.66)} L${q(-0.06)} ${q(-bw*0.58)} L${q(-0.06)} ${q(bw*0.58)} L${q(-hl*0.26)} ${q(bw*0.66)} Q${q(-hl*0.68)} ${q(bw*0.66)} ${q(-hl*0.7)} 0 Z`, fill: '#1a1a1a', stroke: '#000', 'stroke-width': 0.02 }, g);
+const pw = cic ? hw*0.42 : hw*0.55;
+mk('rect', { x: -0.04, y: q(-pw), width: q(hl*0.4), height: q(pw*2), rx: 0.04, fill: '#3a3d42', stroke: '#0b0b0b', 'stroke-width': 0.02 }, g);
+for (let x = 0.02; x < hl*0.36 - 0.04; x += 0.065) mk('line', { x1: q(x), y1: q(-pw*0.8), x2: q(x), y2: q(pw*0.8), stroke: '#55595f', 'stroke-width': 0.016 }, g);
+const sw = cic ? hw*0.62 : hw*0.84;
+ombra(`M${q(hl*0.34)} ${q(-sw)} Q${q(hl*0.48)} ${q(-sw*1.04)} ${q(hl*0.5)} 0 Q${q(hl*0.48)} ${q(sw*1.04)} ${q(hl*0.34)} ${q(sw)} Z`);
+mk('line', { x1: q(xs), y1: q(-m.man[1]), x2: q(xs), y2: q(m.man[1]), stroke: '#222', 'stroke-width': 0.035, 'stroke-linecap': 'round' }, st);
+lucido(mk('rect', { x: q(xs - 0.06), y: q(cic ? -0.13 : -hw*0.8), width: 0.15, height: q(cic ? 0.26 : hw*1.6), rx: 0.06, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.02 }, st));
+mk('ellipse', { cx: q(xs + 0.07), cy: 0, rx: 0.03, ry: cic ? 0.08 : 0.11, fill: '#f4f1d8', stroke: '#333', 'stroke-width': 0.01 }, st);
+[-1, 1].forEach(s => { mk('rect', { x: q(xs - 0.04), y: q(s > 0 ? m.man[1] - 0.08 : -m.man[1]), width: 0.08, height: 0.08, rx: 0.025, fill: '#111' }, st);
+mk('ellipse', { cx: q(xs - 0.1), cy: q(s*m.man[1]*0.68), rx: 0.035, ry: 0.05, fill: '#2b2b2b' }, st); });
+if (!cic) lucido(mk('path', { d: `M${q(hl*0.68)} -0.1 Q${q(hl - 0.02)} -0.08 ${q(hl)} 0 Q${q(hl - 0.02)} 0.08 ${q(hl*0.68)} 0.1 Z`, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.022 }, st));
+if (st !== g) g.appendChild(st);
+return;
+}
+const xs = m.man[0];
+mk('rect', { x: q(m.post - 0.33), y: -0.11, width: 0.66, height: 0.22, rx: 0.09, fill: T }, g);
+const st = sterzante(xs);
+mk('rect', { x: q(m.ant - 0.3), y: -0.075, width: 0.6, height: 0.15, rx: 0.07, fill: T }, st);
+mk('line', { x1: -0.15, y1: q(hw*0.5), x2: q(-hl + 0.22), y2: q(hw*0.55), stroke: '#b9bec4', 'stroke-width': 0.11, 'stroke-linecap': 'round' }, g);
+mk('rect', { x: -0.22, y: q(-hw*0.68), width: 0.62, height: q(hw*1.36), rx: 0.1, fill: '#3a3d42' }, g);
+ombra(`M${q(-hl + 0.18)} 0 Q${q(-hl + 0.22)} -0.13 ${q(-hl*0.45)} -0.12 L${q(-hl*0.45)} 0.12 Q${q(-hl + 0.22)} 0.13 ${q(-hl + 0.18)} 0 Z`);
+mk('rect', { x: q(-hl + 0.18), y: -0.05, width: 0.05, height: 0.1, rx: 0.02, fill: TAIL }, g);
+mk('path', { d: `M${q(-hl*0.6)} 0 Q${q(-hl*0.58)} -0.16 -0.1 -0.17 L-0.05 0.17 Q${q(-hl*0.58)} 0.16 ${q(-hl*0.6)} 0 Z`, fill: '#1a1a1a', stroke: '#000', 'stroke-width': 0.02 }, g);
+ombra(`M-0.08 0 C-0.05 -0.24 ${q(hl*0.3)} -0.25 ${q(hl*0.46)} -0.12 Q${q(hl*0.52)} 0 ${q(hl*0.46)} 0.12 C${q(hl*0.3)} 0.25 -0.05 0.24 -0.08 0 Z`, col, { 'stroke-width': 0.03 });
+mk('circle', { cx: q(hl*0.18), cy: 0, r: 0.045, fill: '#c9ced5', stroke: '#555', 'stroke-width': 0.01 }, g);
+[-1, 1].forEach(s => mk('line', { x1: q(xs), y1: q(s*0.05), x2: q(m.ant), y2: q(s*0.05), stroke: '#9aa0a6', 'stroke-width': 0.035 }, st));
+mk('line', { x1: q(xs), y1: q(-m.man[1]), x2: q(xs), y2: q(m.man[1]), stroke: '#222', 'stroke-width': 0.04, 'stroke-linecap': 'round' }, st);
+[-1, 1].forEach(s => { mk('rect', { x: q(xs - 0.05), y: q(s > 0 ? m.man[1]*0.72 : -m.man[1]), width: 0.1, height: q(m.man[1]*0.28), rx: 0.03, fill: '#111' }, st);
+mk('circle', { cx: q(xs - 0.1), cy: q(s*m.man[1]*0.76), r: 0.05, fill: '#2b2b2b', stroke: '#888', 'stroke-width': 0.012 }, st); });
+lucido(mk('ellipse', { cx: q(hl*0.66), cy: 0, rx: 0.13, ry: 0.15, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.025 }, st));
+mk('ellipse', { cx: q(hl*0.74), cy: 0, rx: 0.05, ry: 0.08, fill: '#f4f1d8', stroke: '#333', 'stroke-width': 0.012 }, st);
+if (st !== g) g.appendChild(st);
 return;
 }
 if (kind === 'artic' || kind === 'roadtrain') {
 const ww = W*0.16, cab = L * (kind === 'artic' ? 0.26 : 0.2);
 wheel(-hl+L*0.12, -hw+ww*0.55, L*0.07, ww); wheel(-hl+L*0.12, hw-ww*0.55, L*0.07, ww);
 if (kind === 'artic') {
-mk('rect', { x: -hl, y: -hw, width: L-cab-0.18, height: W, rx: 0.08, fill: '#dcd7c9', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
+lucido(mk('rect', { x: -hl, y: -hw, width: L-cab-0.18, height: W, rx: 0.08, fill: '#dcd7c9', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g));
 for (let x = -hl+0.8; x < hl-cab-0.6; x += 1.2) mk('line', { x1: x, y1: -hw+0.06, x2: x, y2: hw-0.06, stroke: 'rgba(0,0,0,.12)', 'stroke-width': 0.03 }, g);
 } else {
 const bL = (L-cab)*0.5 - 0.2;
-mk('rect', { x: -hl, y: -hw, width: bL, height: W, rx: 0.06, fill: '#d2ccbc', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
+lucido(mk('rect', { x: -hl, y: -hw, width: bL, height: W, rx: 0.06, fill: '#d2ccbc', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g));
 mk('line', { x1: -hl+bL, y1: 0, x2: -hl+bL+0.3, y2: 0, stroke: '#0b0b0b', 'stroke-width': 0.08 }, g);
-mk('rect', { x: -hl+(L-cab)*0.5+0.08, y: -hw, width: bL, height: W, rx: 0.06, fill: '#dcd7c9', stroke: '#0b0b0b', 'stroke-width': 0.05 }, gAnt);
+lucido(mk('rect', { x: -hl+(L-cab)*0.5+0.08, y: -hw, width: bL, height: W, rx: 0.06, fill: '#dcd7c9', stroke: '#0b0b0b', 'stroke-width': 0.05 }, gAnt));
 }
 wheel(hl-L*0.10, -hw+ww*0.55, L*0.07, ww, true, gAnt); wheel(hl-L*0.10, hw-ww*0.55, L*0.07, ww, true, gAnt);
-mk('rect', { x: hl-cab, y: -hw, width: cab, height: W, rx: 0.18, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, gAnt);
-mk('path', { d: `M${hl-cab+0.08} ${-hw*0.8} L${hl-0.14} ${-hw*0.6} L${hl-0.14} ${hw*0.6} L${hl-cab+0.08} ${hw*0.8} Z`, fill: GLASS }, gAnt);
+cabinaPesante(gAnt, hl - cab, hl, hw, col);
 if (sn) {
 g.appendChild(gAnt);
 mk('circle', { cx: sn.px, cy: 0, r: Math.min(0.22, W*0.09), fill: '#fff', stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
@@ -455,7 +596,7 @@ const ww = W*0.18;
 if (e.catId === 'rimagri') {
 const bl = L - 1.1;
 wheel(-hl + bl*0.5, -hw + ww*0.5, L*0.16, ww); wheel(-hl + bl*0.5, hw - ww*0.5, L*0.16, ww);
-mk('rect', { x: -hl, y: -hw*0.86, width: bl, height: W*0.86, rx: 0.06, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.06 }, g);
+lucido(mk('rect', { x: -hl, y: -hw*0.86, width: bl, height: W*0.86, rx: 0.06, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.06 }, g));
 mk('rect', { x: -hl + 0.12, y: -hw*0.86 + 0.12, width: bl - 0.24, height: W*0.86 - 0.24, fill: 'rgba(0,0,0,.28)' }, g);
 for (let x = -hl + 0.5; x < -hl + bl - 0.3; x += 0.6) mk('line', { x1: x, y1: -hw*0.86, x2: x, y2: hw*0.86, stroke: 'rgba(0,0,0,.35)', 'stroke-width': 0.04 }, g);
 mk('path', { d: `M${-hl + bl} ${-hw*0.6} L${hl - 0.08} 0 L${-hl + bl} ${hw*0.6}`, fill: 'none', stroke: '#222', 'stroke-width': 0.09, 'stroke-linejoin': 'round' }, g);
@@ -463,7 +604,7 @@ mk('circle', { cx: hl - 0.08, cy: 0, r: 0.08, fill: 'none', stroke: '#111', 'str
 return;
 }
 wheel(-hl+L*0.2, -hw+ww*0.55, L*0.1, ww); wheel(-hl+L*0.2, hw-ww*0.55, L*0.1, ww);
-mk('rect', { x: -hl, y: -hw, width: L-0.3, height: W, rx: 0.08, fill: '#dcd7c9', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
+lucido(mk('rect', { x: -hl, y: -hw, width: L-0.3, height: W, rx: 0.08, fill: '#dcd7c9', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g));
 mk('line', { x1: hl-0.3, y1: 0, x2: hl, y2: 0, stroke: '#0b0b0b', 'stroke-width': 0.08 }, g);
 return;
 }
@@ -471,10 +612,10 @@ if (kind === 'combine') {
 const tw = L*0.14, bwid = W*0.62;
 wheel(hl - tw - L*0.16, -bwid/2 - W*0.06, L*0.2, W*0.14); wheel(hl - tw - L*0.16, bwid/2 + W*0.06, L*0.2, W*0.14);
 wheel(-hl + L*0.14, -bwid/2 + W*0.02, L*0.12, W*0.1, true); wheel(-hl + L*0.14, bwid/2 - W*0.02, L*0.12, W*0.1, true);
-mk('rect', { x: hl - tw, y: -hw, width: tw, height: W, rx: 0.06, fill: '#d8c24a', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
+lucido(mk('rect', { x: hl - tw, y: -hw, width: tw, height: W, rx: 0.06, fill: '#d8c24a', stroke: '#0b0b0b', 'stroke-width': 0.05 }, g));
 for (let y = -hw + 0.25; y < hw - 0.1; y += 0.3) mk('line', { x1: hl - tw + 0.05, y1: y, x2: hl - 0.03, y2: y, stroke: 'rgba(0,0,0,.35)', 'stroke-width': 0.03 }, g);
 mk('line', { x1: hl - tw*0.55, y1: -hw + 0.05, x2: hl - tw*0.55, y2: hw - 0.05, stroke: '#7a6a20', 'stroke-width': 0.1 }, g);
-mk('rect', { x: -hl, y: -bwid/2, width: L - tw - 0.1, height: bwid, rx: 0.2, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
+lucido(mk('rect', { x: -hl, y: -bwid/2, width: L - tw - 0.1, height: bwid, rx: 0.2, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g));
 mk('rect', { x: hl - tw - L*0.2, y: -bwid*0.36, width: L*0.16, height: bwid*0.72, rx: 0.1, fill: GLASS }, g);
 mk('rect', { x: -hl*0.3, y: -bwid*0.4, width: L*0.22, height: bwid*0.8, rx: 0.08, fill: 'rgba(0,0,0,.28)', stroke: 'rgba(0,0,0,.4)', 'stroke-width': 0.03 }, g);
 mk('line', { x1: -hl*0.1, y1: -bwid*0.4, x2: -hl*0.6, y2: -hw - 0.2, stroke: '#444', 'stroke-width': 0.18, 'stroke-linecap': 'round' }, g);
@@ -485,8 +626,8 @@ const ww = W*0.26, wl = L*0.22;
 const st = sterzo ? mk('g', { transform: `rotate(${sterzo} ${hl*0.62} 0)` }) : g;
 wheel(-hl*0.62, -hw + ww/2, wl, ww); wheel(-hl*0.62, hw - ww/2, wl, ww);
 wheel(hl*0.62, -hw + ww/2, wl, ww, true); wheel(hl*0.62, hw - ww/2, wl, ww, true);
-mk('rect', { x: -hl*0.86, y: -hw*0.5, width: L*0.86, height: W*0.5, rx: 0.12, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
-mk('rect', { x: hl*0.3, y: -hw*0.62, width: L*0.22, height: W*0.62, rx: 0.1, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
+lucido(mk('rect', { x: -hl*0.86, y: -hw*0.5, width: L*0.86, height: W*0.5, rx: 0.12, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.04 }, g));
+lucido(mk('rect', { x: hl*0.3, y: -hw*0.62, width: L*0.22, height: W*0.62, rx: 0.1, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.04 }, g));
 mk('rect', { x: -hl*0.5, y: -hw*0.24, width: L*0.34, height: W*0.24, rx: 0.08, fill: '#1a1a1a' }, g);
 [-hl*0.82, hl*0.62].forEach(x => mk('rect', { x: x - 0.1, y: -hw*0.4, width: 0.2, height: W*0.4, fill: 'none', stroke: '#222', 'stroke-width': 0.03 }, g));
 mk('rect', { x: hl*0.16, y: -hw*0.74, width: 0.08, height: W*0.74, rx: 0.04, fill: '#111' }, st);
@@ -496,7 +637,7 @@ return;
 if (kind === 'carrozzina') {
 mk('rect', { x: -hl*0.7, y: -hw, width: L*0.6, height: W*0.14, rx: 0.05, fill: TYRE }, g);
 mk('rect', { x: -hl*0.7, y: hw - W*0.14, width: L*0.6, height: W*0.14, rx: 0.05, fill: TYRE }, g);
-mk('rect', { x: -hl*0.55, y: -hw*0.66, width: L*0.56, height: W*0.66, rx: 0.06, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.03 }, g);
+lucido(mk('rect', { x: -hl*0.55, y: -hw*0.66, width: L*0.56, height: W*0.66, rx: 0.06, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.03 }, g));
 mk('rect', { x: -hl*0.72, y: -hw*0.66, width: L*0.1, height: W*0.66, rx: 0.04, fill: '#333' }, g);
 mk('rect', { x: hl*0.55, y: -hw*0.5, width: L*0.14, height: W*0.5, rx: 0.04, fill: '#555' }, g);
 [-1, 1].forEach(s => { mk('circle', { cx: hl*0.5, cy: s*hw*0.62, r: Math.min(0.07, W*0.06), fill: TYRE }, g);
@@ -507,8 +648,8 @@ if (kind === 'ape') {
 const ww = W*0.22;
 wheel(hl-0.3, 0, 0.34, ww*0.9, true);
 wheel(-hl+0.35, -hw+ww*0.5, 0.34, ww); wheel(-hl+0.35, hw-ww*0.5, 0.34, ww);
-mk('rect', { x: -hl, y: -hw, width: L, height: W, rx: 0.16, fill: '#c9b87f', stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
-mk('rect', { x: hl-L*0.42, y: -hw, width: L*0.42, height: W, rx: 0.16, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
+lucido(mk('rect', { x: -hl, y: -hw, width: L, height: W, rx: 0.16, fill: '#c9b87f', stroke: '#0b0b0b', 'stroke-width': 0.04 }, g));
+lucido(mk('rect', { x: hl-L*0.42, y: -hw, width: L*0.42, height: W, rx: 0.16, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.04 }, g));
 shellp(`M${hl-L*0.34} ${-hw*0.7} L${hl-0.12} ${-hw*0.5} L${hl-0.12} ${hw*0.5} L${hl-L*0.34} ${hw*0.7} Z`, GLASS);
 return;
 }
@@ -518,20 +659,16 @@ wheel(-hl*0.45, -(hw - W*0.15), L*0.30, W*0.34);
 wheel(-hl*0.45,  (hw - W*0.15), L*0.30, W*0.34);
 wheel(hl*0.66, -(hw*0.6), L*0.14, W*0.16, true);
 wheel(hl*0.66,  (hw*0.6), L*0.14, W*0.16, true);
-mk('rect', { x: -hl*0.7, y: -bw, width: L*0.62, height: bw*2, rx: 0.12, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
-mk('rect', { x: hl*0.12, y: -bw*0.7, width: hl*0.72, height: bw*1.4, rx: 0.12, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.04 }, g);
+lucido(mk('rect', { x: -hl*0.7, y: -bw, width: L*0.62, height: bw*2, rx: 0.12, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g));
+lucido(mk('rect', { x: hl*0.12, y: -bw*0.7, width: hl*0.72, height: bw*1.4, rx: 0.12, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.04 }, g));
 mk('rect', { x: -hl*0.66, y: -bw*0.94, width: L*0.34, height: bw*1.88, rx: 0.12, fill: ROOFL, stroke: 'rgba(0,0,0,.3)', 'stroke-width': 0.03 }, g);
 mk('rect', { x: -hl*0.58, y: -bw*0.72, width: L*0.2, height: bw*1.44, rx: 0.08, fill: GLASS }, g);
 mk('circle', { cx: hl*0.2, cy: -bw*0.9, r: Math.min(0.09, W*0.06), fill: '#1a1a1a' }, g);
 return;
 }
 const ww = W*0.20, wl = L*0.15, off = hw - ww*0.16;
-const B = (x, y, w, h, fill, rx, sw) => mk('rect', { x, y, width: w, height: h, rx: rx || 0.06, fill, stroke: '#0b0b0b', 'stroke-width': sw || 0.05 }, g);
-const cabina = (cab) => {
-B(hl-cab, -hw, cab, W, col, 0.16);
-shellp(`M${hl-cab+0.06} ${-hw*0.82} L${hl-0.14} ${-hw*0.6} L${hl-0.14} ${hw*0.6} L${hl-cab+0.06} ${hw*0.82} Z`, GLASS);
-mirrors(hl-cab-0.02);
-};
+const B = (x, y, w, h, fill, rx, sw) => { const n = mk('rect', { x, y, width: w, height: h, rx: rx || 0.06, fill, stroke: '#0b0b0b', 'stroke-width': sw || 0.05 }, g); return fill === GLASS ? n : lucido(n); };
+const cabina = (cab) => cabinaPesante(g, hl - cab, hl, hw, col);
 const lampeggianti = (x, y1, y2, lw) => {
 mk('rect', { x: x - lw/2, y: y1, width: lw, height: y2 - y1, rx: 0.04, fill: '#1d2b3a' }, g);
 mk('rect', { x: x - lw/2 + 0.02, y: y1 + 0.02, width: lw - 0.04, height: (y2 - y1)*0.36, rx: 0.03, fill: '#2f7bff' }, g);
@@ -596,6 +733,33 @@ cabina(cab);
 return;
 }
 if (kind === 'bus') {
+const q = v => +v.toFixed(3);
+const cassaBus = (tg, x0, x1, davanti, dietro) => {
+const d = sagoma(x0, x1, hw, davanti ? 0.6 : 0.2, dietro ? 0.4 : 0.2);
+lucido(mk('path', { d, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05, 'stroke-linejoin': 'round' }, tg));
+const f0 = x0 + (dietro ? 0.35 : 0.25), f1 = x1 - (davanti ? 0.95 : 0.25);
+if (f1 > f0) [-1, 1].forEach(s => {
+mk('rect', { x: q(f0), y: q(s > 0 ? hw - 0.2 : -hw + 0.04), width: q(f1 - f0), height: 0.16, rx: 0.04, fill: VETRO }, tg);
+for (let x = f0 + 1.1; x < f1 - 0.2; x += 1.1) mk('line', { x1: q(x), y1: q(s > 0 ? hw - 0.2 : -hw + 0.04), x2: q(x), y2: q(s > 0 ? hw - 0.04 : -hw + 0.2), stroke: col, 'stroke-width': 0.08 }, tg);
+});
+const t0 = x0 + 0.25, t1 = x1 - (davanti ? 0.85 : 0.25);
+lucido(mk('rect', { x: q(t0), y: q(-hw*0.74), width: q(Math.max(0.2, t1 - t0)), height: q(hw*1.48), rx: 0.25, fill: col, stroke: 'rgba(0,0,0,.25)', 'stroke-width': 0.025 }, tg), 'vTetto');
+if (t1 - t0 > 3) {
+const cx = (t0 + t1) / 2 + (davanti ? 0.6 : 0), cl = Math.min(2.6, (t1 - t0)*0.3);
+mk('rect', { x: q(cx - cl/2), y: q(-hw*0.46), width: q(cl), height: q(hw*0.92), rx: 0.12, fill: '#d4d8dc', stroke: 'rgba(0,0,0,.4)', 'stroke-width': 0.03 }, tg);
+for (let x = cx - cl/2 + 0.25; x < cx + cl/2 - 0.1; x += 0.25) mk('line', { x1: q(x), y1: q(-hw*0.36), x2: q(x), y2: q(hw*0.36), stroke: 'rgba(0,0,0,.18)', 'stroke-width': 0.03 }, tg);
+[t0 + 0.6, cx + cl/2 + 0.9].forEach(x => { if (x < t1 - 0.5) mk('rect', { x: q(x), y: -0.32, width: 0.55, height: 0.64, rx: 0.06, fill: 'rgba(0,0,0,.14)', stroke: 'rgba(0,0,0,.3)', 'stroke-width': 0.02 }, tg); });
+}
+if (davanti) lucido(mk('path', { d: `M${q(x1 - 0.1)} ${q(-hw*0.8)} Q${q(x1 - 0.03)} 0 ${q(x1 - 0.1)} ${q(hw*0.8)} L${q(x1 - 0.8)} ${q(hw*0.9)} L${q(x1 - 0.8)} ${q(-hw*0.9)} Z`, fill: VETRO, stroke: 'rgba(0,0,0,.5)', 'stroke-width': 0.03 }, tg), 'vVetro');
+if (dietro) mk('rect', { x: q(x0 + 0.06), y: q(-hw*0.6), width: 0.16, height: q(hw*1.2), rx: 0.04, fill: VETRO }, tg);
+if (davanti) [-1, 1].forEach(s => {
+mk('path', { d: `M${q(x1 - 0.5)} ${q(s*hw)} Q${q(x1 - 0.2)} ${q(s*(hw + 0.3))} ${q(x1 + 0.08)} ${q(s*(hw + 0.22))}`, fill: 'none', stroke: '#222', 'stroke-width': 0.04 }, tg);
+mk('rect', { x: q(x1 + 0.02), y: q(s > 0 ? hw + 0.1 : -hw - 0.3), width: 0.1, height: 0.2, rx: 0.03, fill: '#1c1c1c' }, tg);
+mk('rect', { x: q(x1 - 0.12), y: q(s > 0 ? hw*0.55 : -hw*0.85), width: 0.1, height: q(hw*0.3), rx: 0.03, fill: '#f4f1d8', stroke: 'rgba(0,0,0,.4)', 'stroke-width': 0.015 }, tg);
+});
+if (dietro) [-1, 1].forEach(s => mk('rect', { x: q(x0 + 0.02), y: q(s > 0 ? hw*0.6 : -hw*0.9), width: 0.1, height: q(hw*0.3), rx: 0.03, fill: '#c62828' }, tg));
+mk('path', { d, fill: 'none', stroke: '#0b0b0b', 'stroke-width': 0.05, 'stroke-linejoin': 'round' }, tg);
+};
 if (e.catId === 'tram') {
 B(-hl, -hw, L, W, col, 0.5);
 mk('rect', { x: -hl+0.3, y: -hw*0.7, width: L-0.6, height: W*0.7, rx: 0.2, fill: ROOFL }, g);
@@ -611,40 +775,36 @@ return;
 }
 if (e.catId === 'autosnodato') {
 const px = hl - L*0.58;
-wheel(-hl*0.62, -off, wl, ww); wheel(-hl*0.62, off, wl, ww);
-B(-hl, -hw, px - (-hl) - 0.35, W, col, 0.4);
-mk('rect', { x: -hl+0.25, y: -hw*0.72, width: px - (-hl) - 0.8, height: W*0.72, rx: 0.25, fill: ROOFL }, g);
-for (let x = -hl+0.6; x < px - 1; x += 1.1) { mk('rect', { x, y: -hw+0.06, width: 0.8, height: 0.18, fill: GLASS }, g); mk('rect', { x, y: hw-0.24, width: 0.8, height: 0.18, fill: GLASS }, g); }
+const wwB = W*0.16;
+wheel(-hl*0.62, -off, wl, wwB); wheel(-hl*0.62, off, wl, wwB);
+cassaBus(g, -hl, px - 0.35, false, true);
 mk('rect', { x: px - 0.4, y: -hw*0.92, width: 0.8, height: W*0.92, fill: '#2b2b2b' }, g);
 for (let x = px - 0.35; x < px + 0.4; x += 0.12) mk('line', { x1: x, y1: -hw*0.9, x2: x, y2: hw*0.9, stroke: '#666', 'stroke-width': 0.03 }, g);
-wheel(hl*0.7, -off, wl, ww, true, gAnt); wheel(hl*0.7, off, wl, ww, true, gAnt); wheel(px + 1.4, -off, wl, ww, false, gAnt); wheel(px + 1.4, off, wl, ww, false, gAnt);
-mk('rect', { x: px + 0.35, y: -hw, width: hl - px - 0.35, height: W, rx: 0.4, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, gAnt);
-mk('rect', { x: px + 0.6, y: -hw*0.72, width: hl - px - 0.85, height: W*0.72, rx: 0.25, fill: ROOFL }, gAnt);
-mk('path', { d: `M${hl-0.6} ${-hw*0.78} L${hl-0.12} ${-hw*0.55} L${hl-0.12} ${hw*0.55} L${hl-0.6} ${hw*0.78} Z`, fill: GLASS }, gAnt);
-for (let x = px + 0.7; x < hl - 1; x += 1.1) { mk('rect', { x, y: -hw+0.06, width: 0.8, height: 0.18, fill: GLASS }, gAnt); mk('rect', { x, y: hw-0.24, width: 0.8, height: 0.18, fill: GLASS }, gAnt); }
+wheel(hl*0.7, -off, wl, wwB, true, gAnt); wheel(hl*0.7, off, wl, wwB, true, gAnt); wheel(px + 1.4, -off, wl, wwB, false, gAnt); wheel(px + 1.4, off, wl, wwB, false, gAnt);
+cassaBus(gAnt, px + 0.35, hl, true, false);
 if (gAnt !== g) g.appendChild(gAnt);
 return;
 }
-wheel(hl*0.7, -off, wl, ww, true); wheel(hl*0.7, off, wl, ww, true);
-wheel(-hl*0.62, -off, wl, ww); wheel(-hl*0.62, off, wl, ww);
-mk('rect', { x: -hl, y: -hw, width: L, height: W, rx: 0.4, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
-mk('rect', { x: -hl+0.25, y: -hw*0.72, width: L-0.5, height: W*0.72, rx: 0.25, fill: ROOFL }, g);
-shellp(`M${hl-0.6} ${-hw*0.78} L${hl-0.12} ${-hw*0.55} L${hl-0.12} ${hw*0.55} L${hl-0.6} ${hw*0.78} Z`, GLASS);
-for (let x = -hl+0.6; x < hl-1; x += 1.1) {
-mk('rect', { x: x, y: -hw+0.06, width: 0.8, height: 0.18, fill: GLASS }, g);
-mk('rect', { x: x, y:  hw-0.24, width: 0.8, height: 0.18, fill: GLASS }, g);
-}
-lightsFB();
+const wwB = W*0.16;
+wheel(hl*0.7, -off, wl, wwB, true); wheel(hl*0.7, off, wl, wwB, true);
+wheel(-hl*0.62, -off, wl, wwB); wheel(-hl*0.62, off, wl, wwB);
+cassaBus(g, -hl, hl, true, true);
 return;
 }
 if (kind === 'van' && !FORMA_AUTO[e.catId]) {
-wheel(hl*0.62, -off, wl, ww, true); wheel(hl*0.62, off, wl, ww, true);
-wheel(-hl*0.6, -off, wl, ww); wheel(-hl*0.6, off, wl, ww);
-mk('rect', { x: -hl, y: -hw, width: L, height: W, rx: 0.2, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
-mk('rect', { x: hl-L*0.3, y: -hw*0.82, width: L*0.28, height: W*0.82, rx: 0.12, fill: ROOFL }, g);
-shellp(`M${hl-L*0.3} ${-hw*0.82} L${hl-0.12} ${-hw*0.58} L${hl-0.12} ${hw*0.58} L${hl-L*0.3} ${hw*0.82} Z`, GLASS);
-mk('line', { x1: hl-L*0.32, y1: -hw, x2: hl-L*0.32, y2: hw, stroke: 'rgba(0,0,0,.3)', 'stroke-width': 0.04 }, g);
-mk('line', { x1: -hl+0.04, y1: 0, x2: -hl+0.5, y2: 0, stroke: 'rgba(0,0,0,.3)', 'stroke-width': 0.04 }, g);
+const q = v => +v.toFixed(3), wwV = W*0.14;
+wheel(hl*0.62, -off, wl, wwV, true); wheel(hl*0.62, off, wl, wwV, true);
+wheel(-hl*0.6, -off, wl, wwV); wheel(-hl*0.6, off, wl, wwV);
+const corpoV = sagoma(-hl, hl, hw, Math.min(W*0.4, 0.75), 0.14);
+lucido(mk('path', { d: corpoV, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05, 'stroke-linejoin': 'round' }, g));
+const xV1 = hl - Math.min(0.75, L*0.11), xV0 = hl - Math.min(1.55, L*0.24);
+const vetroV = `M${q(xV1)} ${q(-hw*0.68)} Q${q(xV1 + 0.06)} 0 ${q(xV1)} ${q(hw*0.68)} L${q(xV0)} ${q(hw*0.86)} L${q(xV0)} ${q(-hw*0.86)} Z`;
+lucido(mk('path', { d: vetroV, fill: VETRO, stroke: 'rgba(0,0,0,.55)', 'stroke-width': 0.03 }, g), 'vVetro');
+[-1, 1].forEach(s => mk('rect', { x: q(xV0 - 0.75), y: q(s > 0 ? hw*0.86 : -hw*0.97), width: 0.75, height: q(hw*0.11), rx: 0.03, fill: VETRO }, g));
+lucido(mk('rect', { x: q(-hl + 0.1), y: q(-hw*0.86), width: q(xV0 - (-hl + 0.1) - 0.02), height: q(hw*1.72), rx: 0.14, fill: col, stroke: 'rgba(0,0,0,.25)', 'stroke-width': 0.025 }, g), 'vTetto');
+for (let x = -hl + 0.5; x < xV0 - 0.3; x += 0.45) mk('line', { x1: q(x), y1: q(-hw*0.8), x2: q(x), y2: q(hw*0.8), stroke: 'rgba(0,0,0,.1)', 'stroke-width': 0.035 }, g);
+mk('line', { x1: -hl + 0.02, y1: 0, x2: -hl + 0.12, y2: 0, stroke: 'rgba(0,0,0,.45)', 'stroke-width': 0.04 }, g);
+[-1, 1].forEach(s => mk('rect', { x: q(xV0 - 0.02), y: q(s > 0 ? hw - 0.02 : -hw - 0.16), width: 0.16, height: 0.18, rx: 0.05, fill: col, stroke: '#111', 'stroke-width': 0.022 }, g));
 if (e.catId === 'camper') {
 mk('rect', { x: hl-L*0.36, y: -hw*0.9, width: L*0.1, height: W*0.9, rx: 0.1, fill: 'rgba(255,255,255,.35)', stroke: 'rgba(0,0,0,.25)', 'stroke-width': 0.03 }, g);
 mk('rect', { x: -hl*0.2, y: -W*0.18, width: L*0.1, height: W*0.36, rx: 0.06, fill: 'rgba(255,255,255,.55)', stroke: 'rgba(0,0,0,.3)', 'stroke-width': 0.03 }, g);
@@ -658,20 +818,22 @@ mk('rect', { x: cx - cs*0.38, y: -cs*0.12, width: cs*0.76, height: cs*0.24, fill
 lampeggianti(hl - L*0.33, -hw*0.75, hw*0.75, 0.2);
 lampeggianti(-hl + 0.22, -hw*0.75, hw*0.75, 0.14);
 }
-lightsFB(); mirrors(hl-L*0.3-0.02);
+fariEFanali(g, hl, -hl, hw);
+mk('path', { d: corpoV, fill: 'none', stroke: '#0b0b0b', 'stroke-width': 0.05, 'stroke-linejoin': 'round' }, g);
 return;
 }
 const sg = SAGOME[FORMA_AUTO[e.catId] || 'auto'];
-const r = Math.min(0.6, W*sg.r);
-wheel(hl*sg.ru, -off, wl, ww, true); wheel(hl*sg.ru, off, wl, ww, true);
-wheel(-hl*sg.ru, -off, wl, ww); wheel(-hl*sg.ru, off, wl, ww);
-mk('rect', { x: -hl, y: -hw, width: L, height: W, rx: r, ry: r, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.05 }, g);
-mk('rect', { x: -hl+0.12, y: -hw*0.42, width: L-0.24, height: W*0.2, rx: 0.1, fill: 'rgba(255,255,255,.10)' }, g);
-const cF = hl*sg.cF, cB = hl*sg.cB, cW = hw*0.82;
+const wwA = W*0.14, q = v => +v.toFixed(3);
+wheel(hl*sg.ru, -off, wl, wwA, true); wheel(hl*sg.ru, off, wl, wwA, true);
+wheel(-hl*sg.ru, -off, wl, wwA); wheel(-hl*sg.ru, off, wl, wwA);
+const rF = Math.min(W*0.55, W*sg.r*1.9), rR = Math.min(W*0.45, W*sg.r*1.5);
+const corpo = sagoma(-hl, hl, hw, rF, rR);
+lucido(mk('path', { d: corpo, fill: col, stroke: '#0b0b0b', 'stroke-width': 0.045, 'stroke-linejoin': 'round' }, g));
+const cF = hl*sg.cF, cB = hl*sg.cB, cW = hw*0.82, xF = hl*sg.pF, xB = hl*sg.pB;
+[-1, 1].forEach(s => mk('rect', { x: q(cF - 0.2), y: q(s > 0 ? hw - 0.03 : -hw - 0.11), width: 0.13, height: 0.14, rx: 0.05, fill: col, stroke: '#111', 'stroke-width': 0.022 }, g));
+[-1, 1].forEach(s => mk('path', { d: `M${q(xF + 0.12)} ${q(s*hw*0.42)} Q${q((xF + hl)/2 + 0.1)} ${q(s*hw*0.4)} ${q(hl - 0.12)} ${q(s*hw*0.3)}`, fill: 'none', stroke: 'rgba(0,0,0,.18)', 'stroke-width': 0.025 }, g));
 if (sg.baule) {
-mk('line', { x1: hl*0.5, y1: -hw*0.45, x2: hl*0.92, y2: -hw*0.4, stroke: 'rgba(0,0,0,.22)', 'stroke-width': 0.03 }, g);
-mk('line', { x1: hl*0.5, y1: hw*0.45, x2: hl*0.92, y2: hw*0.4, stroke: 'rgba(0,0,0,.22)', 'stroke-width': 0.03 }, g);
-mk('line', { x1: -hl*0.6, y1: -hw*0.78, x2: -hl*0.6, y2: hw*0.78, stroke: 'rgba(0,0,0,.3)', 'stroke-width': 0.035 }, g);
+mk('path', { d: `M${q(-hl*0.62)} ${q(-hw*0.72)} Q${q(-hl*0.66)} 0 ${q(-hl*0.62)} ${q(hw*0.72)}`, fill: 'none', stroke: 'rgba(0,0,0,.3)', 'stroke-width': 0.03 }, g);
 }
 if (sg.aperto) {
 mk('rect', { x: cB, y: -cW, width: cF-cB, height: cW*2, rx: 0.22, fill: '#2e2f33', stroke: 'rgba(0,0,0,.5)', 'stroke-width': 0.03 }, g);
@@ -682,9 +844,14 @@ mk('circle', { cx: sx + sl*0.85, cy: -cW*0.12 - sw/2, r: Math.min(0.18, sw*0.4),
 mk('rect', { x: hl*sg.pB, y: -cW*0.9, width: cB - hl*sg.pB, height: cW*1.8, rx: 0.1, fill: '#1e1e20' }, g);
 shellp(`M${cF} ${-cW} L${cF + 0.14} ${-hw*0.66} L${cF + 0.14} ${hw*0.66} L${cF} ${cW} Z`, GLASS);
 } else {
-mk('rect', { x: cB, y: -cW, width: cF-cB, height: cW*2, rx: 0.28, fill: ROOFL, stroke: 'rgba(0,0,0,.25)', 'stroke-width': 0.03 }, g);
-shellp(`M${cF} ${-cW} L${hl*sg.pF} ${-hw*0.62} L${hl*sg.pF} ${hw*0.62} L${cF} ${cW} Z`, GLASS);
-shellp(`M${cB} ${-cW} L${hl*sg.pB} ${-hw*0.62} L${hl*sg.pB} ${hw*0.62} L${cB} ${cW} Z`, GLASS);
+const gwF = hw*0.62, gwM = hw*0.84, gwB = hw*0.68;
+const serra = `M${q(xF)} ${q(-gwF)} Q${q(xF + 0.06)} 0 ${q(xF)} ${q(gwF)} L${q(cF)} ${q(gwM)} L${q(cB)} ${q(gwM)} L${q(xB)} ${q(gwB)} Q${q(xB - 0.05)} 0 ${q(xB)} ${q(-gwB)} L${q(cB)} ${q(-gwM)} L${q(cF)} ${q(-gwM)} Z`;
+lucido(mk('path', { d: serra, fill: VETRO, stroke: 'rgba(0,0,0,.55)', 'stroke-width': 0.03 }, g), 'vVetro');
+const tw = hw*0.7, tl = Math.max(0.2, cF - cB - 0.12);
+lucido(mk('rect', { x: q(cB + 0.06), y: q(-tw), width: q(tl), height: q(tw*2), rx: q(Math.min(0.22, tw*0.5)), fill: col }, g), 'vTetto');
+const xm = (cF + cB)/2 + (cF - cB)*0.08;
+[-1, 1].forEach(s => mk('line', { x1: q(xm), y1: q(s*tw), x2: q(xm), y2: q(s*gwM), stroke: col, 'stroke-width': 0.07 }, g));
+if (!RS.bn) mk('path', { d: `M${q(cF + 0.08)} ${q(-gwM*0.55)} L${q(xF - 0.06)} ${q(-gwF*0.2)} L${q(xF - 0.1)} ${q(-gwF*0.02)} L${q(cF + 0.05)} ${q(-gwM*0.3)} Z`, fill: 'rgba(255,255,255,.22)' }, g);
 }
 if (sg.cassone) {
 const x0 = -hl + 0.1, x1 = hl*sg.pB - 0.08;
@@ -692,8 +859,7 @@ mk('rect', { x: x0, y: -hw + 0.1, width: x1 - x0, height: W - 0.2, rx: 0.06, fil
 for (let y = -hw + 0.28; y < hw - 0.2; y += 0.22) mk('line', { x1: x0 + 0.08, y1: y, x2: x1 - 0.08, y2: y, stroke: 'rgba(255,255,255,.14)', 'stroke-width': 0.04 }, g);
 }
 if (sg.barre) {
-mk('line', { x1: cB + 0.15, y1: -cW*0.86, x2: cF - 0.15, y2: -cW*0.86, stroke: '#2a2a2a', 'stroke-width': 0.06 }, g);
-mk('line', { x1: cB + 0.15, y1: cW*0.86, x2: cF - 0.15, y2: cW*0.86, stroke: '#2a2a2a', 'stroke-width': 0.06 }, g);
+[-1, 1].forEach(s => mk('line', { x1: q(cB + 0.12), y1: q(s*hw*0.62), x2: q(cF - 0.12), y2: q(s*hw*0.62), stroke: '#2a2a2a', 'stroke-width': 0.055, 'stroke-linecap': 'round' }, g));
 }
 if (e.catId === 'taxi') {
 const tx = (cF + cB)/2, tw = Math.min(0.55, (cF - cB)*0.35), th = W*0.5;
@@ -705,7 +871,8 @@ lampeggianti((cF + cB)/2 + 0.15, -cW*0.92, cW*0.92, 0.24);
 mk('line', { x1: -hl*0.85, y1: -hw + 0.07, x2: hl*0.85, y2: -hw + 0.07, stroke: '#d01818', 'stroke-width': 0.09 }, g);
 mk('line', { x1: -hl*0.85, y1: hw - 0.07, x2: hl*0.85, y2: hw - 0.07, stroke: '#d01818', 'stroke-width': 0.09 }, g);
 }
-lightsFB(); mirrors(cF-0.06);
+fariEFanali(g, hl, -hl, hw);
+mk('path', { d: corpo, fill: 'none', stroke: '#0b0b0b', 'stroke-width': 0.045, 'stroke-linejoin': 'round' }, g);
 }
 function drawPilota(g, e) {
 const L = e.len, hl = L/2, k = e.kind;
@@ -732,22 +899,35 @@ if (e.len > 6.5) return [
 { lx: -hl, ly: hw }, { lx: -hl, ly: -hw }, { lx: 0, ly: -hw }];
 return [{ lx: hl, ly: -hw }, { lx: hl, ly: hw }, { lx: -hl, ly: hw }, { lx: -hl, ly: -hw }];
 }
+function ruoteLato(e) {
+const L = e.len || 2, W = e.wid || 0.7, hl = L / 2, k = e.kind, c = e.catId;
+const wr = k === 'monopattino' ? Math.min(0.1, W*0.22) : k === 'bike' ? Math.min(0.33, W*0.4, L*0.16)
+: c === 'scooter' ? Math.min(0.2, W*0.3, L*0.11) : Math.min(0.3, W*0.4, L*0.16);
+const cxF = hl - wr*1.02, cxR = -hl + wr*(c === 'scooter' ? 1.6 : 1.02), zc = wr / W;
+const man = k === 'bike' ? [cxF - wr*0.3 + 0.12, Math.min(0.95, zc + 0.66) - 0.02] : k === 'monopattino' ? [cxF - 0.16, 0.95]
+: (c === 'scooter' || c === 'ciclomotore') ? [hl*0.36, 0.96] : [cxF - wr*0.7, 0.86];
+return { wr, cxF, cxR, zc, man };
+}
+function dueRuoteAlto(e) {
+const L = e.len || 2, W = e.wid || 0.7, hl = L / 2, hw = W / 2, k = e.kind, c = e.catId;
+if (k === 'bike') return { ant: hl - 0.3, post: -hl + 0.3, man: [hl - 0.5, hw*0.95] };
+if (k === 'monopattino') return { ant: hl - 0.12, post: -hl + 0.12, man: [hl - 0.105, hw*0.95] };
+if (c === 'scooter') return { ant: hl - 0.24, post: -hl + 0.27, man: [hl*0.5 + 0.08, hw*0.96] };
+if (c === 'ciclomotore') return { ant: hl - 0.28, post: -hl + 0.28, man: [hl*0.56, hw*0.92] };
+return { ant: hl - 0.3, post: -hl + 0.33, man: [hl*0.52, hw*0.95] };
+}
 let registroRuote = null;
 function mozzi(e) {
 const hl = (e.len || 4) / 2, r2 = v => Math.round(v * 100) / 100;
-const due = { bike: 0.3, monopattino: 0.12, moto: 0.25 }[e.kind];
-if (due != null) {
-const hw = (e.wid || 0.7) / 2, W = e.wid || 0.7, L = e.len || 2, k = e.kind;
+if (DUE_RUOTE[e.kind]) {
+const hw = (e.wid || 0.7) / 2, W = e.wid || 0.7;
 const A = 'mozzo della ruota anteriore', P = 'mozzo della ruota posteriore', M = 'estremità del manubrio';
 if (e.posa === 'fiancodx' || e.posa === 'fiancosx') {
-const r = e.posa === 'fiancodx' ? 1 : -1, Y = z => -r * hw + r * z * W;
-const wr = k === 'monopattino' ? Math.min(0.1, W * 0.22) : Math.min(k === 'bike' ? 0.33 : 0.3, W * 0.4, L * 0.16);
-const cxF = hl - wr * 1.02, cxR = -hl + wr * 1.02, zc = wr / W;
-const man = k === 'bike' ? [cxF - wr * 0.3 + 0.12, Math.min(0.95, zc + 0.66) - 0.02] : k === 'monopattino' ? [cxF - 0.16, 0.95] : [cxF - wr * 0.7, 0.86];
+const r = e.posa === 'fiancodx' ? 1 : -1, Y = z => -r * hw + r * z * W, { cxF, cxR, zc, man } = ruoteLato(e);
 return [{ lx: r2(cxF), ly: r2(Y(zc)), nome: A }, { lx: r2(cxR), ly: r2(Y(zc)), nome: P }, { lx: r2(man[0]), ly: r2(Y(man[1])), nome: M }];
 }
-const man = { bike: 0.5, monopattino: 0.105, moto: 0.575 }[k];
-return [{ lx: r2(hl - due), ly: 0, nome: A }, { lx: r2(-hl + due), ly: 0, nome: P }, { lx: r2(hl - man), ly: r2(hw * 0.95), nome: M }];
+const m = dueRuoteAlto(e);
+return [{ lx: r2(m.ant), ly: 0, nome: A }, { lx: r2(m.post), ly: 0, nome: P }, { lx: r2(m.man[0]), ly: r2(m.man[1]), nome: M }];
 }
 const reg = [];
 registroRuote = reg;
@@ -770,15 +950,15 @@ const ant = assi.filter(a => a.px > sn.px && a !== assi[0]).pop();
 if (ant) lato(ant, 'dxsx', e.catId === 'autosnodato' ? 'dell\'asse centrale' : 'posteriore della motrice');
 }
 if (assi.length > 1) lato(assi[assi.length - 1], 'dxsx', 'posteriore');
+if (e.posa === 'tetto') out.forEach(p => { p.nome = p.nome.replace(/sinistro|destro/, l => l === 'sinistro' ? 'destro' : 'sinistro'); });
 return out;
 }
 function nomePuntoVeicolo(v, p) {
 if (!p) return 'punto';
-if (!v.posa || v.posa === 'ruote' || DUE_RUOTE[v.kind]) {
-const d = h => Math.hypot(h.lx - p.lx, h.ly - p.ly);
-const m = mozzi(v).filter(h => d(h) < 0.3).sort((a, b) => d(a) - d(b))[0];
-if (m) return m.nome;
-}
+const d = h => Math.hypot(h.lx - p.lx, h.ly - p.ly), vicino = l => l.filter(h => d(h) < 0.3).sort((a, b) => d(a) - d(b))[0];
+const fianco = !DUE_RUOTE[v.kind] && (v.posa === 'fiancodx' || v.posa === 'fiancosx');
+if (fianco) { const s = vicino(puntiFiancata(v)); if (s) return s.nome; }
+else { const m = vicino(mozzi(v)); if (m) return m.nome; }
 const fx = p.lx / ((v.len || 4) / 2), fy = p.ly / ((v.wid || 1.8) / 2);
 const lon = fx > 0.6 ? 'anteriore' : fx < -0.6 ? 'posteriore' : '', lat = fy < -0.6 ? 'sinistro' : fy > 0.6 ? 'destro' : '';
 if (DUE_RUOTE[v.kind]) {
@@ -2536,7 +2716,7 @@ stroke: RS.bn ? nero : (e.color || '#2f6fed'), 'stroke-width': 0.07, 'stroke-das
 } else if (ombraConFiltro()) g.setAttribute('filter', 'url(#softShadow)');
 else ombraSemplice(g, -e.len/2, -e.wid/2, e.len, e.wid, Math.min(0.4, e.wid*0.25));
 const sulleRuote = !e.posa || e.posa === 'ruote';
-if (DUE_RUOTE[e.kind] && e.evidenzia !== false)
+if (DUE_RUOTE[e.kind] && e.evidenzia === true)
 mk('ellipse', { cx: 0, cy: 0, rx: e.len/2 + 0.35, ry: e.wid/2 + 0.35, fill: 'rgba(255,255,255,.6)',
 stroke: RS.bn ? nero : (e.color || '#d23838'), 'stroke-width': 0.06, 'stroke-dasharray': '0.18 0.1' }, corpo);
 drawVehicleBody(corpo, e); drawTramaBN(corpo, e);
@@ -2710,7 +2890,8 @@ const s = e.size || 0.5;
 return { lx: (e.llx != null ? e.llx : s*0.9), ly: (e.lly != null ? e.lly : -s*0.7) };
 };
 RS.elements.makeRilpts = function (e, base) {
-const m = e.puntiSu !== 'spigoli' && (!e.posa || e.posa === 'ruote' || DUE_RUOTE[e.kind]) ? mozzi(e) : [];
+const fianco = !DUE_RUOTE[e.kind] && (e.posa === 'fiancodx' || e.posa === 'fiancosx');
+const m = fianco ? puntiFiancata(e) : e.puntiSu !== 'spigoli' ? mozzi(e) : [];
 return (m.length >= 2 ? m : patternPoints(e)).map((p, i) => ({ lx: p.lx, ly: p.ly, n: base + i }));
 };
 RS.elements.mozzi = mozzi; RS.elements.nomePuntoVeicolo = nomePuntoVeicolo;
