@@ -1,10 +1,14 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 280;
+RS.BUILD = 281;
 RS.DATA_BUILD = '2026-11-16';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 281, data: '2026-11-16', voci: [
+'Detriti, punto d\'urto, macchie, oggetti a terra e gli altri punti utili: dopo le misure sul disegno non compare più il punto verde accanto al simbolo. Il punto da misurare c\'è ancora (nelle misure guidate, nel Rilievo dei punti, nell\'atto e in legenda) e lo segna il simbolo stesso, che si sposta con lui.',
+'Misure guidate: la piantina sta accanto a «A → A2» e alla sua descrizione e si vede sempre intera, senza scorrere col dito, anche quando in alto c\'è un avviso o la domanda sulla terza distanza. Il caposaldo su cui mettere il nastro sta su una riga; sui telefoni piccoli l\'avviso si accorcia a tre righe e un tocco lo apre tutto (la voce lo legge comunque per intero). Il tastierino resta fermo.'
+] },
 { build: 280, data: '2026-11-16', voci: [
 'Misure guidate: il tastierino non si sposta più su e giù fra una misura e l\'altra. La finestra ha sempre la stessa altezza: in basso, fermi, valore, tastierino, Invio, Salta e Indietro; sopra le indicazioni (esito della misura appena presa, caposaldo su cui mettere il nastro, che cosa misurare, piantina), che si adattano allo spazio e, se non ci stanno, scorrono. Il telemetro laser si collega dalla torcia in alto, accanto all\'altoparlante.',
 'Controllo delle misure più affidabile: le tre o più distanze di un punto si confrontano con i capisaldi dove li mettono le misure (base misurata, capisaldi aggiunti dalle loro distanze) e non con il disegno. Prima, con la base o un caposaldo disegnati un po\' fuori posto, misure giuste potevano risultare «sbagliate» (con l\'invito a ripeterle) e un errore vero poteva sfuggire.',

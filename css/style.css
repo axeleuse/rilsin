@@ -1661,7 +1661,32 @@ body.sole .info-sost-b{background:#000 !important;color:#fff !important;border-c
 .gm-box.gm-misura>.gm-top,.gm-box.gm-misura>.gm-barra{flex-shrink:0}
 .gm-misura .gm-info{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column}
 .gm-misura .gm-info>*{flex-shrink:0}
-.gm-misura .gm-info>.gm-mini{flex:1 1 136px;min-height:96px;max-height:220px;height:auto}
+.gm-misura .gm-qui{display:flex;gap:10px;align-items:stretch;margin:2px 0 6px;flex:1 1 150px;min-height:96px;max-height:170px}
+.gm-misura .gm-cambio{margin:4px 0 4px;padding:5px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gm-misura .gm-info .gm-prop{padding:5px 9px;font-size:12px;line-height:1.3;margin:0 0 6px}
+.gm-misura .gm-info .gm-prop .gm-riga{margin-top:5px}.gm-misura .gm-info .gm-prop .gm-k.gm-pic{height:36px;font-size:13.5px}
+.gm-misura .gm-info>.gm-qui{flex-shrink:1}
+.gm-misura .gm-qui .gm-cosa{flex:1 1 44%;min-width:0;text-align:left;display:flex;flex-direction:column;justify-content:center}
+.gm-misura .gm-qui .gm-nome{font-size:32px;white-space:nowrap}
+.gm-misura .gm-qui .gm-descr{font-size:12px;line-height:1.35}
+.gm-misura .gm-qui .gm-mini{flex:1 1 56%;min-width:0;height:auto;margin:0}
+.gm-misura .gm-qui .gm-mini-tit{font-size:11px;padding:0 6px}
+.gm-misura .gm-qui .gm-verso{font-size:10.5px}
+@media (max-height:760px){.gm-misura .gm-qui .gm-mini{height:auto}.gm-misura .gm-qui .gm-nome{font-size:28px}}
+.gm-esito-t{cursor:pointer}
+@media (max-height:720px){
+.gm-misura .gm-qui{min-height:72px;margin:0 0 4px}
+.gm-misura .gm-cambio{margin:4px 0 2px;padding:3px 8px;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gm-misura .gm-info .gm-esito{padding:5px 8px;font-size:12px;line-height:1.3}
+.gm-misura .gm-info .gm-esito-t:not(.aperto){display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.gm-misura .gm-info .gm-esito .gm-rip{margin-top:4px;height:34px}
+.gm-misura .gm-val{margin:5px 0;padding:3px 12px}.gm-misura .gm-val span{font-size:28px}
+.gm-misura .gm-stima{margin:-3px 0 5px}
+.gm-misura .gm-pad .gm-k{height:44px}.gm-misura .gm-invio{height:46px;margin-top:6px}
+.gm-misura .gm-qui .gm-ora{display:none}
+.gm-misura .gm-info .gm-prop{padding:4px 8px;font-size:11.5px;line-height:1.25;margin-bottom:4px}
+.gm-misura .gm-info .gm-prop .gm-riga{margin-top:5px}.gm-misura .gm-info .gm-prop .gm-k.gm-pic{height:34px;font-size:13px}
+}
 .gm-misura .gm-pad{flex:0 0 auto;padding-top:4px}
 .gm-misura .gm-stima,.gm-misura .gm-dopo{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .gm-misura .gm-info>.gm-esito:first-child{margin-top:0;margin-bottom:8px}

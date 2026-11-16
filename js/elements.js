@@ -1599,6 +1599,7 @@ mk('rect', { x: -hw, y: -hh, width: W, height: H, fill: 'none', stroke: '#3d3426
 if (W > 1.2 && H > 1.2) mk('rect', { x: -hw + 0.35, y: -hh + 0.35, width: W - 0.7, height: H - 0.7, fill: 'none', stroke: '#3d3426', 'stroke-width': 0.06 }, g);
 }
 function drawSurveyPt(g, e) {
+if (e.diSimbolo && RS.scene && RS.scene.get && RS.scene.get(e.diSimbolo)) return;
 const s = e.size || 0.6, h = s/2;
 mk('path', { d: `M${-h} 0 L${h} 0 M0 ${-h} L0 ${h}`, stroke: '#0a7', 'stroke-width': s*0.12 }, g);
 mk('circle', { cx: 0, cy: 0, r: h*0.55, fill: '#fff', stroke: '#0a7', 'stroke-width': s*0.12 }, g);
@@ -1606,7 +1607,6 @@ const t = N('text');
 t.setAttribute('x', h*1.1); t.setAttribute('y', -h*0.7); t.setAttribute('font-size', s*1.1);
 t.setAttribute('fill', '#0a7'); t.setAttribute('font-weight', '700');
 t.setAttribute('paint-order', 'stroke'); t.setAttribute('stroke', '#f4f1e8'); t.setAttribute('stroke-width', 0.06);
-if (e.cod && e.diSimbolo && RS.scene && RS.scene.get && RS.scene.get(e.diSimbolo)) return;
 t.textContent = e.cod ? e.cod : e.n != null ? e.n : '';
 g.appendChild(t);
 annotaNumero(t, e, h*1.1, -h*0.7, s*1.1, h);

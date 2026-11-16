@@ -2712,7 +2712,8 @@ S.render(); S.snapshot(); this._rpRidisegna();
 });
 wrap.querySelectorAll('[data-pshow]').forEach(b => b.onclick = () => {
 const p = [].concat.apply([], RS.verifica.schedaRilievo().gruppi.map(g => g.punti)).find(x => x.T === b.dataset.pshow); if (!p) return;
-const ids = p.el ? [p.el.id] : p.veicolo ? [p.veicolo.id] : [p.ord && p.ord.q, p.asc && p.asc.q].concat(p.dist.map(d => d.q)).filter(Boolean).map(q => q.id);
+const sim = p.el && p.el.type === 'surveypt' && p.el.diSimbolo ? S.get(p.el.diSimbolo) : null;
+const ids = sim ? [sim.id] : p.el ? [p.el.id] : p.veicolo ? [p.veicolo.id] : [p.ord && p.ord.q, p.asc && p.asc.q].concat(p.dist.map(d => d.q)).filter(Boolean).map(q => q.id);
 if (!ids.length) { this.toast(p.T + ' non ha quote sul disegno: le sue misure sono nel registro'); return; }
 S.select(ids); this.closeData();
 });
@@ -2827,7 +2828,10 @@ let v = el('gmVelo');
 if (!v) {
 v = document.createElement('div'); v.id = 'gmVelo'; v.className = 'gm-velo'; v.hidden = true;
 document.body.appendChild(v);
-v.addEventListener('click', ev => { const b = ev.target.closest('[data-gm]'); if (b) this._gmTasto(b.dataset.gm); });
+v.addEventListener('click', ev => {
+const t = ev.target.closest('.gm-esito-t'); if (t) { t.classList.toggle('aperto'); return; }
+const b = ev.target.closest('[data-gm]'); if (b) this._gmTasto(b.dataset.gm);
+});
 document.addEventListener('keydown', ev => {
 if (v.hidden || (el('sceltaModal') && !el('sceltaModal').hidden)) return;
 const k = ev.key, mappa = { Enter: 'ok', Backspace: 'canc', Escape: 'chiudi', ',': ',', '.': ',' };
@@ -2856,7 +2860,7 @@ const fine = g.pos >= g.coda.length;
 const voceOn = gmVoceAttiva();
 const tastoVoce = `<button class="gm-voce" data-gm="voce" title="${voceOn ? 'Lettura a voce attiva: tocca per spegnerla' : 'Lettura a voce spenta: tocca per accenderla'}">${voceOn ? '🔊' : '🔇'}</button>`;
 const ripBtn = r => `<button class="gm-k gm-pic gm-rip" data-gm="ripeti">↺ Ripeti ${escAttr(r.da + ' → ' + r.a)}</button>`;
-const esito = g.esito ? `<div class="gm-esito ${g.esito.ok ? 'ok' : 'ko'}">${g.esito.ok ? '✓' : '⚠'} ${escAttr(g.esito.testo)}${g.esito.ripeti ? ripBtn(g.esito.ripeti) : ''}</div>` : '';
+const esito = g.esito ? `<div class="gm-esito ${g.esito.ok ? 'ok' : 'ko'}"><span class="gm-esito-t" title="Tocca per leggerlo tutto">${g.esito.ok ? '✓' : '⚠'} ${escAttr(g.esito.testo)}</span>${g.esito.ripeti ? ripBtn(g.esito.ripeti) : ''}</div>` : '';
 const prop = g.proposta ? `<div class="gm-esito ko gm-prop">📐 Il triangolo di <b>${escAttr(g.proposta.a)}</b> è ${g.proposta.liv === 'schiacciato' ? 'schiacciato' : 'poco favorevole'} (${escAttr(g.proposta.perche)}). Vuoi aggiungere la distanza dal caposaldo <b>${escAttr(g.proposta.da)}</b>?
           <div class="gm-riga"><button class="gm-k gm-pic" data-gm="terza-si">Sì, misura ${escAttr(g.proposta.da + ' → ' + g.proposta.a)}</button><button class="gm-k gm-pic" data-gm="terza-no">No, va bene così</button></div></div>` : '';
 if (fine) {
@@ -2891,9 +2895,11 @@ v.innerHTML = `<div class="gm-box gm-misura">
           <div class="gm-info">
             ${prop || esito}
             ${cambio}
-            <div class="gm-cosa"><div class="gm-ora">Ora misura</div><div class="gm-nome">${escAttr(p.nome)}</div><div class="gm-descr">${escAttr(p.descr)}</div>${rip}</div>
+            ${(() => {
+const m = gmMini(p), cosa = `<div class="gm-cosa"><div class="gm-ora">Ora misura</div><div class="gm-nome">${escAttr(p.nome)}</div><div class="gm-descr">${escAttr(p.descr)}</div>${rip}</div>`;
+return m ? `<div class="gm-qui">${cosa}<div class="gm-mini">${m}</div></div>` : cosa;
+})()}
             ${p.base ? `<button class="gm-cambiabase" data-gm="cambiabase" title="Scegli altri due capisaldi come base">⇄ Cambia base: scegli altri capisaldi</button>` : ''}
-            ${(() => { const m = gmMini(p); return m ? `<div class="gm-mini">${m}</div>` : ''; })()}
           </div>
           <div class="gm-pad">
             <div class="gm-val"><span>${g.testo ? escAttr(g.testo) : '<em>0,00</em>'}</span><small>m</small></div>
