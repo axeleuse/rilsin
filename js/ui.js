@@ -523,7 +523,13 @@ S.drawGrid(); S.drawFoglio();
 this.toast(S.mostraFoglio ? 'Area di stampa visibile' : 'Area di stampa nascosta (la stampa non cambia)', 2500);
 break;
 }
-case 'snap': S.grid.snap = !S.grid.snap; btn.classList.toggle('on', S.grid.snap); break;
+case 'snap':
+S.grid.snap = !S.grid.snap; if (btn) btn.classList.toggle('on', S.grid.snap);
+try { localStorage.setItem('rilsin:aggancio', S.grid.snap ? '1' : '0'); } catch (e) {}
+document.querySelectorAll('[data-act="snap"]').forEach(b => b.classList.toggle('on', !!S.grid.snap));
+this.toast(S.grid.snap ? 'Aggancio acceso: griglia, punti degli oggetti, calamita e allineamenti'
+: 'Aggancio spento: gli oggetti restano esattamente dove li porti', 2600);
+break;
 case 'righelli': RS.rulers.toggle(btn); break;
 case 'livelli': RS.layers.toggle(btn); break;
 case 'atto-menu': case 'vista-menu': case 'altro-menu': {

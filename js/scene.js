@@ -19,7 +19,7 @@ mostraFoglio: (() => { try { return localStorage.getItem('rilsin:foglio') !== '0
 view: { x: -2, y: -2, w: 64, h: 48 },
 scaleDenom: 100,
 fuoriScala: false,
-grid: { step: 1, show: true, snap: true },
+grid: { step: 1, show: true, snap: (() => { try { return localStorage.getItem('rilsin:aggancio') !== '0'; } catch (e) { return true; } })() },
 guides: { v: [], h: [] },
 elements: [],
 selection: [],
@@ -56,7 +56,8 @@ return { x: p.x, y: p.y };
 },
 snap(p) {
 let x = p.x, y = p.y;
-if (this.grid.snap) { const s = this.grid.step; x = Math.round(x / s) * s; y = Math.round(y / s) * s; }
+if (!this.grid.snap) return { x, y };
+{ const s = this.grid.step; x = Math.round(x / s) * s; y = Math.round(y / s) * s; }
 const g = this._snapGuide(p.x, 'v'); if (g != null) x = g;
 const h = this._snapGuide(p.y, 'h'); if (h != null) y = h;
 return { x, y };
@@ -444,6 +445,7 @@ this.world = doc.world || this.world;
 this.scaleDenom = doc.scaleDenom || 100;
 this.fuoriScala = !!doc.fuoriScala;
 this.grid = Object.assign({ step: 1, show: true, snap: true }, doc.grid || {});
+try { const a = localStorage.getItem('rilsin:aggancio'); if (a != null) this.grid.snap = a === '1'; } catch (e) {}
 this.guides = Object.assign({ v: [], h: [] }, doc.guides || {});
 this.layers = Object.assign({}, doc.layers || {});
 this.meta = doc.meta || {};

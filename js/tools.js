@@ -62,7 +62,7 @@ if (ps) ps.forEach((p, i) => { p.el = e; p.nome = nomeAggancio(e, i, ps.length);
 return out;
 },
 nearestSnap(w) {
-if (!this.snapOn) return null;
+if (!this.snapOn || !RS.scene.grid.snap) return null;
 const thr = 11 / RS.scene.pxPerMeter();
 let best = null, bd = thr;
 this.snapCandidates().forEach(c => { const dd = Math.hypot(c.x - w.x, c.y - w.y); if (dd < bd) { bd = dd; best = c; } });
@@ -513,8 +513,9 @@ if (o.pts) { el.pts = o.pts.map(p => { const q = { x: p.x + dx, y: p.y + dy }; i
 else { el.x = o.x + dx; el.y = o.y + dy; }
 });
 sposta();
-const ag = this.calamita(op) || (this.snapOn ? this.agganciaSpostamento(op) : null);
-const al = ag ? null : this.allineaSpostamento(op);
+const agg = !!RS.scene.grid.snap;
+const ag = agg ? (this.calamita(op) || (this.snapOn ? this.agganciaSpostamento(op) : null)) : null;
+const al = ag || !agg ? null : this.allineaSpostamento(op);
 if (ag) { dx += ag.dx; dy += ag.dy; sposta(); }
 else if (al) { dx += al.dx; dy += al.dy; sposta(); }
 RS.scene.render();
@@ -526,7 +527,7 @@ const el = RS.scene.get(op.id); if (!el) return;
 let ang = Math.atan2(w.y - op.cy, w.x - op.cx) * 180 / Math.PI + 90;
 ang = ((ang % 360) + 360) % 360;
 if (this._shift) ang = Math.round(ang / 15) * 15;
-else { const near = Math.round(ang / 45) * 45; if (Math.abs(near - ang) <= 3.5) ang = near; }
+else if (RS.scene.grid.snap) { const near = Math.round(ang / 45) * 45; if (Math.abs(near - ang) <= 3.5) ang = near; }
 el.rot = Math.round(ang * 10) / 10; RS.scene.render();
 this.showRotBadge(el); return;
 }
@@ -534,7 +535,8 @@ if (op.kind === 'grot') {
 let d = (Math.atan2(w.y - op.c.y, w.x - op.c.x) - op.a0) * 180 / Math.PI;
 d = ((d % 360) + 540) % 360 - 180;
 if (this._shift) d = Math.round(d / 15) * 15;
-else { const near = Math.round(d / 45) * 45; d = Math.abs(near - d) <= 2 ? near : Math.round(d * 2) / 2; }
+else if (RS.scene.grid.snap) { const near = Math.round(d / 45) * 45; d = Math.abs(near - d) <= 2 ? near : Math.round(d * 2) / 2; }
+else d = Math.round(d * 10) / 10;
 op.orig.forEach(o => {
 const e = o.e;
 if (o.x !== undefined) e.x = o.x;
@@ -580,7 +582,7 @@ const r = op.rot * Math.PI / 180;
 el.x = op.cx + clx * Math.cos(r) - cly * Math.sin(r);
 el.y = op.cy + clx * Math.sin(r) + cly * Math.cos(r);
 let cal = null;
-if (sx && !sy && estremi(el).length) {
+if (RS.scene.grid.snap && sx && !sy && estremi(el).length) {
 const [p0, p1] = estremi(el), mobile = sx > 0 ? p1 : p0, fermo = sx > 0 ? p0 : p1;
 const v = estremoVicino(el, mobile, new Set([el.id]), 24 / (RS.scene.pxPerMeter() || 20));
 if (v) {
@@ -882,7 +884,7 @@ const p = this.calamitaNuovo(this.snapPoint(w), this.active.def);
 this._op = { kind: 'newdrag', tool: this.active.tool, def: this.active.def, a: p, b: p, preview: null };
 },
 calamitaNuovo(p, def) {
-if (!def || !(def.tool === 'band' || def.tool === 'mark')) return p;
+if (!RS.scene.grid.snap || !def || !(def.tool === 'band' || def.tool === 'mark')) return p;
 const finto = { id: '__nuovo', type: def.tool, sub: def.sub, style: def.style };
 const v = estremoVicino(finto, p, new Set(), 24 / (RS.scene.pxPerMeter() || 20));
 return v ? { x: v.q.x, y: v.q.y } : p;
@@ -903,7 +905,7 @@ if (!el) return;
 const len = Math.hypot(op.b.x - op.a.x, op.b.y - op.a.y);
 const rectTool = op.tool === 'building' || op.tool === 'island' || op.tool === 'parking' || op.tool === 'area';
 if (len < 0.3 && !rectTool) return;
-const aggancio = el.type === 'ramp' && RS.elements.agganciaCorsia(el);
+const aggancio = el.type === 'ramp' && RS.scene.grid.snap && RS.elements.agganciaCorsia(el);
 const added = RS.scene.add(el);
 if (aggancio) RS.ui.toast('Corsia agganciata al bordo della strada, nel verso di marcia di quel lato', 3500);
 RS.scene.select(added.id);

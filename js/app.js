@@ -6,6 +6,7 @@ RS.DATA_BUILD = '2026-11-16';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
 { build: 281, data: '2026-11-16', voci: [
+'Aggancio (menu Vista): spento, gli oggetti non si agganciano più a niente e restano esattamente dove li si porta. Prima spegneva solo la griglia: continuavano ad agganciarsi ai punti degli altri oggetti, alla calamita fra elementi uguali, agli allineamenti e alle guide, e la rotazione scattava su 0, 45 e 90 gradi. La scelta vale per tutte le tavole del dispositivo finché non la si cambia; accendendo o spegnendo, un messaggio dice che cosa fa.',
 'Detriti, punto d\'urto, macchie, oggetti a terra e gli altri punti utili: dopo le misure sul disegno non compare più il punto verde accanto al simbolo. Il punto da misurare c\'è ancora (nelle misure guidate, nel Rilievo dei punti, nell\'atto e in legenda) e lo segna il simbolo stesso, che si sposta con lui.',
 'Misure guidate: la piantina sta accanto a «A → A2» e alla sua descrizione e si vede sempre intera, senza scorrere col dito, anche quando in alto c\'è un avviso o la domanda sulla terza distanza. Il caposaldo su cui mettere il nastro sta su una riga; sui telefoni piccoli l\'avviso si accorcia a tre righe e un tocco lo apre tutto (la voce lo legge comunque per intero). Il tastierino resta fermo.'
 ] },
