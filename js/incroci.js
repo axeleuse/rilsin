@@ -631,7 +631,7 @@ return `<div class="inc-pan">
         ${c.pl ? '' : `<label>Raggio raccordi (m)${numIn('data-ip="raggio"', c.raggio, 0.5, 0)}</label>`}
         <label>Rotazione°${numIn('data-ip="rot"', r2(c.rot || 0), 1)}</label>
       </div>
-      <div class="inc-sez-t" style="margin-top:10px">Bracci <span class="muted">· trascina i numeri sul disegno</span></div>
+      <div class="inc-sez-t" style="margin-top:10px">Bracci <span class="muted aiuto">· trascina i numeri sul disegno</span></div>
       ${righe}
       <div class="pbtns"><button class="pbtn" data-iact="add">＋ Braccio</button><button class="pbtn" data-iact="sciogli" title="Torna a tratti di strada separati, da modificare uno per uno">Sciogli in strade</button></div>
       ${segnaliHtml(c)}
@@ -667,7 +667,7 @@ return `<div class="inc-pan">
         ${c.mini ? '' : `<label>Corsie nell'anello${selIn('data-ip="corsie"', +c.corsie === 2 ? 2 : c.corsie == null ? '' : 1, (c.corsie == null ? [['', 'come disegnata']] : []).concat([[1, 'una'], [2, 'due']]))}</label>`}
         <label>Larghezza bracci (m)${numIn('data-ip="brWid"', c.brWid || 7, 0.1, 3)}</label>
       </div>
-      <div class="inc-sez-t" style="margin-top:10px">Bracci <span class="muted">· trascina i numeri sul disegno</span></div>
+      <div class="inc-sez-t" style="margin-top:10px">Bracci <span class="muted aiuto">· trascina i numeri sul disegno</span></div>
       ${br.map((b, i) => `<div class="inc-br"><span class="inc-n">${i + 1}</span>
           <label>Angolo°${numIn(`data-ib="${i}:ang"`, b.ang, 1)}</label>
           <label>Lungh. (m)${numIn(`data-ib="${i}:len"`, b.len, 0.5, 4)}</label>

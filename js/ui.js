@@ -3248,6 +3248,32 @@ root.querySelectorAll('.mis-hint:not(.aiuto):not(.warn):not(.ok):not(.esito):not
 const testo = h.textContent.trim();
 if (testo && !/^[⚠✓✔]/.test(testo)) h.classList.add('aiuto');
 });
+this._aiutiSez = this._aiutiSez || new Set();
+root.querySelectorAll('details.psec').forEach(d => {
+const s = d.querySelector(':scope > summary'), ha = [...d.querySelectorAll('.aiuto')].some(a => a.closest('details.psec') === d);
+let b = s && s.querySelector(':scope > .sez-aiuto');
+if (!s || (!ha && !b)) return;
+if (!ha) { b.remove(); return; }
+if (!b) {
+b = document.createElement('span'); b.className = 'sez-aiuto'; b.setAttribute('role', 'button');
+b.title = 'Spiegazioni di questa sezione'; b.textContent = '?';
+const t = s.querySelector('.psec-t'); if (t) t.after(b); else s.appendChild(b);
+}
+const on = this._aiutiSez.has(d.dataset.sez || '');
+if (d.classList.contains('aiuti-qui') !== on) d.classList.toggle('aiuti-qui', on);
+if (b.classList.contains('on') !== on) b.classList.toggle('on', on);
+});
+if (!root._sezAiuto) {
+root._sezAiuto = true;
+root.addEventListener('click', ev => {
+const b = ev.target.closest && ev.target.closest('.sez-aiuto'); if (!b) return;
+ev.preventDefault(); ev.stopPropagation();
+const d = b.closest('details.psec'), k = d.dataset.sez || '';
+if (this._aiutiSez.has(k)) this._aiutiSez.delete(k); else this._aiutiSez.add(k);
+if (!d.open && this._aiutiSez.has(k)) d.open = true;
+this.comprimiSpiegazioni(root);
+}, true);
+}
 },
 renderProps() {
 const body = el('propsBody');
@@ -3787,7 +3813,7 @@ const auto = RS._legendAutoRows ? RS._legendAutoRows() : [];
 const hidden = e.hidden || [], extra = e.extra || [];
 let h = '<div class="leg-ed">';
 const labels = e.labels || {};
-h += '<div class="leg-ed-h">Voci automatiche <span class="muted">(spunta = mostra · testo modificabile)</span></div>';
+h += '<div class="leg-ed-h">Voci automatiche <span class="muted aiuto">(spunta = mostra · testo modificabile)</span></div>';
 if (!auto.length) h += '<div class="muted" style="margin:2px 0 6px">— nessuna —</div>';
 auto.forEach(r => {
 const on = hidden.indexOf(r.key) < 0;
@@ -3816,8 +3842,7 @@ if (e.inc && RS.scene.get(e.inc)) h += `<div class="mis-hint">Fa parte dell'incr
 if (e.type === 'sketch') {
 const p = (RS.sketch && RS.sketch.riconosci) ? RS.sketch.riconosci(e) : { alternative: [] };
 const NOMI = (RS.sketch && RS.sketch.NOMI) || {};
-h += `<div class="mis-hint esito">Schizzo a mano libera${p.nome ? ': sembra <b>' + p.nome + '</b>' : ''}.
-              Trasformalo nell'oggetto vero, disegnato in scala.</div>`;
+h += `<div class="mis-hint esito">Schizzo a mano libera${p.nome ? ': sembra <b>' + p.nome + '</b>' : ''}.</div><div class="mis-hint aiuto">Trasformalo nell'oggetto vero, disegnato in scala.</div>`;
 if (p.tipo) h += `<div class="pbtns"><button class="pbtn sk-go" data-sk="${p.tipo}">✔ Trasforma in ${escAttr((NOMI[p.tipo] || p.tipo).toLowerCase())}</button></div>`;
 const altre = (p.alternative || []).filter(t => t !== p.tipo);
 if (altre.length) {
@@ -3868,7 +3893,7 @@ const POSE = RS.elements.DUE_RUOTE[e.kind]
 ? [['ruote','In piedi sulle ruote'],['fiancosx','Adagiato sul fianco sinistro'],['fiancodx','Adagiato sul fianco destro'],['tetto','Capovolto']]
 : [['ruote','Su ruote'],['fiancosx','Su fianco sinistro'],['fiancodx','Su fianco destro'],['tetto','Capovolto (sul tetto)']];
 let asp = selFld('Posizione', 'posa', e.posa || 'ruote', POSE);
-if (RS.elements.DUE_RUOTE[e.kind]) asp += `<div class="mis-hint esito">Se è a terra scegli il fianco su cui è adagiato: nell'atto è scritto nella riga del veicolo; i punti restano mozzo anteriore, mozzo posteriore ed estremità del manubrio.</div>`;
+if (RS.elements.DUE_RUOTE[e.kind]) asp += `<div class="mis-hint aiuto">Se è a terra scegli il fianco su cui è adagiato: nell'atto è scritto nella riga del veicolo; i punti restano mozzo anteriore, mozzo posteriore ed estremità del manubrio.</div>`;
 if (e.kind !== 'trailer' && e.catId !== 'operatrice') asp += numFld('Sterzo ° (+ destra)', 'sterzo', round(e.sterzo || 0, 1), 5);
 if (RS.elements.snodoInfo(e)) asp += numFld('Snodo ° (+ destra)', 'snodo', round(e.snodo || 0, 1), 5);
 asp += chkFld('Freccia di marcia', 'freccia', !!e.freccia);
@@ -3902,7 +3927,7 @@ danni.length > 0, { riass: danni.length ? String(danni.length) : 'nessuna' });
 const ribaltato = (e.posa === 'fiancodx' || e.posa === 'fiancosx') && !RS.elements.DUE_RUOTE[e.kind];
 const puntiSu = ribaltato ? '' : selFld('Punti sui', 'puntiSu', e.puntiSu === 'spigoli' ? 'spigoli' : 'mozzi', [['mozzi', 'Mozzi delle ruote'], ['spigoli', 'Spigoli della sagoma']]);
 if (e.rilpts && e.rilpts.length) {
-let pt = puntiSu + `<div class="muted aiuto">Trascinali sul disegno per ridisporli (✕ per togliere):</div>`;
+let pt = puntiSu + `<div class="muted aiuto">Sul disegno: trascina il pallino per spostare il punto, il numero per spostare solo il numero (il filo si allunga). ✕ per togliere un punto.</div>`;
 pt += `<div class="ptchips">` + e.rilpts.map((p, i) => `<span class="ptchip" title="${escAttr(e.label || '')}${p.n}: ${escAttr(RS.elements.nomePuntoVeicolo(e, p))}">${p.n}<button data-rmpt="${i}" title="Elimina punto">✕</button></span>`).join('') + `</div>`;
 const nomiStd = [...new Set([].concat(RS.elements.mozzi(Object.assign({}, e, { posa: 'ruote' })), RS.elements.mozzi(Object.assign({}, e, { posa: 'tetto' })),
 (e.posa === 'fiancodx' || e.posa === 'fiancosx') ? RS.elements.makeRilpts(Object.assign({}, e), 1) : []).map(q => q.nome).filter(Boolean))];
@@ -3910,7 +3935,9 @@ pt += `<datalist id="ptnomi-dl">${nomiStd.concat(['spigolo anteriore sinistro', 
 .filter((x, i, a) => a.indexOf(x) === i).map(x => `<option value="${escAttr(x)}">`).join('')}</datalist>`;
 pt += `<div class="ptnomi">` + e.rilpts.map((p, i) => ({ p, i })).sort((a, b) => a.p.n - b.p.n).map(({ p, i }) =>
 `<label class="ptnome"><b>${escAttr(e.label || '')}${p.n}</b><input type="text" data-ptnome="${i}" list="ptnomi-dl" value="${escAttr(RS.elements.nomePuntoVeicolo(e, p))}" title="Nome del punto nell'atto: si può riscrivere"></label>`).join('') + `</div>`;
-pt += `<div class="pbtns"><button class="pbtn" data-b="pointadd">＋ Punto</button><button class="pbtn" data-b="pointsregen">↺ Rigenera</button><button class="pbtn danger" data-b="points">Rimuovi tutti</button></div>`;
+pt += `<div class="pbtns"><button class="pbtn" data-b="pointadd">＋ Punto</button><button class="pbtn" data-b="pointsregen">↺ Rigenera</button>` +
+(e.rilpts.some(p => p.ex != null) ? `<button class="pbtn" data-b="numeriauto" title="I numeri spostati a mano tornano al loro posto, fuori dalla sagoma; i punti restano dove sono">↺ Numeri al loro posto</button>` : '') +
+`<button class="pbtn danger" data-b="points">Rimuovi tutti</button></div>`;
 h += section('Punti di rilievo', pt, e.rilpts.length <= 6, { riass: String(e.rilpts.length) });
 } else {
 h += puntiSu + `<div class="pbtns"><button class="pbtn" data-b="points">🎯 Numera punti rilievo</button></div>`;
@@ -4004,7 +4031,7 @@ h += chkFld('Attenua (grigio chiaro)', 'attenua', !!e.attenua);
 h += `<div class="pbtns sfondo-btns"><button class="pbtn${e.locked ? ' on' : ''}" data-b="sfondo-lock">${e.locked ? '🔓 Sblocca lo sfondo' : '🔒 Blocca lo sfondo'}</button><button class="pbtn" data-b="ritaglia">✂ Ritaglia</button></div>`;
 if (e.geo) {
 h += `<div class="pbtns"><button class="pbtn" data-b="ortofoto">🛰 Riscarica dal Geoportale</button><button class="pbtn" data-b="back">⬇ In fondo</button></div>`;
-h += `<div class="muted" style="margin-top:6px">${escAttr(e.geo.fonte || 'Geoportale Nazionale')}: in scala (${String(round(e.w, 0))} × ${String(round(e.h, 0))} m) e Nord in alto, non va calibrata. Spostala sotto il disegno, poi blocca lo sfondo. Ortofoto del 2012: verifica lo stato dei luoghi.</div>`;
+h += `<div class="muted" style="margin-top:6px">${escAttr(e.geo.fonte || 'Geoportale Nazionale')}: in scala (${String(round(e.w, 0))} × ${String(round(e.h, 0))} m) e Nord in alto. Ortofoto del 2012: verifica lo stato dei luoghi.</div><div class="muted aiuto" style="margin-top:4px">Non va calibrata. Spostala sotto il disegno, poi blocca lo sfondo.</div>`;
 } else if (e.raddDa) {
 const f = RS.scene.get(e.raddDa);
 h += `<div class="pbtns">${f ? '<button class="pbtn" data-b="raddsorg">🔲 Torna al raddrizzamento</button>' : ''}<button class="pbtn" data-b="back">⬇ In fondo</button></div>`;
@@ -4031,7 +4058,7 @@ h += `<div class="pbtns"><button class="pbtn" data-b="lblreset">↺ Riporta la l
 else {
 h += textFld('Etichetta', 'label', e.label || '');
 const spL = RS.verifica && RS.scene.elements.find(x => x.type === 'surveypt' && x.diSimbolo === e.id && x.n != null);
-if (spL) h += `<div class="mis-hint esito">Punto di rilievo <b>${escAttr(RS.verifica.codicePunto(spL))}</b> nelle misure guidate e in legenda. Scrivi qui una sigla (per esempio U) per chiamarlo così.</div>`;
+if (spL) h += `<div class="mis-hint esito">Punto di rilievo <b>${escAttr(RS.verifica.codicePunto(spL))}</b> nelle misure guidate e in legenda.</div><div class="mis-hint aiuto">Scrivi qui una sigla (per esempio U) per chiamarlo così.</div>`;
 }
 if (e.sym === 'limite') h += textFld('Valore', 'text', e.text || '50');
 if (e.sym === 'chilometrica') h += textFld('Progressiva', 'text', e.text || 'km 0+000');
@@ -4321,6 +4348,11 @@ S.render(); S.snapshot(); RS.ui.renderProps();
 RS.ui.toast('Punto ' + n + ' aggiunto al centro — trascinalo in posizione');
 return;
 }
+if (b.dataset.b === 'numeriauto') {
+const e = S.get(sel[0]); if (!e || !e.rilpts) return;
+e.rilpts.forEach(p => { delete p.ex; delete p.ey; });
+S.render(); S.snapshot(); RS.ui.renderProps(); return;
+}
 if (b.dataset.b === 'pointsregen') {
 const e = S.get(sel[0]); if (!e || e.type !== 'vehicle') return;
 delete e.rilpts; e.rilpts = RS.elements.makeRilpts(e, 1); e.spigoli = true;
@@ -4329,7 +4361,7 @@ S.render(); S.snapshot(); RS.ui.renderProps(); return;
 if (act === 'dimtipo') {
 const e = S.get(sel[0]), t = e && RS.catalog.veicoloById(e.catId); if (!t) return;
 const kx = t.len / e.len, ky = t.wid / e.wid;
-if (e.rilpts) e.rilpts.forEach(p => { p.lx *= kx; p.ly *= ky; });
+if (e.rilpts) e.rilpts.forEach(p => { p.lx *= kx; p.ly *= ky; if (p.ex != null) { p.ex *= kx; p.ey *= ky; } });
 e.len = t.len; e.wid = t.wid;
 S.render(); S.snapshot(); RS.ui.renderProps(); RS.ui.toast('Misure tipiche ripristinate'); return;
 }
@@ -4419,7 +4451,7 @@ return `<div class="fld"><label>${label}</label><input type="text" data-k="${k}"
 function viaPosBtn(e) {
 if (!String(e.nomeVia || '').trim()) return '';
 return e.viaPos ? `<div class="pbtns"><button class="pbtn" data-b="viaauto">↺ Nome della via nella posizione automatica</button></div>`
-: '<p class="muted" style="margin:2px 0 8px;font-size:11.5px">Per spostare il nome della via trascinalo sulla tavola (nello schizzo: tienilo premuto e trascina).</p>';
+: '<p class="muted aiuto" style="margin:2px 0 8px;font-size:11.5px">Per spostare il nome della via trascinalo sulla tavola (nello schizzo: tienilo premuto e trascina).</p>';
 }
 function colorFld(v) {
 return `<div class="fld"><label>Colore</label><input type="color" data-k="color" value="${toHex(v||'#333333')}"></div>`;

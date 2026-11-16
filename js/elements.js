@@ -1002,6 +1002,7 @@ const hl = (e.len || 4) / 2, hw = (e.wid || 1.8) / 2, q = v => +v.toFixed(3);
 const rad = Math.max(0.2, Math.min(0.3, (e.wid || 1.8) * 0.12)), dot = rad * 0.42, gap = rad * 2.1, rot = e.rot || 0;
 const L = pts.map((p0, i) => {
 const p = Object.assign({}, p0, locale(e, p0.lx, p0.ly));
+if (p0.ex != null && p0.ey != null) { const o = locale(e, p0.ex, p0.ey); return { p, i, ox: o.lx, oy: o.ly, fisso: true }; }
 const fx = Math.abs(p.lx) / hl, fy = Math.abs(p.ly) / hw;
 return fy > fx ? { p, i, ox: p.lx, oy: (p.ly < 0 ? -1 : 1) * (Math.max(hw, Math.abs(p.ly)) + gap) }
 : { p, i, ox: (p.lx < 0 ? -1 : 1) * (Math.max(hl, Math.abs(p.lx)) + gap), oy: p.ly };
@@ -1009,9 +1010,10 @@ return fy > fx ? { p, i, ox: p.lx, oy: (p.ly < 0 ? -1 : 1) * (Math.max(hw, Math.
 const min = rad * 2.3;
 for (let it = 0; it < 40; it++) for (let a = 0; a < L.length; a++) for (let b = a + 1; b < L.length; b++) {
 const A = L[a], B = L[b], dx = B.ox - A.ox, dy = B.oy - A.oy, d = Math.hypot(dx, dy);
-if (d >= min) continue;
-const ux = d ? dx / d : (Math.abs(A.oy) > hw ? 1 : 0), uy = d ? dy / d : (Math.abs(A.oy) > hw ? 0 : 1), k = (min - d) / 2;
-A.ox -= ux * k; A.oy -= uy * k; B.ox += ux * k; B.oy += uy * k;
+if (d >= min || (A.fisso && B.fisso)) continue;
+const ux = d ? dx / d : (Math.abs(A.oy) > hw ? 1 : 0), uy = d ? dy / d : (Math.abs(A.oy) > hw ? 0 : 1), k = min - d;
+const ka = A.fisso ? 0 : B.fisso ? k : k / 2, kb = k - ka;
+A.ox -= ux * ka; A.oy -= uy * ka; B.ox += ux * kb; B.oy += uy * kb;
 }
 const r = rot * Math.PI / 180, mondo = (x, y) => ({ x: (e.x || 0) + x * Math.cos(r) - y * Math.sin(r), y: (e.y || 0) + x * Math.sin(r) + y * Math.cos(r) });
 L.forEach(({ p, ox, oy }) => {
@@ -1019,7 +1021,7 @@ const dx = ox - p.lx, dy = oy - p.ly, d = Math.hypot(dx, dy);
 if (d > rad + dot) mk('line', { x1: q(p.lx + dx / d * dot), y1: q(p.ly + dy / d * dot), x2: q(ox - dx / d * rad), y2: q(oy - dy / d * rad), stroke: '#c00', 'stroke-width': q(rad * 0.15) }, g);
 });
 L.forEach(({ p, ox, oy, i }) => {
-const gn = N('g'); gn.setAttribute('data-rilpt', i); gn.setAttribute('cursor', 'grab'); g.appendChild(gn);
+const gn = N('g'); gn.setAttribute('data-rilnum', i); gn.setAttribute('data-ex', q(ox)); gn.setAttribute('data-ey', q(oy)); gn.setAttribute('cursor', 'move'); g.appendChild(gn);
 mk('circle', { cx: q(ox), cy: q(oy), r: q(rad), fill: '#fff', stroke: '#c00', 'stroke-width': q(rad * 0.2) }, gn);
 const t = N('text');
 t.setAttribute('x', q(ox)); t.setAttribute('y', q(oy)); t.setAttribute('font-size', q(rad * 1.3));

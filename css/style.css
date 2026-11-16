@@ -781,8 +781,8 @@ text-transform:uppercase;letter-spacing:.6px;color:var(--muted);display:flex;ali
 .phead-t b{font-size:13px;color:var(--txt);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .phead-t small{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .psec>summary{padding:8px 2px}
-.psec-t{flex:1 1 auto;min-width:0}
-.psec-r{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+.psec-t{flex:0 1 auto;min-width:0}
+.psec-r{flex:0 1 auto;min-width:0;margin-left:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 font-size:11px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted2);display:flex;align-items:center;gap:5px}
 .psec[open]>summary .psec-r{display:none}
 .psec-col{display:inline-block;width:10px;height:10px;border-radius:3px;border:1px solid var(--line2);flex:0 0 auto}
@@ -1616,6 +1616,15 @@ body:not(.aiuti) .aiuto{display:none !important}
 .sk-tgl{border:1px dashed var(--line2) !important}
 .sk-tgl.on{background:transparent;color:var(--accent);border-color:var(--accent) !important;font-weight:600}
 body.sole .props-aiuto{border:2px solid #000 !important;color:#000 !important}
+.sez-aiuto{display:inline-flex;align-items:center;justify-content:center;flex:none;width:17px;height:17px;border-radius:50%;
+border:1px solid var(--line2);color:var(--muted);font-size:10.5px;font-weight:700;text-transform:none;letter-spacing:0;cursor:pointer;line-height:1}
+.sez-aiuto:hover{color:var(--txt);border-color:var(--muted)}
+.sez-aiuto.on{border-color:var(--accent);color:var(--accent)}
+body.aiuti .sez-aiuto{display:none}
+body:not(.aiuti) details.aiuti-qui .aiuto{display:block !important}
+body:not(.aiuti) details.aiuti-qui span.aiuto{display:inline !important}
+body.sole .sez-aiuto{border:2px solid #000 !important;color:#000 !important}
+@media (pointer:coarse){.sez-aiuto{width:22px;height:22px;font-size:12px}}
 .home-bozza-r{display:flex;gap:8px;align-items:stretch;margin-top:6px}
 .home-bozza-r .home-bozza{margin-top:0;flex:1;min-width:0}
 .home-bozza-x{flex:0 0 46px;border:1px solid var(--line2);background:var(--panel);color:var(--danger);border-radius:12px;font-size:17px;cursor:pointer}

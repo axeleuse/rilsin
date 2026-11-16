@@ -212,11 +212,11 @@ return `<div class="inc-pan">
         <label>Rotazione°${numIn('data-cp="rot"', r2(e.rot || 0), 1)}</label>
         <label>Sviluppo<input disabled value="${it(G.svil, 2)} m"></label>
       </div>
-      <div class="inc-sez-t" style="margin-top:10px">Tracciato <span class="muted">· dall'inizio alla fine, nell'ordine</span></div>
+      <div class="inc-sez-t" style="margin-top:10px">Tracciato <span class="muted aiuto">· dall'inizio alla fine, nell'ordine</span></div>
       ${righe}
       <div class="pbtns"><button class="pbtn" data-cact="r">＋ Rettifilo</button><button class="pbtn" data-cact="c">＋ Curva</button></div>
       ${G.stretto ? `<div class="mis-hint">⚠ Con questa carreggiata il raggio non può essere minore di ${it(G.stretto)} m: la curva è disegnata con ${it(G.stretto)} m.</div>` : ''}
-      ${archi.length ? `<div class="inc-sez"><div class="inc-sez-t">Raggio da corda e freccia <span class="muted">· misurate sul bordo o sulla mezzeria</span></div>
+      ${archi.length ? `<div class="inc-sez"><div class="inc-sez-t">Raggio da corda e freccia <span class="muted aiuto">· misurate sul bordo o sulla mezzeria</span></div>
         <div class="inc-griglia">
           <label>Corda (m)${numIn('data-cm="corda"', m.corda != null ? m.corda : '', 0.01, 0)}</label>
           <label>Freccia (m)${numIn('data-cm="freccia"', m.freccia != null ? m.freccia : '', 0.01, 0)}</label>
@@ -241,7 +241,7 @@ return `<div class="inc-pan">
           ${e.guard ? `<label>Guard-rail da (m)${numIn('data-cg="guardDa"', r2(+e.guardDa || 0), 0.5, 0)}</label><label>fino a (m)${numIn('data-cg="guardA"', r2(e.guardA != null && e.guardA !== '' ? Math.min(+e.guardA, G.svil) : G.svil), 0.5, 0)}</label>` : ''}
         </div>
       </div>
-      <div class="inc-sez"><div class="inc-sez-t">Marciapiedi <span class="muted">· destra e sinistra guardando verso la fine del tracciato</span></div>
+      <div class="inc-sez"><div class="inc-sez-t">Marciapiedi <span class="muted aiuto">· destra e sinistra guardando verso la fine del tracciato</span></div>
         <div class="inc-griglia">
           <label class="inc-wide">Marciapiede${selIn('data-cmarc="marcLati"', latoM, [['nessuno', 'nessuno'], ['entrambi', 'su entrambi i lati'], ['dx', 'solo a destra'], ['sx', 'solo a sinistra']])}</label>
           ${lmP.sx > 0 ? `<label>Sinistra (m)${numIn('data-cmarc="marcSx"', r2(lmP.sx), 0.05, 0)}</label>` : ''}
