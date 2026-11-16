@@ -6,7 +6,7 @@ RS.DATA_BUILD = '2026-11-16';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
 { build: 283, data: '2026-11-17', voci: [
-'Punti del veicolo: un pallino piccolo segna il punto esatto e il numero sta fuori dalla sagoma, legato da un filo sottile; i numeri vicini si allargano da soli. Il disegno non resta più coperto dai cerchi. Si trascina il pallino.',
+'Punti del veicolo: un pallino piccolo segna il punto esatto e il numero sta fuori dalla sagoma, legato da un filo sottile; i numeri vicini si allargano da soli. Il disegno non resta più coperto dai cerchi. Per spostare un punto lo si prende dal pallino (anche un po\' di lato, a ogni ingrandimento) oppure dal suo numero.',
 'Il nome di ogni punto (mozzo anteriore sinistro, spigolo posteriore lato tetto...) resta quello stabilito anche se il punto si sposta. In Proprietà, Punti di rilievo, ogni punto ha il suo nome scritto: si può cambiare a mano o scegliere dall\'elenco; vuoto torna automatico.',
 'Tabella delle misure sul foglio di stampa: nelle opzioni di stampa, Disposizione del foglio, si sceglie se metterla con la legenda (sotto nella colonna, accanto nella fascia) o nel disegno, in uno dei quattro angoli. Ha le stesse righe dell\'atto: base, punti di ogni veicolo con il nome e le distanze dai due capisaldi, altri punti, tracce e altre misure.',
 'Motrice ridisegnata: telaio con le traverse, parafanghi, serbatoio, batterie, passerella con i tubi dell\'aria, ralla; anche su un fianco.',

@@ -1018,20 +1018,21 @@ L.forEach(({ p, ox, oy }) => {
 const dx = ox - p.lx, dy = oy - p.ly, d = Math.hypot(dx, dy);
 if (d > rad + dot) mk('line', { x1: q(p.lx + dx / d * dot), y1: q(p.ly + dy / d * dot), x2: q(ox - dx / d * rad), y2: q(oy - dy / d * rad), stroke: '#c00', 'stroke-width': q(rad * 0.15) }, g);
 });
-L.forEach(({ p, ox, oy }) => {
-mk('circle', { cx: q(ox), cy: q(oy), r: q(rad), fill: '#fff', stroke: '#c00', 'stroke-width': q(rad * 0.2) }, g);
+L.forEach(({ p, ox, oy, i }) => {
+const gn = N('g'); gn.setAttribute('data-rilpt', i); gn.setAttribute('cursor', 'grab'); g.appendChild(gn);
+mk('circle', { cx: q(ox), cy: q(oy), r: q(rad), fill: '#fff', stroke: '#c00', 'stroke-width': q(rad * 0.2) }, gn);
 const t = N('text');
 t.setAttribute('x', q(ox)); t.setAttribute('y', q(oy)); t.setAttribute('font-size', q(rad * 1.3));
 t.setAttribute('text-anchor', 'middle'); t.setAttribute('dy', '0.35em');
 t.setAttribute('fill', '#c00'); t.setAttribute('font-weight', '700');
 t.setAttribute('transform', `rotate(${-rot} ${q(ox)} ${q(oy)})`);
-t.textContent = p.n; g.appendChild(t);
+t.textContent = p.n; gn.appendChild(t);
 const w = mondo(ox, oy); ostacolo(t, w.x, w.y, rad);
 });
 L.forEach(({ p, i }) => {
 const gp = N('g'); gp.setAttribute('transform', `translate(${q(p.lx)} ${q(p.ly)})`);
 gp.setAttribute('data-rilpt', i); gp.setAttribute('cursor', 'grab');
-mk('circle', { cx: 0, cy: 0, r: q(rad * 1.1), fill: 'rgba(0,0,0,0)' }, gp);
+mk('circle', { cx: 0, cy: 0, r: q(dot), fill: 'rgba(0,0,0,0)', stroke: 'rgba(0,0,0,0)', 'stroke-width': 22, 'vector-effect': 'non-scaling-stroke', 'pointer-events': 'all', class: 'presa' }, gp);
 mk('circle', { cx: 0, cy: 0, r: q(dot), fill: '#c00', stroke: '#fff', 'stroke-width': q(dot * 0.4) }, gp);
 g.appendChild(gp);
 });

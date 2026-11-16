@@ -39,6 +39,7 @@ tmp.querySelectorAll('[data-id]').forEach(n => { if (ids.indexOf(n.getAttribute(
 contenuto = tmp.innerHTML;
 }
 }
+contenuto = contenuto.replace(/<circle\b[^>]*class="presa"[^>]*\/?>(?:<\/circle>)?/g, '');
 parts.push(`<g>${contenuto}</g>`);
 if (!opts.senzaCornice) parts.push(`<rect x="${bx+0.1}" y="${by+0.1}" width="${w-0.2}" height="${h-0.2}" fill="none" stroke="#222" stroke-width="0.08"/>`);
 parts.push('</svg>');

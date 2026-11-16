@@ -303,10 +303,7 @@ this.startHandle(handle, w, e); return;
 const rp = e.target.closest && e.target.closest('[data-rilpt]');
 if (rp && this.active.mode === 'select') {
 const host = rp.closest('.el');
-if (host && host.dataset.id) {
-this._op = { kind: 'rilpt', vid: host.dataset.id, i: +rp.dataset.rilpt };
-return;
-}
+if (host && host.dataset.id) { this._op = this.opRilpt(host.dataset.id, +rp.dataset.rilpt, w); return; }
 }
 const m = this.active.mode;
 if (m === 'calibrate') { this.calibrateClick(w); return; }
@@ -317,7 +314,7 @@ if (m === 'poly') { this.polyClick(w); return; }
 if (m === 'freehand') {
 const S = RS.scene;
 if (handle && S.selection.length) { this.startHandle(handle, w, e); e.preventDefault(); return; }
-if (rp) { const host = rp.closest('.el'); if (host && host.dataset.id) { this._op = { kind: 'rilpt', vid: host.dataset.id, i: +rp.dataset.rilpt }; e.preventDefault(); return; } }
+if (rp) { const host = rp.closest('.el'); if (host && host.dataset.id) { this._op = this.opRilpt(host.dataset.id, +rp.dataset.rilpt, w); e.preventDefault(); return; } }
 const nd = e.target.closest && e.target.closest('.el'), sotto = nd && nd.dataset.id ? S.get(nd.dataset.id) : null;
 const punto = sotto && (sotto.letter || sotto.type === 'surveypt');
 if (sotto && !sotto.locked && !sotto.inc && punto) {
@@ -607,8 +604,8 @@ if (op.kind === 'rilpt') {
 const v = RS.scene.get(op.vid); if (!v || !v.rilpts || !v.rilpts[op.i]) return;
 const loc = toLocal(w, v.x, v.y, v.rot || 0);
 if (v.rilpts[op.i].nome === undefined && RS.elements.nomePuntoVeicolo) v.rilpts[op.i].nome = RS.elements.nomePuntoVeicolo(v, v.rilpts[op.i]);
-v.rilpts[op.i].lx = Math.round(loc.x*100)/100;
-v.rilpts[op.i].ly = Math.round(loc.y*100)/100;
+v.rilpts[op.i].lx = Math.round((loc.x + (op.dx || 0))*100)/100;
+v.rilpts[op.i].ly = Math.round((loc.y + (op.dy || 0))*100)/100;
 RS.scene.render(); return;
 }
 if (op.kind === 'braccio') {
@@ -945,6 +942,11 @@ this.toSelect();
 },
 cancelPoly() {
 if (this._poly) { this._poly = null; RS.scene.gOverlay.querySelectorAll('.preview').forEach(n => n.remove()); }
+},
+opRilpt(vid, i, w) {
+const op = { kind: 'rilpt', vid, i }, v = RS.scene.get(vid), p = v && v.rilpts && v.rilpts[i];
+if (p) { const loc = toLocal(w, v.x, v.y, v.rot || 0); op.dx = p.lx - loc.x; op.dy = p.ly - loc.y; }
+return op;
 },
 startHandle(handle, w, e) {
 const id = handle.dataset.id;
