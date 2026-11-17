@@ -661,8 +661,10 @@ opzioni: (tutte ? ordinate : ordinate.slice(0, MOSTRA)).map(voce)
 .concat([{ k: 'importa', t: '📂 Importa da file…', d: 'una tavola ricevuta (.json), con le sue foto', primario: !list.length }])
 .concat(list.length ? [{ k: 'copia', t: '💾 Copia di sicurezza di tutte le tavole', d: 'un solo file .zip con tavole e foto: conservalo fuori dal telefono (Salva su File, Drive, PC)' }] : [])
 .concat([{ k: 'ripristina', t: '♻ Ripristina da una copia di sicurezza…', d: 'le tavole di un file .zip fatto con «Copia di sicurezza»' }])
+.concat(list.length ? [{ k: 'elimina', t: '🗑 Elimina una tavola…', d: 'toglie dal dispositivo una tavola che non serve più (e libera memoria)' }] : [])
 });
 if (!k) return;
+if (k === 'elimina') return this._eliminaDalBrowser();
 if (k === 'importa') { el('fileOpen').click(); return; }
 if (k === 'copia') return this.copiaTavole();
 if (k === 'ripristina') return this.ripristinaTavole();
@@ -684,6 +686,28 @@ const t = list[+k.slice(1)]; if (!t) return;
 if (!(await this.confermaSostituzione('aprire «' + t.nome + '»'))) return;
 ST.open(t.id); ST.currentName = t.nome; ST.staccaFile();
 this.markClean(); this.updateStatus(); this.toast('Aperta: ' + t.nome);
+},
+async _eliminaDalBrowser() {
+const ST = RS.storage, list = ST.list();
+if (!list.length) { this.toast('Non ci sono tavole salvate in questo dispositivo'); return; }
+const ordinate = list.map((t, i) => ({ t, i })).sort((a, b) => String(b.t.salvataIl || '').localeCompare(String(a.t.salvataIl || '')) || b.i - a.i);
+const testi = {}; ordinate.forEach(x => { const m = x.t.meta || {}; testi['t' + x.i] = [x.t.nome, m.localita, m.comune, m.data, m.numero].filter(Boolean).join(' '); });
+const k = await this.scelta({
+titolo: 'Elimina una tavola',
+testo: 'Tocca la tavola da togliere da questo dispositivo: prima di eliminarla viene chiesta conferma.',
+cerca: ordinate.length > 5 ? { segnaposto: 'Cerca per nome, via o data', testi } : null,
+opzioni: ordinate.map(x => ({ k: 't' + x.i, t: '🗑 ' + (x.t.nome || 'Tavola senza nome'),
+d: [x.t.salvataIl ? quandoBreve(x.t.salvataIl) : '', (x.t.elements || []).length + ' oggetti'].filter(Boolean).join(' · ') }))
+});
+if (!k) return;
+const t = list[+k.slice(1)]; if (!t) return;
+const aperta = ST.currentId === t.id;
+if (!confirm('Eliminare DEFINITIVAMENTE la tavola «' + (t.nome || 'senza nome') + '» da questo dispositivo?\n\n' +
+'Non si può annullare. Se potrebbe servire ancora, annulla e fai prima «Copia di sicurezza di tutte le tavole» (in Apri) oppure Esporta la tavola.' +
+(aperta ? '\n\nÈ la tavola aperta adesso: resta sullo schermo, ma non sarà più salvata nel dispositivo.' : ''))) return;
+ST.delete(t.id);
+if (aperta) { ST.currentName = ''; this.updateStatus(); }
+this.toast('Tavola «' + (t.nome || 'senza nome') + '» eliminata dal dispositivo');
 },
 async copiaTavole() {
 const ST = RS.storage, list = ST.list();

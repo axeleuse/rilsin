@@ -1,10 +1,14 @@
 (function (RS) {
 'use strict';
 RS.VERSION = '2.0';
-RS.BUILD = 283;
-RS.DATA_BUILD = '2026-11-16';
+RS.BUILD = 284;
+RS.DATA_BUILD = '2026-11-17';
 RS.versioneEstesa = () => RS.VERSION + ' · build ' + RS.BUILD + ' del ' + RS.DATA_BUILD.split('-').reverse().join('/');
 RS.NOVITA = [
+{ build: 284, data: '2026-11-17', voci: [
+'Telefono, iPhone, file da campo e Firefox: in Apri c\'è «Elimina una tavola». Si sceglie la tavola (con la ricerca se sono tante), si conferma, e sparisce dal dispositivo con le sue immagini, liberando memoria. È definitivo: la conferma ricorda di fare prima la copia di sicurezza se potrebbe servire ancora.',
+'Guida: la tolleranza dei 15 giorni (art. 170-bis del Codice delle assicurazioni private) è scritta solo per l\'assicurazione; per la patente non c\'è.'
+] },
 { build: 283, data: '2026-11-17', voci: [
 'Punti del veicolo: un pallino piccolo segna il punto esatto e il numero sta fuori dalla sagoma, legato da un filo sottile; i numeri vicini si allargano da soli. Il disegno non resta più coperto dai cerchi. Per spostare un punto si trascina il pallino (si prende anche un po\' di lato, a ogni ingrandimento). Il numero si trascina da solo, dove si vuole, e il filo si allunga fino a lì: resta in quella posizione anche se poi si sposta il punto. «Numeri al loro posto» li rimette in automatico.',
 'Spiegazioni nelle proprietà: restano tutte nascoste finché non si chiedono (anche quella della posizione dei veicoli a due ruote, che si vedeva sempre). Oltre al tasto Spiegazioni in cima, ogni sezione che ne ha mostra un piccolo «?» accanto al titolo: tocca quello per vedere solo le spiegazioni di quella sezione, lì dove servono.',
